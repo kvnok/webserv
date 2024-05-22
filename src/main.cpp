@@ -13,8 +13,10 @@ int main(int argc, char **argv)
 	{
 		Server.handleConfigFile("nginx.conf");
 	}
-	std::cout << "Port: " << Server.getPort() << std::endl;
-	std::cout << "ServerName: " << Server.getServerName()[1] << std::endl;
+	if (Server.connect())
+		return 1;
+	// std::cout << "Port: " << Server.getPort() << std::endl;
+	// std::cout << "ServerName: " << Server.getServerName()[1] << std::endl;
 	return 0;
 }
 

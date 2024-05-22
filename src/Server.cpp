@@ -3,6 +3,8 @@
 Server::Server( void )
 {
 	this->port = -1;
+    this->serverFd = 0;
+    // this->maxClients = -1;
 }
 
 Server::Server( int port)
@@ -53,14 +55,12 @@ bool Server::setServerNameFromFile(std::string line)
 
 void Server::setSocket()
 {
-	int newSocket;
-	struct sockaddr_in address;
-	int opt = 1;
-	int addrlen = sizeof(address);
+	this->opt = 1;
+	this->addrlen = sizeof(this->address);
 	
-	address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(this->port);
+	this->address.sin_family = AF_INET;
+    this->address.sin_addr.s_addr = INADDR_ANY;
+    this->address.sin_port = htons(this->port);
 
 	if ((this->serverFd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 	{
@@ -72,7 +72,7 @@ void Server::setSocket()
         perror("setsockopt failed");
         exit(EXIT_FAILURE);
     }
-	if (bind(this->serverFd, (struct sockaddr *)&address, sizeof(address)) == -1) {
+	if (bind(this->serverFd, (struct sockaddr *)&this->address, sizeof(this->address)) == -1) {
         perror("bind failed");
         exit(EXIT_FAILURE);
     }
@@ -109,23 +109,25 @@ void Server::handleConfigFile(std::string configFile)
         {
             if (firstWord(line) == "server")
             {
-                std::cout << GREEN "Found server block" RESET << std::endl;
+                // std::cout << GREEN "Found server block" RESET << std::endl;
             }
             else if (firstWord(line) == "location")
             {
-                std::cout << firstWord(line) << "Found location block" << std::endl;
+                // std::cout << firstWord(line) << "Found location block" << std::endl;
             }
             else if (firstWord(line) == "listen")
             {
+                this->setPortNumberFromFile(line);
                 //get the port number
-                if (this->setPortNumberFromFile(line))
-                    std::cout << GREEN "Found listen directive at port number: " << this->getPort() << RESET << std::endl;
+                // if (this->setPortNumberFromFile(line))
+                    // std::cout << GREEN "Found listen directive at port number: " << this->getPort() << RESET << std::endl;
             }
             else if (firstWord(line) == "server_name")
             {
                 // parse server_name ||-- Remenber we can have multiple server_name --||
-                if (this->setServerNameFromFile(line))
-                    std::cout << GREEN << firstWord(line) << "Found server_name: " << this->getServerName()[0] << RESET << std::endl;
+                this->setServerNameFromFile(line);
+                // if (this->setServerNameFromFile(line))
+                    // std::cout << GREEN << firstWord(line) << "Found server_name: " << this->getServerName()[0] << RESET << std::endl;
             }
             // else if (firstWord(line) == "root")
             // {
@@ -151,6 +153,134 @@ void Server::handleConfigFile(std::string configFile)
         this->setPortNumberFromFile("");
     }
     this->getServerName();
+}
+
+// void Server::serveHtml(Server& server)
+// {
+//     std::string filename = (this->path == "/") ? "www/index.html" : "www/" + this->path;
+//     std::ifstream html_file(filename);
+//     static bool error_printed = false; // Flag to track if error message has been printed
+
+//     // Reset the error_printed flag if the file is found
+
+//     // File exists, serve it
+//     std::stringstream response;
+//     response << "HTTP/1.1 200 OK\r\n";
+//     response << "Content-Type: text/html\r\n";
+//     response << "Connection: keep-alive\r\n"; // Keep the connection alive
+//     response << "\r\n";
+//     response << html_file.rdbuf();
+
+//     std::string response_str = response.str();
+//     send(this->newSocket, response_str.c_str(), response_str.length(), 0);
+// }
+
+void Server::getClient(int client_fd)
+{
+
+}
+
+void Server::parseRequestPath(std::string request)
+{
+    std::istringstream iss(request);
+    std::string request_line;
+    std::getline(iss, request_line);
+    std::istringstream iss_line(request_line);
+    std::string method , path, protocol;
+    iss_line >> method >> path >> protocol;
+    this->path = path;
+}
+
+void Server::serveHtml(Server& server)
+{
+    std::string filename;
+    if (this->path == "/")
+        filename = "www/index.html";
+    else
+        filename = "www/" + this->path;
+    std::ifstream html_file(filename);
+    std::ifstream css_file(filename);
+    std::stringstream response;
+    if (css_file.good())
+    {
+        std::string content((std::istreambuf_iterator<char>(css_file)), std::istreambuf_iterator<char>());
+
+        // std::stringstream response;
+        response << "HTTP/1.1 200 OK\r\n";
+        response << "Content-Type: text/css\r\n";
+        response << "Content-Length: " << content.size() << "\r\n";
+        response << "Connection: close\r\n"; // Close the connection after sending the response
+        response << "\r\n";
+        response << content;
+        std::cout << "CSS file found" << std::endl;
+    }
+    if (!html_file.good()) {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return;
+    }
+    else
+    {
+        std::string content((std::istreambuf_iterator<char>(html_file)), std::istreambuf_iterator<char>());
+
+        response << "HTTP/1.1 200 OK\r\n";
+        response << "Content-Type: text/html\r\n";
+        response << "Content-Length: " << content.size() << "\r\n";
+        response << "Connection: close\r\n"; // Close the connection after sending the response
+        response << "\r\n";
+        response << content;
+    }
+    // std::string content((std::istreambuf_iterator<char>(html_file)), std::istreambuf_iterator<char>());
+
+    // std::stringstream response;
+    // response << "HTTP/1.1 200 OK\r\n";
+    // response << "Content-Type: text/html\r\n";
+    // response << "Content-Length: " << content.size() << "\r\n";
+    // response << "Connection: close\r\n"; // Close the connection after sending the response
+    // response << "\r\n";
+    // response << content;
+
+    std::string response_str = response.str();
+    printf("Response: %s\n", response_str.c_str());
+
+    ssize_t bytes_sent = send(this->newSocket, response_str.c_str(), response_str.length(), 0);
+    if (bytes_sent < 0) {
+        std::cerr << "Failed to send response: " << strerror(errno) << std::endl;
+    }
+}
+
+int Server::connect( void )
+{
+    char buffer[BUFFER_SIZE] = {0};
+    this->setSocket();
+    std::cout << GREEN "Server listening on port " << this->port << RESET << std::endl;
+    while (true)
+    {
+        if ((this->newSocket = accept(this->serverFd, (struct sockaddr *)&this->address, (socklen_t*)&this->addrlen)) == -1) {
+            perror("accept failed");
+            continue;
+        }
+
+        // Receive HTTP request
+        ssize_t bytes_received = recv(this->newSocket, buffer, BUFFER_SIZE, 0);
+        if (bytes_received <= 0) {
+            // Handle error or closed connection
+            close(this->newSocket);
+            continue;
+        }
+
+        std::string request(buffer, bytes_received);
+
+        // Parse request path
+        parseRequestPath(request);
+        
+        // Serve HTML file
+        serveHtml(*this);
+        // Close the connection
+        close(this->newSocket);
+    }
+
+    close(this->serverFd);
+    return (0);
 }
 
 Server::~Server( void )

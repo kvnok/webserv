@@ -28,8 +28,16 @@ class Server
 	private:
 		int port;
 		int serverFd;
+		int maxClients;
 		std::vector<std::string> server_name;
 		std::vector<pollfd> pollFds;
+		struct sockaddr_in address;
+		int opt;
+		int addrlen;
+		int newSocket;
+		std::string path;
+		std::string request;
+		std::string response;
 	public:
 		Server( void );
 		Server( int port);
@@ -41,6 +49,10 @@ class Server
 		bool setServerNameFromFile(std::string line);
 		void setSocket();
 		void handleConfigFile(std::string configFile);
+		int  connect( void );
+		void getClient(int client_fd);
+		void serveHtml(Server& server);
+		void parseRequestPath(std::string request);
 };
 
 std::string firstWord(std::string line);
