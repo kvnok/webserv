@@ -24,12 +24,3 @@ void get_words(std::string &line, std::vector<std::string> &words) {
 	}
 }
 
-void parse_line(std::string &line) {
-	trim_start(line);
-	std::vector<std::string> words;
-	get_words(line, words);
-	for (int i = 0; i < words.size(); i++) {
-		std::cout << "|" << words[i] << "|";
-	}
-	std::cout << std::endl;
-}
