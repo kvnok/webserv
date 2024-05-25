@@ -6,19 +6,37 @@ Parser::Parser(std::string config_file) : _config_file(config_file) {}
 Parser::~Parser() {}
 
 /*
-loop to start of the key
-loop to end of the key
-loop to start of the value
-loop to end of the value
-repeat last two steps until end of line
-
-
-
+remove whitespace at the start
 */
+void trim_start(std::string &line) {
+	size_t i = 0;
+	while (is_match(line[i], ' ', '\t') == true) {
+		i++;
+	}
+	line = line.substr(i);
+}
+
+void get_words(std::string &line, std::vector<std::string> &words) {
+	std::string word = "";
+	for (int i = 0, j = 0; i < line.size(); i++) {
+		word = "";
+		while(line[i] && is_match(line[i], ' ', '\t') == false) {
+			word += line[i];
+			i++;
+		}
+		words.push_back(word);
+		j++;
+	}
+}
+
 void parse_line(std::string &line) {
-	
-	
-	
+	trim_start(line);
+	std::vector<std::string> words;
+	get_words(line, words);
+	for (int i = 0; i < words.size(); i++) {
+		std::cout << "|" << words[i] << "|";
+	}
+	std::cout << std::endl;
 }
 
 void Parser::parse() {
@@ -29,34 +47,8 @@ void Parser::parse() {
 	}
 	std::string line;
 	while (std::getline(file, line)) {
-		// std::cout << line << std::endl;
+		// std::cout << "|" << line << "|" << std::endl;
 		parse_line(line);
-		std::cout << line << std::endl;
+		// std::cout << line << std::endl;
 	}
 }
-
-/*
-removing whitespace
-end of the line is semi colon or { or }
-some things are mandatory
-some things are optional
-some things are repeated
-some things are nested
-some things are not
-some things are in a specific order
-some things are not
-*/
-/*
-spaces in front
-splitting on spaces
-array of things that can be repeated on same line
-and array of things that can be repeated on multiple lines
-
-
-so an array of locations
-each location is:
-- root
-- index
-- autoindex
-*/
-

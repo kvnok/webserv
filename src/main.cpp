@@ -14,17 +14,3 @@ int main(int argc, char **argv) {
 	parser.parse();
 	return 0;
 }
-
-/*
-smart way to parse config file
-
-reading
-remove whitespace
-
-listen
-server_name
-root
-index
-location
-
-*/
