@@ -1,21 +1,36 @@
 #include "../include/parser.hpp"
 
+void raw_extract(ifstream& file, vector<vector<string>> &raw_config) {
+	string line;
+	while (getline(file, line)) {
+		trim_start(line);
+		if (line.size() == 0 || line[0] == 0) {
+			continue;
+		}
+		// print_ascii(line);
+		vector<string> words;
+		get_words(line, words);
+		if (words.size() == 0) {
+			continue;
+		}
+		// cout << line.size() << ":" << endl;
+		// cout << line << endl;
+		raw_config.push_back(words);
+	}
+}
+
 /*
 remove whitespace at the start
 */
-void trim_start(std::string &line) {
-	size_t i = 0;
-	while (is_match(line[i], ' ', '\t') == true) {
-		i++;
-	}
-	line = line.substr(i);
+void trim_start(string &line) {
+	line.erase(0, line.find_first_not_of(" \t\v\f\r"));
 }
 
-void get_words(std::string &line, std::vector<std::string> &words) {
-	std::string word = "";
+void get_words(string &line, vector<string> &words) {
+	string word = "";
 	for (int i = 0, j = 0; i < line.size(); i++) {
 		word = "";
-		while(line[i] && is_match(line[i], ' ', '\t') == false) {
+		while(line[i] && is_match(line[i], ' ', '\t', '\v', '\f', '\r') == false) {
 			word += line[i];
 			i++;
 		}
