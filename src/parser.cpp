@@ -81,3 +81,32 @@ struct
 					is_redirect
 					redirect
 */
+
+/*
+server{
+
+	location / {
+
+	}
+	location / {
+		}
+	} <--- error
+}
+
+bdsgds <- error
+
+server{
+	}
+	location / { <- error
+
+	}
+	location / {
+		
+	}
+} <- error
+
+*/
+/*
+use a state system
+
+*/
