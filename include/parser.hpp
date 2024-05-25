@@ -23,3 +23,8 @@ bool is_match(char c, const T& arg, const Args&... args) {
     }
     return is_match(c, args...);
 }
+
+/* parse_line.cpp */
+void trim_start(std::string &line);
+void get_words(std::string &line, std::vector<std::string> &words);
+void parse_line(std::string &line);

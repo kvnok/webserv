@@ -14,3 +14,10 @@ int main(int argc, char **argv) {
 	parser.parse();
 	return 0;
 }
+/*
+make
+./webserv
+./webserv config.conf
+./webserv test.conf
+./webserv random.conf
+*/
