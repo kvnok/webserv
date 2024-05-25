@@ -19,13 +19,6 @@ void raw_extract(ifstream& file, vector<vector<string>> &raw_config) {
 	}
 }
 
-/*
-remove whitespace at the start
-*/
-void trim_start(string &line) {
-	line.erase(0, line.find_first_not_of(" \t\v\f\r"));
-}
-
 void get_words(string &line, vector<string> &words) {
 	string word = "";
 	for (int i = 0, j = 0; i < line.size(); i++) {
