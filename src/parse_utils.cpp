@@ -37,3 +37,30 @@ void is_file_name_correct(string &f) {
 		return ;
 	throw logic_error("invalid file name");
 }
+
+void print_raw_servers(vector<vector<vector<string>>> &servers) {
+	for (int i = 0; i < servers.size(); i++) {
+		cout << "\nserver block " << i << "\n";
+		for (int j = 0; j < servers[i].size(); j++) {
+			for (int k = 0; k < servers[i][j].size(); k++) {
+				cout << servers[i][j][k];
+				if (k < servers[i][j].size() - 1) {
+					cout << "|";
+				}
+			}
+			cout << endl;
+		}
+	}
+}
+
+void print_i_raw_serv(vector<vector<string>> &server) {
+	for (int j = 0; j < server.size(); j++) {
+		for (int k = 0; k < server[j].size(); k++) {
+			cout << server[j][k];
+			if (k < server[j].size() - 1) {
+				cout << "|";
+			}
+		}
+		cout << endl;
+	}
+}

@@ -32,3 +32,6 @@ void raw_extract(ifstream& file, vector<vector<string>> &raw_config);
 void print_ascii(string &line);
 void print_raw_config(vector<vector<string>> &raw_config);
 void is_file_name_correct(string &f);
+void extract_raw_servers(vector<vector<string>> &raw_config, vector<vector<vector<string>>> &servers);
+void print_raw_servers(vector<vector<vector<string>>> &servers);
+void print_i_raw_serv(vector<vector<string>> &server);

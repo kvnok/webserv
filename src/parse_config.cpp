@@ -32,3 +32,18 @@ void get_words(string &line, vector<string> &words) {
 	}
 }
 
+void extract_raw_servers(vector<vector<string>> &raw_config, vector<vector<vector<string>>> &servers) {
+	vector<vector<string>> server;
+	for (int i = 0; i < raw_config.size(); i++) {
+		if (raw_config[i][0] == "server") {
+			if (server.size() > 0) {
+				servers.push_back(server);
+				server.clear();
+			}
+		}
+		server.push_back(raw_config[i]);
+	}
+	if (server.size() > 0) {
+		servers.push_back(server);
+	}
+}
