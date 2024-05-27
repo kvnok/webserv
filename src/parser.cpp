@@ -110,3 +110,7 @@ server{
 use a state system
 
 */
+/*
+end with .conf? use cub3d .ber map text check
+
+*/
