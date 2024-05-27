@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
 /*
 make
 ./webserv
-./webserv config.conf
-./webserv test.conf
-./webserv random.conf
+./webserv configs/config.conf
+./webserv configs/test.conf
+./webserv configs/random.conf
 */
