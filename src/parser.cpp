@@ -19,4 +19,12 @@ void Parser::parse() {
 		// print_i_raw_serv(raw_servers[i]);
 		check_brackets(raw_servers[i]);
 	}
+	
 }
+/*
+state system
+into server, into location
+when the bracket that closes the server is found, nothing else can be behind it
+no comments are allowed in the config files
+*/
+
