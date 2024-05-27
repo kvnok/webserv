@@ -15,15 +15,15 @@ class Parser {
 
 template<typename T>
 bool is_match(char c, const T& arg) {
-    return c == arg;
+	return c == arg;
 }
 
 template<typename T, typename... Args>
 bool is_match(char c, const T& arg, const Args&... args) {
-    if (c == arg) {
-        return true;
-    }
-    return is_match(c, args...);
+	if (c == arg) {
+		return true;
+	}
+	return is_match(c, args...);
 }
 
 void trim_start(string &line);
@@ -35,3 +35,4 @@ void is_file_name_correct(string &f);
 void extract_raw_servers(vector<vector<string>> &raw_config, vector<vector<vector<string>>> &servers);
 void print_raw_servers(vector<vector<vector<string>>> &servers);
 void print_i_raw_serv(vector<vector<string>> &server);
+void check_brackets(vector<vector<string>> &raw_server);

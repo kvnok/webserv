@@ -15,9 +15,8 @@ void Parser::parse() {
 	extract_raw_servers(raw_config, raw_servers);
 	// print_raw_servers(servers);
 	for (int i = 0; i < raw_servers.size(); i++) {
-		cout << MAG << "raw server block " << i << RESET << endl;
-		print_i_raw_serv(raw_servers[i]);
+		// cout << MAG << "raw server block " << i << RESET << endl;
+		// print_i_raw_serv(raw_servers[i]);
+		check_brackets(raw_servers[i]);
 	}
-	//check brackets are closed correctly
-	//splitting on server blocks
 }
