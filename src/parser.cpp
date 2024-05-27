@@ -38,7 +38,7 @@ void print_raw_servers(vector<vector<vector<string>>> &servers) {
 void Parser::parse() {
 	ifstream file(_config_file.c_str());
 	if (!file.is_open())
-		throw runtime_error("cannot open file");
+		throw logic_error("cannot open file");
 	vector<vector<string>> raw_config;
 	raw_extract(file, raw_config);
 	// print_raw_config(raw_config);
@@ -48,67 +48,3 @@ void Parser::parse() {
 	//check brackets are closed correctly
 	//splitting on server blocks
 }
-/*
-can have multiple server blocks
-
-map for checking the key
-if key is not in the map, then error
-else do the handler for the key
-*/
-/*
-struct
-	*servers
-		server
-			listen
-			server_name
-			root
-			index
-			body_limit
-			*locations
-				location
-					path
-					root
-					index
-					autoindex
-					body_limit
-					is_cgi
-					cgi_extension
-					cgi_allowed
-					allow
-					deny
-					is_redirect
-					redirect
-*/
-
-/*
-server{
-
-	location / {
-
-	}
-	location / {
-		}
-	} <--- error
-}
-
-bdsgds <- error
-
-server{
-	}
-	location / { <- error
-
-	}
-	location / {
-		
-	}
-} <- error
-
-*/
-/*
-use a state system
-
-*/
-/*
-end with .conf? use cub3d .ber map text check
-
-*/

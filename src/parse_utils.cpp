@@ -31,9 +31,9 @@ void is_file_name_correct(string &f) {
 
 	l = f.size();
 	if (l <= 5 || f[l - 6] == '/')
-		throw runtime_error("invalid file name");
+		throw logic_error("invalid file name");
 	if (f[l - 5] == '.' && f[l - 4] == 'c' && f[l - 3] == 'o'
 		&& f[l - 2] == 'n' && f[l - 1] == 'f')
 		return ;
-	throw runtime_error("invalid file name");
+	throw logic_error("invalid file name");
 }
