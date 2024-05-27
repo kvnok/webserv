@@ -22,7 +22,7 @@ void extract_raw_servers(vector<vector<string>> &raw_config, vector<vector<vecto
 
 void print_raw_servers(vector<vector<vector<string>>> &servers) {
 	for (int i = 0; i < servers.size(); i++) {
-		cout << "server block " << i << endl;
+		cout << "\nserver block " << i << "\n";
 		for (int j = 0; j < servers[i].size(); j++) {
 			for (int k = 0; k < servers[i][j].size(); k++) {
 				cout << servers[i][j][k];
@@ -46,7 +46,7 @@ void Parser::parse() {
 	// print_raw_config(raw_config);
 	vector<vector<vector<string>>> servers;
 	extract_raw_servers(raw_config, servers);
-	// print_raw_servers(servers);
+	print_raw_servers(servers);
 	//check brackets are closed correctly
 	//splitting on server blocks
 }
