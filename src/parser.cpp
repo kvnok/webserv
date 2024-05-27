@@ -11,12 +11,12 @@ void Parser::parse() {
 	vector<vector<string>> raw_config;
 	raw_extract(file, raw_config);
 	// print_raw_config(raw_config);
-	vector<vector<vector<string>>> servers;
-	extract_raw_servers(raw_config, servers);
+	vector<vector<vector<string>>> raw_servers;
+	extract_raw_servers(raw_config, raw_servers);
 	// print_raw_servers(servers);
-	for (int i = 0; i < servers.size(); i++) {
+	for (int i = 0; i < raw_servers.size(); i++) {
 		cout << MAG << "raw server block " << i << RESET << endl;
-		print_i_raw_serv(servers[i]);
+		print_i_raw_serv(raw_servers[i]);
 	}
 	//check brackets are closed correctly
 	//splitting on server blocks
