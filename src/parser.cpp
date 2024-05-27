@@ -37,10 +37,8 @@ void print_raw_servers(vector<vector<vector<string>>> &servers) {
 
 void Parser::parse() {
 	ifstream file(_config_file.c_str());
-	if (!file.is_open()) {
-		cerr << "could not open file" << endl;
-		return;
-	}
+	if (!file.is_open())
+		throw runtime_error("cannot open file");
 	vector<vector<string>> raw_config;
 	raw_extract(file, raw_config);
 	// print_raw_config(raw_config);

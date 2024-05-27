@@ -8,6 +8,7 @@ int main(int argc, char **argv) {
 		string config_file = "default.conf";
 		if (argc == 2)
 			config_file = argv[1];
+		is_file_name_correct(config_file);
 		Parser parser(config_file);
 		parser.parse();
 	} catch (exception &e) {

@@ -31,3 +31,4 @@ void get_words(string &line, vector<string> &words);
 void raw_extract(ifstream& file, vector<vector<string>> &raw_config);
 void print_ascii(string &line);
 void print_raw_config(vector<vector<string>> &raw_config);
+void is_file_name_correct(string &f);
