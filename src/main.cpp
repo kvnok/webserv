@@ -28,4 +28,6 @@ make
 ./webserv configs/config.conf
 ./webserv configs/test.conf
 ./webserv configs/random.conf
+
+make && ./run.sh random
 */

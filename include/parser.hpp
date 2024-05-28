@@ -7,6 +7,8 @@
 
 using namespace std;
 
+using raw_conf = vector<vector<string>>;
+
 class Parser {
 	private:
 		string _config_file;
