@@ -29,5 +29,6 @@ make
 ./webserv configs/test.conf
 ./webserv configs/random.conf
 
-make && ./run.sh random
+./run.sh random
+./run.sh simplem
 */

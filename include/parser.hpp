@@ -7,7 +7,9 @@
 
 using namespace std;
 
-using raw_conf = vector<vector<string>>;
+using RAWCONF = vector<vector<string>>;
+using RAWSERV = vector<vector<string>>;
+using RAWSERVS = vector<RAWSERV>;
 
 class Parser {
 	private:
@@ -33,11 +35,11 @@ bool is_match(char c, const T& arg, const Args&... args) {
 
 void trim_start(string &line);
 void get_words(string &line, vector<string> &words);
-void raw_extract(ifstream& file, vector<vector<string>> &raw_config);
+void raw_extract(ifstream& file, RAWCONF &raw_config);
 void print_ascii(string &line);
-void print_raw_config(vector<vector<string>> &raw_config);
+void print_raw_config(RAWCONF &raw_config);
 void is_file_name_correct(string &f);
-void extract_raw_servers(vector<vector<string>> &raw_config, vector<vector<vector<string>>> &servers);
-void print_raw_servers(vector<vector<vector<string>>> &servers);
-void print_i_raw_serv(vector<vector<string>> &server);
-void check_brackets(vector<vector<string>> &raw_server);
+void extract_raw_servers(RAWCONF &raw_config, RAWSERVS &servers);
+void print_raw_servers(RAWSERVS &servers);
+void print_i_raw_serv(RAWSERV &server);
+void check_brackets(RAWSERV &raw_server);

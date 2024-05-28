@@ -1,6 +1,6 @@
 #include "parser.hpp"
 
-void raw_extract(ifstream& file, vector<vector<string>> &raw_config) {
+void raw_extract(ifstream& file, RAWCONF &raw_config) {
 	string line;
 	while (getline(file, line)) {
 		trim_start(line);
@@ -32,8 +32,8 @@ void get_words(string &line, vector<string> &words) {
 	}
 }
 
-void extract_raw_servers(vector<vector<string>> &raw_config, vector<vector<vector<string>>> &servers) {
-	vector<vector<string>> server;
+void extract_raw_servers(RAWCONF &raw_config, RAWSERVS &servers) {
+	RAWSERV server;
 	for (int i = 0; i < raw_config.size(); i++) {
 		if (raw_config[i][0] == "server") {
 			if (server.size() > 0) {

@@ -1,6 +1,6 @@
 #include "parser.hpp"
 
-void check_brackets(vector<vector<string>> &raw_server) {
+void check_brackets(RAWSERV &raw_server) {
 	stack<string> s;
 	for (int i = 0; i < raw_server.size(); i++) {
 		for (int j = 0; j < raw_server[i].size(); j++) {

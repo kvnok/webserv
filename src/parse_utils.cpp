@@ -7,7 +7,7 @@ void trim_start(string &line) {
 	line.erase(0, line.find_first_not_of(" \t\v\f\r"));
 }
 
-void print_raw_config(vector<vector<string>> &raw_config) {
+void print_raw_config(RAWCONF &raw_config) {
 	for (int i = 0; i < raw_config.size(); i++) {
 		for (int j = 0; j < raw_config[i].size(); j++) {
 			cout << raw_config[i][j];
@@ -38,7 +38,7 @@ void is_file_name_correct(string &f) {
 	throw logic_error("invalid file name");
 }
 
-void print_raw_servers(vector<vector<vector<string>>> &servers) {
+void print_raw_servers(RAWSERVS &servers) {
 	for (int i = 0; i < servers.size(); i++) {
 		cout << "\nserver block " << i << "\n";
 		for (int j = 0; j < servers[i].size(); j++) {
@@ -53,7 +53,7 @@ void print_raw_servers(vector<vector<vector<string>>> &servers) {
 	}
 }
 
-void print_i_raw_serv(vector<vector<string>> &server) {
+void print_i_raw_serv(RAWSERV &server) {
 	for (int j = 0; j < server.size(); j++) {
 		for (int k = 0; k < server[j].size(); k++) {
 			cout << server[j][k];
