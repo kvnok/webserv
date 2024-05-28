@@ -1,6 +1,6 @@
 #pragma once
-#include "../include/stuff.hpp"
-#include "../include/location.hpp"	
+#include "stuff.hpp"
+#include "location.hpp"	
 
 class ServerBlock {
 	private:

@@ -1,4 +1,4 @@
-#include "../include/serverBlock.hpp"
+#include "serverBlock.hpp"
 
 ServerBlock::ServerBlock()
 {

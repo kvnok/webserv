@@ -1,4 +1,4 @@
-#include "../include/parser.hpp"
+#include "parser.hpp"
 
 Parser::Parser(string config_file) : _config_file(config_file) {}
 

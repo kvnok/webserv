@@ -16,7 +16,7 @@ $(NAME): $(OBJS)
 
 obj/%.o: src/%.cpp $(HEADER)
 	@mkdir -p obj
-	@$(CC) -c $(FLAGS) -o $@ $<
+	@$(CC) -c $(FLAGS) -I include -o $@ $<
 
 clean:
 	rm -rf obj

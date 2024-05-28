@@ -1,4 +1,4 @@
-#include "../include/parser.hpp"
+#include "parser.hpp"
 
 void check_brackets(vector<vector<string>> &raw_server) {
 	stack<string> s;

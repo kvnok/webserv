@@ -1,8 +1,8 @@
-#include "../include/stuff.hpp"
-#include "../include/location.hpp"
-#include "../include/serverBlock.hpp"
-#include "../include/config.hpp"
-#include "../include/parser.hpp"
+#include "stuff.hpp"
+#include "location.hpp"
+#include "serverBlock.hpp"
+#include "config.hpp"
+#include "parser.hpp"
 
 int main(int argc, char **argv) {
 	try

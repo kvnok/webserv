@@ -1,4 +1,4 @@
-#include "../include/parser.hpp"
+#include "parser.hpp"
 
 void raw_extract(ifstream& file, vector<vector<string>> &raw_config) {
 	string line;

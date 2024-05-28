@@ -1,5 +1,5 @@
 #pragma once
-#include "../include/stuff.hpp"
+#include "stuff.hpp"
 
 class Location {
 	private:
