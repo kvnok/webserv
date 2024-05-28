@@ -1,6 +1,9 @@
 #pragma once
 
 #include "stuff.hpp"
+#include "location.hpp"
+#include "serverBlock.hpp"
+#include "config.hpp"
 
 using namespace std;
 
@@ -10,7 +13,7 @@ class Parser {
 	public:
 		Parser(string config_file);
 		~Parser();
-		void parse();
+		void parse(Config &config);
 };
 
 template<typename T>

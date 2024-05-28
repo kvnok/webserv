@@ -4,7 +4,7 @@ Parser::Parser(string config_file) : _config_file(config_file) {}
 
 Parser::~Parser() {}
 
-void Parser::parse() {
+void Parser::parse(Config &config) {
 	ifstream file(_config_file.c_str());
 	if (!file.is_open())
 		throw logic_error("cannot open file");
@@ -15,8 +15,8 @@ void Parser::parse() {
 	extract_raw_servers(raw_config, raw_servers);
 	// print_raw_servers(servers);
 	for (int i = 0; i < raw_servers.size(); i++) {
-		// cout << MAG << "raw server block " << i << RESET << endl;
-		// print_i_raw_serv(raw_servers[i]);
+		cout << MAG << "raw server block " << i << RESET << endl;
+		print_i_raw_serv(raw_servers[i]);
 		check_brackets(raw_servers[i]);
 	}
 	
@@ -28,3 +28,8 @@ when the bracket that closes the server is found, nothing else can be behind it
 no comments are allowed in the config files
 */
 
+/*
+have like strings for each thing and then yaknow set thte things
+or just have the setting and getting handle it yep
+non empty check on the things that can only be set once
+*/
