@@ -52,4 +52,5 @@ void ServerBlock::print_server_block() {
 		cout << BLU << "Location " << i << ":" << RESET << endl;
 		_locations[i].print_location();
 	}
+	cout << endl;
 }
