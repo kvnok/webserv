@@ -38,3 +38,18 @@ void ServerBlock::set_client_max_body_size(string client_max_body_size) { _clien
 void ServerBlock::set_root(string root) { _root = root; }
 void ServerBlock::set_index(string index) { _index = index; }
 void ServerBlock::set_locations(vector<Location> locations) { _locations = locations; }
+
+void ServerBlock::add_location(Location location) { _locations.push_back(location); }
+
+void ServerBlock::print_server_block() {
+	cout << "Listen: " << _listen << endl;
+	cout << "Server name: " << _server_name << endl;
+	cout << "Error page: " << _error_page << endl;
+	cout << "Client max body size: " << _client_max_body_size << endl;
+	cout << "Root: " << _root << endl;
+	cout << "Index: " << _index << endl;
+	for (int i = 0; i < _locations.size(); i++) {
+		cout << BLU << "Location " << i << ":" << RESET << endl;
+		_locations[i].print_location();
+	}
+}

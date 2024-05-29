@@ -43,3 +43,14 @@ void Location::set_is_cgi(bool is_cgi) { _is_cgi = is_cgi; }
 void Location::set_cgi_extension(string cgi_extension) { _cgi_extension = cgi_extension; }
 void Location::set_is_redirect(bool is_redirect) { _is_redirect = is_redirect; }
 void Location::set_redirect(string redirect) { _redirect = redirect; }
+
+void Location::print_location() {
+	cout << "Path: " << _path << endl
+		 << "Root: " << _root << endl
+		 << "Index: " << _index << endl
+		 << "Autoindex: " << _autoindex << endl
+		 << "Is CGI: " << _is_cgi << endl
+		 << "CGI extension: " << _cgi_extension << endl
+		 << "Is redirect: " << _is_redirect << endl
+		 << "Redirect: " << _redirect << endl;
+}

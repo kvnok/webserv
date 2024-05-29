@@ -29,4 +29,6 @@ class ServerBlock {
 		void set_root(string root);
 		void set_index(string index);
 		void set_locations(vector<Location> locations);
+		void add_location(Location location);
+		void print_server_block();
 };

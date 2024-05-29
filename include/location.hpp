@@ -31,4 +31,6 @@ class Location {
 		void set_cgi_extension(string cgi_extension);
 		void set_is_redirect(bool is_redirect);
 		void set_redirect(string redirect);
+
+		void print_location();
 };
