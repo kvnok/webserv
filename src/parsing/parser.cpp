@@ -39,7 +39,6 @@ void parse_location(RAWSERV &s, Location &location, int &i)
 }
 
 void parse_server_block(RAWSERV &s, ServerBlock &block) {
-	int serverMode = 1;
 	if (s.size() == 0)
 		throw logic_error("empty server block");
 	if (s[0].size() != 2 || s[0][0] != "server" || s[0][1] != "{")
