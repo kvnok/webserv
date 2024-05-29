@@ -4,18 +4,9 @@ Parser::Parser(string config_file) : _config_file(config_file) {}
 
 Parser::~Parser() {}
 
-/*
-loop in the raw_server
-server mode
-when location is found go to location mode
-until the closing bracket is found
-then back to server mode
+void parse_server_block(RAWSERV &raw_server, ServerBlock &server_block) {
 
-whats smart, gotta think
-*/
-// void parse_server_block(RAWSERV &raw_server, ServerBlock &server_block) {
-
-// }
+}
 
 void Parser::parse(Config &config) {
 	ifstream file(_config_file.c_str());
@@ -38,10 +29,10 @@ void Parser::parse(Config &config) {
 		print_i_raw_serv(raw_servers[i]);
 		check_brackets(raw_servers[i]);
 	}
-	// for (int i = 0; i < raw_servers.size(); i++) {
-	// 	ServerBlock server_block;
-	// 	parse_server_block(raw_servers[i], server_block);
-	// 	config.add_server_block(server_block);
-	// }
+	for (int i = 0; i < raw_servers.size(); i++) {
+		ServerBlock server_block;
+		parse_server_block(raw_servers[i], server_block);
+		config.add_server_block(server_block);
+	}
 }
 
