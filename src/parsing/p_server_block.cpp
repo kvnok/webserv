@@ -12,6 +12,7 @@ void parse_server_block(RAWSERV &s, ServerBlock &block) {
 			break;
 		if (s[i].size() < 2)
 			throw logic_error("directive must have a value");
+		s[i][1] = s[i][1].substr(0, s[i][1].find(";"));
 		if (s[i][0] == "server_name") {
 			block.set_server_name(s[i][1]);
 		}
