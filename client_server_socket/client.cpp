@@ -15,13 +15,13 @@ int	main(void)
 	serverAddress.sin_addr.s_addr = INADDR_ANY;
 
 	connect(clientSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
-	
+
 	while (true)
 	{
-		char *message;
-		std::cin >> message;
+		char message[100];
+		std::cin.getline(message, 100);
 		send(clientSocket, message, strlen(message), 0);
-		if (message == "exit")
+		if (std::strcmp(message, "exit"))
 			break ;
 	}
 	close(clientSocket);

@@ -4,6 +4,7 @@
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <cstring>
 
 int main(void)
 {
@@ -26,7 +27,7 @@ int main(void)
 		char buffer2[100] = {0};
 		recv(clientSocket2, buffer2, sizeof(buffer2), 0);
 		std::cout << "Client2 says: " << buffer2 << std::endl;
-		if (buffer1 == "exit" || buffer2 == "exit")
+		if (std::strcmp(buffer1, "exit") || std::strcmp(buffer2, "exit"))
 			break ;
 	}
 	close(serverSocket);
