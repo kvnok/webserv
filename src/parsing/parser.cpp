@@ -31,6 +31,6 @@ void Parser::parse(Config &config) {
 		parse_server_block(raw_servers[i], server_block);
 		config.add_server_block(server_block);
 	}
-	config.print_server_blocks();
+	// config.print_server_blocks();
 }
 

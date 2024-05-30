@@ -1,5 +1,4 @@
-#ifndef SERVER_H
-# define SERVER_H
+#pragma once
 
 #include <iostream>
 #include <fstream>
@@ -16,50 +15,52 @@
 #include <arpa/inet.h>
 #include <vector>
 #include <poll.h>
+#include "config.hpp"
+
+using namespace std;
 
 #define MAX_CLIENTS 10
 #define BUFFER_SIZE 1024
-#define RED     "\033[31m"
-#define GREEN   "\033[32m"
-#define RESET   "\033[0m"
+// #define RED     "\033[31m"
+// #define GREEN   "\033[32m"
+// #define RESET   "\033[0m"
 
 class Server
 {
 	private:
-		int port;
+		int _port;
+		string _server_name;
+		int _client_max_body_size;
+		string _index;
+		string _error_page;
+		string _root;
+		vector<Location> _locations;
+
 		int serverFd;
-		int maxClients;
-		std::vector<std::string> server_name;
-		std::vector<pollfd> pollFds;
+		vector<pollfd> pollFds;
 		struct sockaddr_in address;
 		int opt;
 		int addrlen;
 		int newSocket;
-		std::string path;
-		std::string request;
-		std::string response;
+		string path;
+		string request;
+		string response;
 	public:
 		Server( void );
-		Server( int port);
+		Server(ServerBlock& blocks);
 		~Server( void );
 		void setPort(int port);
+		// -------- Getters -------- //
 		int getPort();
-		std::vector<std::string> getServerName();
-		bool setPortNumberFromFile(std::string line);
-		bool setServerNameFromFile(std::string line);
+		string getServerName();
+		int getMaxBody();
+		string getIndex();
+		string getErrorPage();
+		string getRoot();
+		int getFd();
+		// ------------------------- //
 		void setSocket();
-		void handleConfigFile(std::string configFile);
 		int  connect( void );
-		void getClient(int client_fd);
 		void serveHtml(Server& server);
-		void parseRequestPath(std::string request);
+		void parseRequestPath(string request);
 };
-
-std::string firstWord(std::string line);
-bool containsOnlyNumbers(const std::string& str);
-int skipFirstWord(std::string line);
-int howManyServerName(std::string line);
-std::string skipWhiteSpace(std::string line);
-
-
-#endif
