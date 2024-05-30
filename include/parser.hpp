@@ -46,3 +46,18 @@ void check_brackets(RAWSERV &raw_server);
 
 void parse_server_block(RAWSERV &s, ServerBlock &block);
 void parse_location(RAWSERV &s, Location &location, int &i);
+
+/*p_handlers*/
+void s_listen(vector<string> &s, ServerBlock &block);
+void s_server_name(vector<string> &s, ServerBlock &block);
+void s_error_page(vector<string> &s, ServerBlock &block);
+void s_client_max_body_size(vector<string> &s, ServerBlock &block);
+void s_root(vector<string> &s, ServerBlock &block);
+void s_index(vector<string> &s, ServerBlock &block);
+
+void l_path(vector<string> &s, Location &location);
+void l_root(vector<string> &s, Location &location);
+void l_index(vector<string> &s, Location &location);
+void l_autoindex(vector<string> &s, Location &location);
+void l_cgi_extension(vector<string> &s, Location &location);
+void l_redirect(vector<string> &s, Location &location);
