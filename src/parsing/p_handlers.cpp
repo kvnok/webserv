@@ -4,6 +4,9 @@
 at the base of server block
 */
 void s_listen(vector<string> &s, ServerBlock &block) {
+	if (block.get_listen() != "")
+		throw invalid_argument("listen: already set");
+	
 	string str = s[1].substr(0, s[1].size() - 1);
 	if (s.size() != 2)
 		throw invalid_argument("listen: invalid number of arguments");
@@ -18,6 +21,7 @@ void s_listen(vector<string> &s, ServerBlock &block) {
 void s_server_name(vector<string> &s, ServerBlock &block) {
 	if (block.get_server_name().size() != 0)
 		throw invalid_argument("server_name: already set");
+	
 	// remove the ; from the last server name
 	s[s.size() - 1] = s[s.size() - 1].substr(0, s[s.size() - 1].size() - 1);
 	//check if there is something else than digits and alphabetic characters
@@ -46,18 +50,29 @@ void s_error_page(vector<string> &s, ServerBlock &block) {
 
 // in bytes
 void s_client_max_body_size(vector<string> &s, ServerBlock &block) {
+	if (block.get_client_max_body_size() != "")
+		throw invalid_argument("client_max_body_size: already set");
+	
+	if (s.size() != 2)
+		throw invalid_argument("client_max_body_size: invalid number of arguments");
 	string str = s[1].substr(0, s[1].size() - 1);
 
 	block.set_client_max_body_size(str);
 }
 
 void s_root(vector<string> &s, ServerBlock &block) {
+	if (block.get_root() != "")
+		throw invalid_argument("root: already set");
+	
 	string str = s[1].substr(0, s[1].size() - 1);
 
 	block.set_root(str);
 }
 
 void s_index(vector<string> &s, ServerBlock &block) {
+	if (block.get_index() != "")
+		throw invalid_argument("index: already set");
+	
 	string str = s[1].substr(0, s[1].size() - 1);
 
 	block.set_index(str);
@@ -67,6 +82,9 @@ void s_index(vector<string> &s, ServerBlock &block) {
 location route of server block
 */
 void l_root(vector<string> &s, Location &location) {
+	if (location.get_root() != "")
+		throw invalid_argument("root: already set");
+	
 	if (s.size() != 2)
 		throw invalid_argument("root: invalid number of arguments");
 	
@@ -81,20 +99,23 @@ void l_root(vector<string> &s, Location &location) {
 }
 
 void l_index(vector<string> &s, Location &location) {
+	if (location.get_index() != "")
+		throw invalid_argument("index: already set");
+	
 	string str = s[1].substr(0, s[1].size() - 1);
 	if (s.size() != 2)
 		throw invalid_argument("index: invalid number of arguments");
-	if (location.get_index() != "")
-		throw invalid_argument("index: already set");
 	location.set_index(str);
 }
 
 void l_autoindex(vector<string> &s, Location &location) {
+	if (location.get_is_autoindex_set() == true)
+		throw invalid_argument("autoindex: already set");
+	
 	string str = s[1].substr(0, s[1].size() - 1);
 	if (s.size() != 2)
 		throw invalid_argument("autoindex: invalid number of arguments");
-	if (location.get_is_autoindex_set() == true)
-		throw invalid_argument("autoindex: already set");
+
 	if (str != "on" && str != "off")
 		throw invalid_argument("autoindex: invalid argument");
 	if (str == "on")
@@ -105,9 +126,10 @@ void l_autoindex(vector<string> &s, Location &location) {
 }
 
 void l_cgi_extension(vector<string> &s, Location &location) {
-	string str = s[1].substr(0, s[1].size() - 1);
 	if (location.get_is_cgi() == true)
 		throw invalid_argument("cgi extension: already set");
+
+	string str = s[1].substr(0, s[1].size() - 1);
 	if (s.size() != 2)
 		throw invalid_argument("cgi extension: invalid number of arguments");
 	if (str[0] == '.') // should just be the extension name
@@ -125,10 +147,11 @@ Code	Description
 308		Permanent Redirect
 */
 void l_redirect(vector<string> &s, Location &location) {
-	if (s.size() != 3)
-		throw invalid_argument("redirect: invalid number of arguments");
 	if (location.get_is_redirect() == true)
 		throw invalid_argument("redirect: already set");
+
+	if (s.size() != 3)
+		throw invalid_argument("redirect: invalid number of arguments");
 	string path = s[2].substr(0, s[2].size() - 1);
 	string code = s[1];
 	
