@@ -127,7 +127,7 @@ void Server::handleConfigFile(std::string configFile)
                 // parse server_name ||-- Remenber we can have multiple server_name --||
                 this->setServerNameFromFile(line);
                 // if (this->setServerNameFromFile(line))
-                    // std::cout << GREEN << firstWord(line) << "Found server_name: " << this->getServerName()[0] << RESET << std::endl;
+                    std::cout << GREEN << firstWord(line) << "Found server_name: " << this->getServerName()[0] << RESET << std::endl;
             }
             // else if (firstWord(line) == "root")
             // {
@@ -209,26 +209,26 @@ void Server::serveHtml(Server& server)
         response << "HTTP/1.1 200 OK\r\n";
         response << "Content-Type: text/css\r\n";
         response << "Content-Length: " << content.size() << "\r\n";
-        response << "Connection: close\r\n"; // Close the connection after sending the response
+        // response << "Connection: close\r\n"; // Close the connection after sending the response
         response << "\r\n";
         response << content;
         std::cout << "CSS file found" << std::endl;
     }
-    if (!html_file.good()) {
-        std::cerr << "Failed to open file: " << filename << std::endl;
-        return;
-    }
-    else
-    {
-        std::string content((std::istreambuf_iterator<char>(html_file)), std::istreambuf_iterator<char>());
+    // if (!html_file.good()) {
+    //     std::cerr << "Failed to open file: " << filename << std::endl;
+    //     return;
+    // }
+    // else
+    // {
+        // std::string content((std::istreambuf_iterator<char>(html_file)), std::istreambuf_iterator<char>());
 
-        response << "HTTP/1.1 200 OK\r\n";
-        response << "Content-Type: text/html\r\n";
-        response << "Content-Length: " << content.size() << "\r\n";
-        response << "Connection: close\r\n"; // Close the connection after sending the response
-        response << "\r\n";
-        response << content;
-    }
+        // response << "HTTP/1.1 200 OK\r\n";
+        // response << "Content-Type: text/html\r\n";
+        // response << "Content-Length: " << content.size() << "\r\n";
+        // // response << "Connection: close\r\n"; // Close the connection after sending the response
+        // response << "\r\n";
+        // response << content;
+    // }
     // std::string content((std::istreambuf_iterator<char>(html_file)), std::istreambuf_iterator<char>());
 
     // std::stringstream response;
@@ -252,7 +252,6 @@ int Server::connect( void )
 {
     char buffer[BUFFER_SIZE] = {0};
     this->setSocket();
-    std::cout << GREEN "Server listening on port " << this->port << RESET << std::endl;
     while (true)
     {
         if ((this->newSocket = accept(this->serverFd, (struct sockaddr *)&this->address, (socklen_t*)&this->addrlen)) == -1) {

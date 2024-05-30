@@ -8,6 +8,7 @@ int main(int argc, char **argv)
 	{
 		//parse nginx config file
 		Server.handleConfigFile(argv[1]);
+		Server.getServerName();
 	}
 	else
 	{
