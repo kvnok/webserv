@@ -5,6 +5,19 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <cstring>
+#include <poll.h>
+
+static bool	receiveMessage(int clientSocket, const std::string& clientName)
+{
+	char	buffer[100] = {0};
+	ssize_t bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
+
+	if (bytesReceived <= 0)
+		return true;
+	std::string message(buffer);
+	std::cout << clientName << " says: " << message << std::endl;
+	return (message == "exit");
+}
 
 int main(void)
 {
@@ -19,17 +32,29 @@ int main(void)
 
 	int clientSocket1 = accept(serverSocket, nullptr, nullptr);
 	int clientSocket2 = accept(serverSocket, nullptr, nullptr);
+
+	struct pollfd fds[2];
+	fds[0].fd = clientSocket1;
+	fds[0].events = POLLIN;
+	fds[1].fd = clientSocket2;
+	fds[1].events = POLLIN;
+
 	while (true)
 	{
-		char buffer1[100] = {0};
-		recv(clientSocket1, buffer1, sizeof(buffer1), 0);
-		std::cout << "Client1 says: " << buffer1 << std::endl;
-		char buffer2[100] = {0};
-		recv(clientSocket2, buffer2, sizeof(buffer2), 0);
-		std::cout << "Client2 says: " << buffer2 << std::endl;
-		if (std::strcmp(buffer1, "exit") || std::strcmp(buffer2, "exit"))
-			break ;
+		int pollCount = poll(fds, 2, -1);
+		if (pollCount > 0)
+		{
+			if (fds[0].revents && POLLIN)
+				if (receiveMessage(clientSocket1, "Client1"))
+					break ;
+			if (fds[1].revents && POLLIN)
+				if (receiveMessage(clientSocket2, "Client2"))
+					break ;
+		}
+
 	}
+	close(clientSocket1);
+	close(clientSocket2);
 	close(serverSocket);
 	return 0;
 }

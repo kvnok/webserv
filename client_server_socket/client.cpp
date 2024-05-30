@@ -18,10 +18,11 @@ int	main(void)
 
 	while (true)
 	{
-		char message[100];
+		char message[100] = {0};
 		std::cin.getline(message, 100);
 		send(clientSocket, message, strlen(message), 0);
-		if (std::strcmp(message, "exit"))
+		std::string message2(message);
+		if (message2 == "exit")
 			break ;
 	}
 	close(clientSocket);
