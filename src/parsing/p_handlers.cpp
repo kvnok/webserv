@@ -59,10 +59,16 @@ void s_error_page(vector<string> &s, ServerBlock &block) {
 	if (code < 400 || code > 599)
 		throw invalid_argument("error_page: invalid error code");
 	string error_path = s[2].substr(0, s[2].size() - 1);
-	
-	
-
-	block.set_error_page(error_path);
+	// check if the file exists
+	string path = block.get_root() + error_path;
+	ifstream file(path);
+	if (!file.is_open()) {
+		throw runtime_error("error_page: cant open: " + path);
+	}
+	file.close();
+	if (block.get_error_pages().find(code) != block.get_error_pages().end())
+		throw invalid_argument("error_page: error code already set");
+	block.add_error_page(code, error_path);
 }
 
 // in bytes
