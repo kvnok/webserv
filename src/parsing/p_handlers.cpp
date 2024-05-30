@@ -64,16 +64,34 @@ void s_root(vector<string> &s, ServerBlock &block) {
 	if (block.get_root() != "")
 		throw invalid_argument("root: already set");
 	
+	if (s.size() != 2)
+		throw invalid_argument("root: invalid number of arguments");
+	
 	string str = s[1].substr(0, s[1].size() - 1);
 
+	ifstream file(str);
+	if (!file.is_open()) {
+		throw runtime_error("block: invalid root: " + s[1]);
+	}
+	file.close();
 	block.set_root(str);
 }
 
 void s_index(vector<string> &s, ServerBlock &block) {
 	if (block.get_index() != "")
 		throw invalid_argument("index: already set");
+	if (block.get_root() == "")
+		throw invalid_argument("index: root not set");
+	if (s.size() != 2)
+		throw invalid_argument("index: invalid number of arguments");
 	
 	string str = s[1].substr(0, s[1].size() - 1);
+	string path = block.get_root() + "/" + str;
+	ifstream file(path);
+	if (!file.is_open()) {
+		throw runtime_error("index: cant open: " + path);
+	}
+	file.close();
 
 	block.set_index(str);
 }
@@ -101,10 +119,19 @@ void l_root(vector<string> &s, Location &location) {
 void l_index(vector<string> &s, Location &location) {
 	if (location.get_index() != "")
 		throw invalid_argument("index: already set");
-	
-	string str = s[1].substr(0, s[1].size() - 1);
+	if (location.get_root() == "")
+		throw invalid_argument("index: root not set");
 	if (s.size() != 2)
 		throw invalid_argument("index: invalid number of arguments");
+	
+	string str = s[1].substr(0, s[1].size() - 1);
+	string path = location.get_root() + "/" + str;
+	ifstream file(path);
+	if (!file.is_open()) {
+		throw runtime_error("index: cant open: " + path);
+	}
+	file.close();
+
 	location.set_index(str);
 }
 
