@@ -55,8 +55,14 @@ void s_client_max_body_size(vector<string> &s, ServerBlock &block) {
 	
 	if (s.size() != 2)
 		throw invalid_argument("client_max_body_size: invalid number of arguments");
-	string str = s[1].substr(0, s[1].size() - 1);
 
+	string str = s[1].substr(0, s[1].size() - 1);
+	if (str == "0")
+		throw invalid_argument("client_max_body_size: invalid argument");
+	for (size_t i = 0; i < str.size(); i++) {
+		if (!isdigit(str[i]))
+			throw invalid_argument("client_max_body_size: invalid argument");
+	}
 	block.set_client_max_body_size(str);
 }
 
