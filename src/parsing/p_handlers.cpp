@@ -5,22 +5,39 @@ at the base of server block
 */
 void s_listen(vector<string> &s, ServerBlock &block) {
 	string str = s[1].substr(0, s[1].size() - 1);
-
+	if (s.size() != 2)
+		throw invalid_argument("listen: invalid number of arguments");
+	//check if there is something else than digits, ':', and '.'
+	for (size_t i = 0; i < str.size(); i++) {
+		if (!isdigit(str[i]) && str[i] != ':' && str[i] != '.')
+			throw invalid_argument("listen: invalid argument");
+	}
 	block.set_listen(str);
 }
 
 void s_server_name(vector<string> &s, ServerBlock &block) {
 	string str = s[1].substr(0, s[1].size() - 1);
-
+	if (s.size() != 2)
+		throw invalid_argument("server_name: invalid number of arguments");
+	//check if there is something else than digits and alphabetic characters
+	for (size_t i = 0; i < str.size(); i++) {
+		if (!isalnum(str[i]) && str[i] != '.')
+			throw invalid_argument("server_name: invalid argument");
+	}
 	block.set_server_name(str);
 }
 
+// path is the route on top of the root
+// so if root is ./var and path is /404.html, it will be ./var/404.html
 void s_error_page(vector<string> &s, ServerBlock &block) {
-	string str = s[1].substr(0, s[1].size() - 1);
-
-	block.set_error_page(str);
+	if (s.size() != 3)
+		throw invalid_argument("error_page: invalid number of arguments");
+	string error_code = s[1];
+	string error_path = s[2].substr(0, s[2].size() - 1);
+	block.set_error_page(error_path);
 }
 
+// in bytes
 void s_client_max_body_size(vector<string> &s, ServerBlock &block) {
 	string str = s[1].substr(0, s[1].size() - 1);
 
