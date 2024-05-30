@@ -6,6 +6,9 @@ SRCS := $(shell find ./src -iname "*.cpp")
 OBJS := $(addprefix obj/,$(notdir $(SRCS:.cpp=.o)))
 CHECKFLAGS = valgrind --leak-check=full
 
+# vpath searches all dirs and subdirs for .cpp files
+vpath %.cpp $(sort $(dir $(SRCS)))
+
 all: $(NAME)
 
 check: all
@@ -14,9 +17,9 @@ check: all
 $(NAME): $(OBJS)
 	@$(CC) $(FLAGS) -o $@ $^
 
-obj/%.o: src/%.cpp $(HEADER)
+obj/%.o: %.cpp $(HEADER)
 	@mkdir -p obj
-	@$(CC) -c $(FLAGS) -o $@ $<
+	@$(CC) -c $(FLAGS) -I include -o $@ $<
 
 clean:
 	rm -rf obj
