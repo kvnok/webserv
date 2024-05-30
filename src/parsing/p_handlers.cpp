@@ -75,7 +75,10 @@ void l_root(vector<string> &s, Location &location) {
 
 void l_index(vector<string> &s, Location &location) {
 	string str = s[1].substr(0, s[1].size() - 1);
-
+	if (s.size() != 2)
+		throw invalid_argument("index: invalid number of arguments");
+	if (location.get_index() != "")
+		throw invalid_argument("index: already set");
 	location.set_index(str);
 }
 
@@ -83,6 +86,8 @@ void l_autoindex(vector<string> &s, Location &location) {
 	string str = s[1].substr(0, s[1].size() - 1);
 	if (s.size() != 2)
 		throw invalid_argument("autoindex: invalid number of arguments");
+	if (location.get_is_autoindex_set() == true)
+		throw invalid_argument("autoindex: already set");
 	if (str != "on" && str != "off")
 		throw invalid_argument("autoindex: invalid argument");
 	if (str == "on")
@@ -94,6 +99,8 @@ void l_autoindex(vector<string> &s, Location &location) {
 
 void l_cgi_extension(vector<string> &s, Location &location) {
 	string str = s[1].substr(0, s[1].size() - 1);
+	if (location.get_is_cgi() == true)
+		throw invalid_argument("cgi extension: already set");
 	if (s.size() != 2)
 		throw invalid_argument("cgi extension: invalid number of arguments");
 	if (str[0] == '.') // should just be the extension name
@@ -113,6 +120,8 @@ Code	Description
 void l_redirect(vector<string> &s, Location &location) {
 	if (s.size() != 3)
 		throw invalid_argument("redirect: invalid number of arguments");
+	if (location.get_is_redirect() == true)
+		throw invalid_argument("redirect: already set");
 	string path = s[2].substr(0, s[2].size() - 1);
 	string code = s[1];
 	
