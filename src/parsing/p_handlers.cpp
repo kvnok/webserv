@@ -16,15 +16,22 @@ void s_listen(vector<string> &s, ServerBlock &block) {
 }
 
 void s_server_name(vector<string> &s, ServerBlock &block) {
-	string str = s[1].substr(0, s[1].size() - 1);
-	if (s.size() != 2)
-		throw invalid_argument("server_name: invalid number of arguments");
+	if (block.get_server_name().size() != 0)
+		throw invalid_argument("server_name: already set");
+	// remove the ; from the last server name
+	s[s.size() - 1] = s[s.size() - 1].substr(0, s[s.size() - 1].size() - 1);
 	//check if there is something else than digits and alphabetic characters
-	for (size_t i = 0; i < str.size(); i++) {
-		if (!isalnum(str[i]) && str[i] != '.')
-			throw invalid_argument("server_name: invalid argument");
+	for (size_t i = 1; i < s.size(); i++) {
+		for (size_t j = 0; j < s[i].size(); j++) {
+			if (!isalnum(s[i][j]) && s[i][j] != '.')
+				throw invalid_argument("server_name: invalid argument");
+		}
 	}
-	block.set_server_name(str);
+	vector<string> server_name;
+	for (size_t i = 1; i < s.size(); i++) {
+		server_name.push_back(s[i]);
+	}
+	block.set_server_name(server_name);
 }
 
 // path is the route on top of the root
