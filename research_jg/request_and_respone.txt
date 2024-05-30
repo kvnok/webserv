@@ -1,0 +1,72 @@
+
+subject about this part:
+	- need to have GET, POST, DELETE
+	- a request to a server cannot hang forever
+	- headers can be compared with NGINX, which we can consider HTTP1.1 compliant
+	- HTTP reponse status codes must be accurate
+	- 
+source: https://developer.mozilla.org/en-US/docs/Web/HTTP/
+
+
+HTTP = a protocol for fetching resources, such as a HTML Document.
+a complete document can be reconstructed form different sub-documents.
+	so a different document for layout, for text, for adds, etc.
+these documents can be requested of of different servers.
+	a server for the add, a server for the general webpages, etc.
+
+the client(web server) sends a 'request', the server sends a 'response' as answer
+
+to show one webpage, a client might send multiple request, one first request for the general document,
+and multiple different requests to parse/show the page correctly. (CGI, css, images etc)
+these different requests are combined to show the final version of the requested webpage.
+
+
+steps taken by a client to communicate with a server:
+	- open a TCP connection. (used to send and receive messages).
+	- send an HTTP message.
+	- read response of the server.
+	- close or reuse the connection.
+
+HTTP request and response structure:
+	- start-line 
+		request: *Method* *Path* *Version of protocol*
+		response: *Version of protocol* *status code* *status message*
+	- Optional set of HTTP headers
+	- blank line, to indicate the meta-info has been send
+	- optional body
+
+A request has the following attributes:
+	- Method:
+		* GET, POST, DELETE
+		* what do we need to do with the other possible methods (like HEAD and OPTIONS)
+	- Path:
+		* the path of the resource to fetch.
+		* the path is the URL, without the protocol(http://), the domain(mysite.com) or the port(8080)
+	- Version of the protocol:
+		* Versoin of the HTTP protocol
+		* should this, in our case, always be HTTP/1.1
+	- Headers:
+		* optional
+		* are for additional information for the servers
+		* what are the options, what do we want/need to handle
+	- Body:
+		* optional
+		* what are the options, what do we want/need to handle
+	
+A respons has the following attributes:
+	- Version of the protocol
+		* Versoin of the HTTP protocol
+		* should this, in our case, always be HTTP/1.1
+	- Status codes
+		* a code to indicate if the request was successfull or not
+		* need the correct codes, for every situation
+	- Status message
+		* non-autoritative short description of the status code
+		* see 'list_http_status_codes.txt'
+	- Headers
+		* optional
+		* description of the body
+	- Body
+		* optionally
+		* contains the fetched resource
+
