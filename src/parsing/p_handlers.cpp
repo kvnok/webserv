@@ -89,13 +89,14 @@ void l_autoindex(vector<string> &s, Location &location) {
 		location.set_autoindex(true);
 	else
 		location.set_autoindex(false);
+	location.set_is_autoindex_set(true);
 }
 
 void l_cgi_extension(vector<string> &s, Location &location) {
 	string str = s[1].substr(0, s[1].size() - 1);
 	if (s.size() != 2)
 		throw invalid_argument("cgi extension: invalid number of arguments");
-	if (str[0] != '.')
+	if (str[0] == '.') // should just be the extension name
 		throw invalid_argument("cgi extension: invalid extension");
 	location.set_is_cgi(true);
 	location.set_cgi_extension(str);

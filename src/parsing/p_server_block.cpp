@@ -33,7 +33,7 @@ void check_location_block(Location loc) {
 		}
 	}
 	else if (loc.get_is_redirect() == true) {
-		if (!loc.get_root().empty() || !loc.get_index().empty() || !loc.get_autoindex().empty()) {
+		if (!loc.get_root().empty() || !loc.get_index().empty() || loc.get_is_autoindex_set() == true) {
 			throw logic_error("location illegal directive for redirect");
 		}
 	}
