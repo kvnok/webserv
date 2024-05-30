@@ -34,6 +34,7 @@ bool Location::get_is_cgi() const { return _is_cgi; }
 string Location::get_cgi_extension() const { return _cgi_extension; }
 bool Location::get_is_redirect() const { return _is_redirect; }
 string Location::get_redirect() const { return _redirect; }
+int Location::get_redirect_code() const { return redirect_code; }
 
 void Location::set_path(string path) { _path = path; }
 void Location::set_root(string root) { _root = root; }
@@ -43,6 +44,7 @@ void Location::set_is_cgi(bool is_cgi) { _is_cgi = is_cgi; }
 void Location::set_cgi_extension(string cgi_extension) { _cgi_extension = cgi_extension; }
 void Location::set_is_redirect(bool is_redirect) { _is_redirect = is_redirect; }
 void Location::set_redirect(string redirect) { _redirect = redirect; }
+void Location::set_redirect_code(int code) { redirect_code = code; }
 
 void Location::print_location() {
 	cout << "Path: " << _path << endl

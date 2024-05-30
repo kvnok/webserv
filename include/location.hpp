@@ -11,6 +11,7 @@ class Location {
 		string _cgi_extension;
 		bool _is_redirect;
 		string _redirect;
+		int redirect_code;
 	public:
 		Location();
 		Location(string path, string root, string index, string autoindex, bool is_cgi, string cgi_extension, bool is_redirect, string redirect);
@@ -23,6 +24,7 @@ class Location {
 		string get_cgi_extension() const;
 		bool get_is_redirect() const;
 		string get_redirect() const;
+		int get_redirect_code() const;
 		void set_path(string path);
 		void set_root(string root);
 		void set_index(string index);
@@ -31,6 +33,6 @@ class Location {
 		void set_cgi_extension(string cgi_extension);
 		void set_is_redirect(bool is_redirect);
 		void set_redirect(string redirect);
-
+		void set_redirect_code(int code);
 		void print_location();
 };
