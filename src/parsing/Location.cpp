@@ -1,4 +1,5 @@
 #include "Location.hpp"
+#include "Parser.hpp"
 
 Location::Location()
 {
@@ -53,12 +54,12 @@ void Location::set_redirect(string redirect) { _redirect = redirect; }
 void Location::set_redirect_code(int redirect_code) { _redirect_code = redirect_code; }
 
 void Location::print_location() {
-	cout << "Path: " << _path << endl
-		 << "Root: " << _root << endl
-		 << "Index: " << _index << endl
-		 << "Autoindex: " << _autoindex << endl
-		 << "Is CGI: " << _is_cgi << endl
-		 << "CGI extension: " << _cgi_extension << endl
-		 << "Is redirect: " << _is_redirect << endl
-		 << "Redirect: " << _redirect << endl;
+	cout << "Path: " << (_path.empty() ? is_not_set() : _path) << endl
+		 << "Root: " << (_root.empty() ? is_not_set() : _root) << endl
+		 << "Index: " << (_index.empty() ? is_not_set() : _index) << endl
+		 << "Autoindex: " << (_autoindex ? "true" : "false") << endl
+		 << "Is CGI: " << (_is_cgi ? "true" : "false") << endl
+		 << "CGI extension: " << (_cgi_extension.empty() ? is_not_set() : _cgi_extension) << endl
+		 << "Is redirect: " << (_is_redirect ? "true" : "false") << endl
+		 << "Redirect: " << (_redirect.empty() ? is_not_set() : _redirect) << endl;
 }

@@ -1,4 +1,5 @@
 #include "ServerBlock.hpp"
+#include "Parser.hpp"
 
 ServerBlock::ServerBlock()
 {
@@ -45,21 +46,21 @@ void ServerBlock::set_locations(vector<Location> locations) { _locations = locat
 void ServerBlock::add_location(Location location) { _locations.push_back(location); }
 
 void ServerBlock::print_server_block() {
-	cout << "Listen: " << _listen << endl;
-	cout << "Server name: ";
+	cout << "Listen: " << (_listen.empty() ? is_not_set() : _listen) << endl;
+	cout << "Server name: " << (_server_names.size() == 0 ? is_not_set() : "");
 	for (int i = 0; i < _server_names.size(); i++) {
 		cout << _server_names[i] << " ";
 	}
 	cout << endl;
 
-	cout << "Error pages: " << endl;
+	cout << "Error pages: " << (_error_pages.size() == 0 ? is_not_set() : "") << endl;
 	for (map<int, string>::iterator it = _error_pages.begin(); it != _error_pages.end(); it++) {
 		cout << it->first << " " << it->second << endl;
 	}
 
-	cout << "Client max body size: " << _client_max_body_size << endl;
-	cout << "Root: " << _root << endl;
-	cout << "Index: " << _index << endl;
+	cout << "Client max body size: " << (_client_max_body_size.empty() ? is_not_set() : _client_max_body_size) << endl;
+	cout << "Root: " << (_root.empty() ? is_not_set() : _root) << endl;
+	cout << "Index: " << (_index.empty() ? is_not_set() : _index) << endl;
 	for (int i = 0; i < _locations.size(); i++) {
 		cout << BLU << "Location " << i << ":" << RESET << endl;
 		_locations[i].print_location();

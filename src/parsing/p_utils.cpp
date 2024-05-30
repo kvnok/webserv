@@ -64,3 +64,7 @@ void print_i_raw_serv(RAWSERV &server) {
 		cout << endl;
 	}
 }
+
+string is_not_set() {
+	return string(RED) + "not set" + string(RESET);
+}

@@ -33,6 +33,7 @@ bool is_match(char c, const T& arg, const Args&... args) {
 	return is_match(c, args...);
 }
 
+string is_not_set();
 void trim_start(string &line);
 void get_words(string &line, vector<string> &words);
 void raw_extract(ifstream& file, RAWCONF &raw_config);
