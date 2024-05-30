@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
 	"files.associations": {
 		"string": "cpp",
@@ -52,4 +53,8 @@
 		"fstream": "cpp",
 		"sstream": "cpp"
 	}
+=======
+{
+	"C_Cpp.errorSquiggles": "disabled"
+>>>>>>> main
 }
