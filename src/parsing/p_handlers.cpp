@@ -66,8 +66,12 @@ void s_error_page(vector<string> &s, ServerBlock &block) {
 		throw runtime_error("error_page: cant open: " + path);
 	}
 	file.close();
-	if (block.get_error_pages().find(code) != block.get_error_pages().end())
-		throw invalid_argument("error_page: error code already set");
+	if (block.get_error_pages().find(code) != block.get_error_pages().end()
+		&& block.get_error_pages()[code] != error_path
+		&& block.get_error_pages()[code] != "")
+	{
+		throw invalid_argument("error_page: error code already set: " + error_code);
+	}
 	block.add_error_page(code, error_path);
 }
 
