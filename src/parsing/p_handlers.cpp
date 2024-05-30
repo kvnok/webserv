@@ -59,16 +59,9 @@ void s_index(vector<string> &s, ServerBlock &block) {
 /*
 location route of server block
 */
-// path is the route of the location
-void l_path(vector<string> &s, Location &location) {
-	string str = s[1].substr(0, s[1].size() - 1);
-
-	location.set_path(str);
-}
-
 void l_root(vector<string> &s, Location &location) {
 	if (s.size() != 2)
-		throw invalid_argument("location: invalid number of arguments");
+		throw invalid_argument("root: invalid number of arguments");
 	
 	string str = s[1].substr(0, s[1].size() - 1);
 
@@ -88,13 +81,22 @@ void l_index(vector<string> &s, Location &location) {
 
 void l_autoindex(vector<string> &s, Location &location) {
 	string str = s[1].substr(0, s[1].size() - 1);
-
-	location.set_autoindex(str);
+	if (s.size() != 2)
+		throw invalid_argument("autoindex: invalid number of arguments");
+	if (str != "on" && str != "off")
+		throw invalid_argument("autoindex: invalid argument");
+	if (str == "on")
+		location.set_autoindex(true);
+	else
+		location.set_autoindex(false);
 }
 
 void l_cgi_extension(vector<string> &s, Location &location) {
 	string str = s[1].substr(0, s[1].size() - 1);
-
+	if (s.size() != 2)
+		throw invalid_argument("cgi extension: invalid number of arguments");
+	if (str[0] != '.')
+		throw invalid_argument("cgi extension: invalid extension");
 	location.set_is_cgi(true);
 	location.set_cgi_extension(str);
 }

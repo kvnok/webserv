@@ -55,7 +55,6 @@ void s_client_max_body_size(vector<string> &s, ServerBlock &block);
 void s_root(vector<string> &s, ServerBlock &block);
 void s_index(vector<string> &s, ServerBlock &block);
 
-void l_path(vector<string> &s, Location &location);
 void l_root(vector<string> &s, Location &location);
 void l_index(vector<string> &s, Location &location);
 void l_autoindex(vector<string> &s, Location &location);

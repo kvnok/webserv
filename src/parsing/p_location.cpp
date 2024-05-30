@@ -25,6 +25,8 @@ void parse_location(RAWSERV &s, Location &location, int &i)
 			throw logic_error("location path already used");
 		}
 	}
+	if (s[i][1][0] != '/')
+		throw logic_error("location path must start with /");
 	location.set_path(s[i][1]);
 	i++;
 
