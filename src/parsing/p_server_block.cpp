@@ -1,12 +1,12 @@
 #include "parser.hpp"
 
-std::set<std::string> s_directives = {"server_name", "listen", "root", "error_page", "client_max_body_size", "index", "location"};
+set<string> s_directives = {"server_name", "listen", "root", "error_page", "client_max_body_size", "index", "location"};
 
-bool is_valid_server_block_directive(const std::string& directive) {
+bool is_valid_server_block_directive(const string& directive) {
 	return s_directives.count(directive) > 0;
 }
 
-std::map<std::string, std::function<void(vector<string> &, ServerBlock&)>> s_directive_funcs = {
+map<string, function<void(vector<string> &, ServerBlock&)>> s_directive_funcs = {
 	{"server_name", s_server_name},
 	{"listen", s_listen},
 	{"root", s_root},
@@ -15,14 +15,63 @@ std::map<std::string, std::function<void(vector<string> &, ServerBlock&)>> s_dir
 	{"index", s_index}
 };
 
+void check_location_block(Location loc) {
+	if (loc.get_path().empty())
+		throw logic_error("location missing path");
+	
+	if (loc.get_is_cgi() == false && loc.get_is_redirect() == false) {
+		if (loc.get_root().empty()) {
+			throw logic_error("location missing mandatory part");
+		}
+	}
+	else if (loc.get_is_cgi() == true && loc.get_is_redirect() == true) {
+		throw logic_error("location directive is not allowed for both cgi and redirect");
+	}
+	else if (loc.get_is_cgi() == true) {
+		if (loc.get_root().empty()) {
+			throw logic_error("location missing mandatory part");
+		}
+	}
+	else if (loc.get_is_redirect() == true) {
+		if (!loc.get_root().empty() || !loc.get_index().empty() || !loc.get_autoindex().empty()) {
+			throw logic_error("location illegal directive for redirect");
+		}
+	}
+}
+
+void check_manadatory_directives(ServerBlock &block) {
+	if (block.get_listen().empty())
+		throw logic_error("listen directive is mandatory");
+	if (block.get_root().empty())
+		throw logic_error("root directive is mandatory");
+	if (block.get_index().empty())
+		throw logic_error("index directive is mandatory");
+	
+	// and check the locations
+	for (auto& location : block.get_locations()) {
+		check_location_block(location);
+		// for redirect, check if the return path is valid for going to another location
+		if (location.get_is_redirect() == true) {
+			bool found = false;
+			for (auto& loc : block.get_locations()) {
+				if (loc.get_path() == location.get_redirect()) {
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+				throw logic_error("redirect path not found: " + location.get_redirect());
+		}
+	}
+}
+
 void parse_server_block(RAWSERV &s, ServerBlock &block) {
 	if (s.size() == 0)
 		throw logic_error("empty server block");
 	if (s[0].size() != 2 || s[0][0] != "server" || s[0][1] != "{")
 		throw logic_error("first block is not a server block");
 
-	for (int i = 1; s.size(); i++)
-	{
+	for (int i = 1; s.size(); i++) {
 		// basic error checking
 		if (s[i][0] == "}" && s[i].size() == 1)
 			break;
@@ -33,8 +82,7 @@ void parse_server_block(RAWSERV &s, ServerBlock &block) {
 		if (!is_valid_server_block_directive(s[i][0]))
 			throw logic_error("unknown directive : " + s[i][0]);
 		// if its location, then handle it separately
-		if (s[i][0] == "location")
-		{
+		if (s[i][0] == "location") {
 			Location location;
 			parse_location(s, location, i);
 			block.add_location(location);
@@ -43,6 +91,7 @@ void parse_server_block(RAWSERV &s, ServerBlock &block) {
 		// call the handler
 		s_directive_funcs[s[i][0]](s[i], block);
 	}
+	check_manadatory_directives(block);
 }
 /*
 check if the mandatory directives are present in the server block

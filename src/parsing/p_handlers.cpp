@@ -4,59 +4,82 @@
 at the base of server block
 */
 void s_listen(vector<string> &s, ServerBlock &block) {
-	block.set_listen(s[1]);
+	string str = s[1].substr(0, s[1].size() - 1);
+
+	block.set_listen(str);
 }
 
 void s_server_name(vector<string> &s, ServerBlock &block) {
-	block.set_server_name(s[1]);
+	string str = s[1].substr(0, s[1].size() - 1);
+
+	block.set_server_name(str);
 }
 
 void s_error_page(vector<string> &s, ServerBlock &block) {
-	block.set_error_page(s[1]);
+	string str = s[1].substr(0, s[1].size() - 1);
+
+	block.set_error_page(str);
 }
 
 void s_client_max_body_size(vector<string> &s, ServerBlock &block) {
-	block.set_client_max_body_size(s[1]);
+	string str = s[1].substr(0, s[1].size() - 1);
+
+	block.set_client_max_body_size(str);
 }
 
 void s_root(vector<string> &s, ServerBlock &block) {
-	block.set_root(s[1]);
+	string str = s[1].substr(0, s[1].size() - 1);
+
+	block.set_root(str);
 }
 
 void s_index(vector<string> &s, ServerBlock &block) {
-	block.set_index(s[1]);
+	string str = s[1].substr(0, s[1].size() - 1);
+
+	block.set_index(str);
 }
 
 /*
 location route of server block
 */
+// path is the route of the location
 void l_path(vector<string> &s, Location &location) {
-	if (s.size() != 3)
-		throw std::invalid_argument("location: invalid number of arguments");
-	
-	std::ifstream file(s[1]);
-	if (!file.is_open()) {
-		throw std::runtime_error("location: invalid path: " + s[1]);
-	}
-	file.close();
-	location.set_path(s[1]);
+	string str = s[1].substr(0, s[1].size() - 1);
+
+	location.set_path(str);
 }
 
 void l_root(vector<string> &s, Location &location) {
-	location.set_root(s[1]);
+	if (s.size() != 2)
+		throw invalid_argument("location: invalid number of arguments");
+	
+	string str = s[1].substr(0, s[1].size() - 1);
+
+	ifstream file(str);
+	if (!file.is_open()) {
+		throw runtime_error("location: invalid root: " + s[1]);
+	}
+	file.close();
+	location.set_root(str);
 }
 
 void l_index(vector<string> &s, Location &location) {
-	location.set_index(s[1]);
+	string str = s[1].substr(0, s[1].size() - 1);
+
+	location.set_index(str);
 }
 
 void l_autoindex(vector<string> &s, Location &location) {
-	location.set_autoindex(s[1]);
+	string str = s[1].substr(0, s[1].size() - 1);
+
+	location.set_autoindex(str);
 }
 
 void l_cgi_extension(vector<string> &s, Location &location) {
+	string str = s[1].substr(0, s[1].size() - 1);
+
 	location.set_is_cgi(true);
-	location.set_cgi_extension(s[1]);
+	location.set_cgi_extension(str);
 }
 
 /*
@@ -69,20 +92,14 @@ Code	Description
 */
 void l_redirect(vector<string> &s, Location &location) {
 	if (s.size() != 3)
-		throw std::invalid_argument("redirect: invalid number of arguments");
-	string path = s[2];
+		throw invalid_argument("redirect: invalid number of arguments");
+	string path = s[2].substr(0, s[2].size() - 1);
 	string code = s[1];
 	
 	if (code != "301" && code != "302" && code != "303" && code != "307" && code != "308")
-		throw std::invalid_argument("redirect: invalid code");
+		throw invalid_argument("redirect: invalid code");
 	if (path[0] != '/')
-		throw std::invalid_argument("redirect: invalid path");
-	
-	std::ifstream file(path);
-	if (!file.is_open()) {
-		throw std::runtime_error("redirect: invalid path: " + path);
-	}
-	file.close();
+		throw invalid_argument("redirect: invalid path");
 
 	if (code == "301")
 		location.set_redirect_code(301);

@@ -1,12 +1,12 @@
 #include "parser.hpp"
 
-std::set<std::string> l_directives = {"root", "index", "autoindex", "cgi_extension", "return"};
+set<string> l_directives = {"root", "index", "autoindex", "cgi_extension", "return"};
 
-bool is_valid_location_directive(const std::string& directive) {
+bool is_valid_location_directive(const string& directive) {
 	return l_directives.count(directive) > 0;
 }
 
-std::map<std::string, std::function<void(vector<string> &, Location&)>> l_directive_funcs = {
+map<string, function<void(vector<string> &, Location&)>> l_directive_funcs = {
 	{"root", l_root},
 	{"index", l_index},
 	{"autoindex", l_autoindex},
