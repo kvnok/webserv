@@ -1,9 +1,9 @@
 #pragma once
 
 #include "stuff.hpp"
-#include "location.hpp"
-#include "serverBlock.hpp"
-#include "config.hpp"
+#include "Location.hpp"
+#include "ServerBlock.hpp"
+#include "Config.hpp"
 
 using namespace std;
 

@@ -1,4 +1,4 @@
-#include "parser.hpp"
+#include "Parser.hpp"
 
 set<string> l_directives = {"root", "index", "autoindex", "cgi_extension", "return"};
 

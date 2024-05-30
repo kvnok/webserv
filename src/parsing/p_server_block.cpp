@@ -1,4 +1,4 @@
-#include "parser.hpp"
+#include "Parser.hpp"
 
 set<string> s_directives = {"server_name", "listen", "root", "error_page", "client_max_body_size", "index", "location"};
 
