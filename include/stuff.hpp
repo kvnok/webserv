@@ -1,7 +1,5 @@
 #pragma once
 
-using namespace std;
-
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -25,6 +23,8 @@ using namespace std;
 #include <stack>
 #include <queue>
 #include <deque>
+
+using namespace std;
 
 // ANSI escape codes for text color
 #define RED "\033[1;31m"
