@@ -19,7 +19,7 @@ void s_listen(vector<string> &s, ServerBlock &block) {
 }
 
 void s_server_name(vector<string> &s, ServerBlock &block) {
-	if (block.get_server_name().size() != 0)
+	if (block.get_server_names().size() != 0)
 		throw invalid_argument("server_name: already set");
 	
 	// remove the ; from the last server name
@@ -31,11 +31,11 @@ void s_server_name(vector<string> &s, ServerBlock &block) {
 				throw invalid_argument("server_name: invalid argument");
 		}
 	}
-	vector<string> server_name;
+	vector<string> server_names;
 	for (size_t i = 1; i < s.size(); i++) {
-		server_name.push_back(s[i]);
+		server_names.push_back(s[i]);
 	}
-	block.set_server_name(server_name);
+	block.set_server_names(server_names);
 }
 
 // path is the route on top of the root
@@ -44,7 +44,24 @@ void s_error_page(vector<string> &s, ServerBlock &block) {
 	if (s.size() != 3)
 		throw invalid_argument("error_page: invalid number of arguments");
 	string error_code = s[1];
+	if (error_code.size() != 3)
+		throw invalid_argument("error_page: invalid error code");
+	for (size_t i = 0; i < error_code.size(); i++) {
+		if (!isdigit(error_code[i]))
+			throw invalid_argument("error_page: invalid error code");
+	}
+	int code;
+	try {
+		code = stoi(error_code);
+	} catch (const invalid_argument &e) {
+		throw invalid_argument("error_page: invalid error code");
+	}
+	if (code < 400 || code > 599)
+		throw invalid_argument("error_page: invalid error code");
 	string error_path = s[2].substr(0, s[2].size() - 1);
+	
+	
+
 	block.set_error_page(error_path);
 }
 
