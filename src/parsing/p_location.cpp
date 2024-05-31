@@ -1,6 +1,6 @@
 #include "Parser.hpp"
 
-set<string> l_directives = {"root", "index", "autoindex", "cgi_extension", "return"};
+set<string> l_directives = {"root", "index", "autoindex", "cgi_extension", "return", "deny"};
 
 bool is_valid_location_directive(const string& directive) {
 	return l_directives.count(directive) > 0;
@@ -11,7 +11,8 @@ map<string, function<void(vector<string> &, Location&)>> l_directive_funcs = {
 	{"index", l_index},
 	{"autoindex", l_autoindex},
 	{"cgi_extension", l_cgi_extension},
-	{"return", l_redirect}
+	{"return", l_redirect},
+	{"deny", l_deny}
 };
 
 void parse_location(RAWSERV &s, Location &location, int &i)

@@ -24,16 +24,16 @@ void check_location_block(Location loc) {
 			throw logic_error("location missing mandatory part");
 		}
 	}
-	else if (loc.get_is_cgi() == true && loc.get_is_redirect() == true) {
+	else if (loc.get_is_cgi() && loc.get_is_redirect()) {
 		throw logic_error("location directive is not allowed for both cgi and redirect");
 	}
-	else if (loc.get_is_cgi() == true) {
+	else if (loc.get_is_cgi()) {
 		if (loc.get_root().empty()) {
 			throw logic_error("location missing mandatory part");
 		}
 	}
-	else if (loc.get_is_redirect() == true) {
-		if (!loc.get_root().empty() || !loc.get_index().empty() || loc.get_is_autoindex_set() == true) {
+	else if (loc.get_is_redirect()) {
+		if (!loc.get_root().empty() || !loc.get_index().empty() || loc.get_is_autoindex_set() || loc.get_has_deny()) {
 			throw logic_error("location illegal directive for redirect");
 		}
 	}

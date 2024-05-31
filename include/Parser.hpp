@@ -61,3 +61,4 @@ void l_index(vector<string> &s, Location &location);
 void l_autoindex(vector<string> &s, Location &location);
 void l_cgi_extension(vector<string> &s, Location &location);
 void l_redirect(vector<string> &s, Location &location);
+void l_deny(vector<string> &s, Location &location);
