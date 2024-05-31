@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "stuff.hpp"
 
 Server::Server( void )
 {
@@ -74,7 +75,41 @@ void Server::setSocket()
 
 void Server::parseRequestPath(string request)
 {
+    printf("%s\n", request.c_str());
+    if (request.empty())
+    {
+        this->path = this->_root + "/" + this->_index;
+        return ;
+    }
+    int find = request.find("/");
+    find++;
+    if (find)
+    {
+        for (int i = find; i < request.size(); i++)
+        {
+            if (request[i] == ' ')
+            {
+                if (i == find)
+                {
+                    this->path = this->_root + "/" + this->_index;
+                    return ;
+                }
+            }
+            else
+            {
+                int e = i;
+                printf("request[i]: %c\n", request[i]);
+                while(request[e] != ' ' && e < request.size())
+                    e++;
+                printf("i: %d, e: %d\n", i, e);
+                this->_index = request.substr(i, e-i);
+                break;
+            }
+        }
+    }
+    printf("index: %s\n", this->_index.c_str());
     this->path = this->_root + "/" + this->_index;
+    printf("Path: %s\n", this->path.c_str());
 }
 
 void Server::serveHtml(Server& server)
@@ -85,14 +120,18 @@ void Server::serveHtml(Server& server)
         std::cerr << "Failed to open file: " << this->path << std::endl;
         return;
     }
+    cout << "Serving file: " << this->path << endl;
     std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-
+    string contentType;
+    if (this->path.find(".html") != std::string::npos)
+        contentType = "text/html";
+    else if (this->path.find(".css") != std::string::npos)
+        contentType = "text/css";
     std::string response = "HTTP/1.1 200 OK\r\n"
-                       "Content-Type: text/html\r\n"
-                       "Connection: close\r\n"
-                       "Content-Length: " + std::to_string(content.size()) + "\r\n\r\n"
+                       "Content-Type: " + contentType + "\r\n"
+                       "Connection: keep-alive\r\n"
+                       "Content-Length: " + to_string(content.size()) + "\r\n\r\n"
                        + content;
-
     server.response = response;
 }
 
@@ -101,6 +140,7 @@ int Server::connect( void )
     // create path to file
 
     char buffer[BUFFER_SIZE] = {0};
+    cout << GREEN << "Listening at Port: " << this->_port << RESET << endl;
     while(true)
     {
         this->newSocket = accept(this->serverFd, (struct sockaddr *)&this->address, (socklen_t*)&this->addrlen);
@@ -122,10 +162,11 @@ int Server::connect( void )
         {
             this->request = buffer;
             this->parseRequestPath(this->request);
-            printf("Request path: %s\n", this->path.c_str());
+            // printf("Request path: %s\n", this->path.c_str());
             this->serveHtml(*this);
             send(this->newSocket, response.c_str(), response.size(), 0);
         }
+        close(this->newSocket);
     }
     return (0);
 }

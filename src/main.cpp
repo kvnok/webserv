@@ -10,7 +10,7 @@
 void setServers(Config &config) {
 	vector<Server> Servers;
 	vector<ServerBlock> blocks = config.get_server_blocks();
-	vector<std::thread> threads; // only for testing purposises
+	// vector<std::thread> threads; // only for testing purposises
 
     for (int i = 0; i < blocks.size(); i++)
     {
@@ -19,11 +19,12 @@ void setServers(Config &config) {
 	for(int i = 0; i < Servers.size(); i++)
 	{
 		Servers[i].setSocket();
-		threads.push_back(std::thread(&Server::connect, &Servers[i]));
+		// threads.push_back(std::thread(&Server::connect, &Servers[i]));
 	}
-	for(auto &th : threads){
-        th.join();
-    }
+	// for(auto &th : threads){
+    //     th.join();
+    // }
+	Servers[0].connect();
 }
 
 int main(int argc, char **argv) {
