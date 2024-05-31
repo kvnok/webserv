@@ -235,3 +235,26 @@ void l_redirect(vector<string> &s, Location &location) {
 	location.set_redirect(path);
 }
 
+void l_deny(vector<string> &s, Location &location) {
+	if (location.get_has_deny() == true)
+		throw invalid_argument("deny: already set");
+	if (s.size() > 4)
+		throw invalid_argument("deny: invalid number of arguments");
+	
+	// remove the ; from the last method
+	s[s.size() - 1] = s[s.size() - 1].substr(0, s[s.size() - 1].size() - 1);
+	//check for invalid arguments
+	for (size_t i = 1; i < s.size(); i++) {
+		if (s[i] != "GET" && s[i] != "POST" && s[i] != "DELETE")
+			throw invalid_argument("deny: invalid argument: " + s[i]);
+	}
+	//check for duplicates
+	set<string> methods;
+	for (size_t i = 1; i < s.size(); i++) {
+		if (methods.count(s[i]) > 0)
+			throw invalid_argument("deny: duplicate method: " + s[i]);
+		methods.insert(s[i]);
+		location.add_deny(s[i]);
+	}
+	location.set_has_deny(true);
+}

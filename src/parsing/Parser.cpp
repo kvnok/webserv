@@ -4,6 +4,20 @@ Parser::Parser(string config_file) : _config_file(config_file) {}
 
 Parser::~Parser() {}
 
+void check_outside(RAWCONF &a) {
+	for (int i = 0; i < a.size(); i++) {
+		if (a[i].size() != 2 || a[i][0] != "server" || a[i][1] != "{")
+			throw logic_error("outside block: " + a[i][0]);
+		
+		while(a[i][0] != "}") {
+			if (a[i][0] == "location") {
+				while(a[i][0] != "}") i++;
+			}
+			i++;
+		}
+	}
+}
+
 void Parser::parse(Config &config) {
 	ifstream file(_config_file.c_str());
 	if (!file.is_open())
@@ -15,6 +29,7 @@ void Parser::parse(Config &config) {
 		throw logic_error("empty file");
 	if (raw_config[0].size() != 2 || raw_config[0][0] != "server" || raw_config[0][1] != "{")
 		throw logic_error("first block is not a server block");
+	check_outside(raw_config);
 	// print_raw_config(raw_config);
 
 	RAWSERVS raw_servers;

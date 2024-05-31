@@ -13,6 +13,8 @@ class Location {
 		bool _is_redirect;
 		string _redirect;
 		int _redirect_code;
+		bool _has_deny;
+		vector<string> _deny;
 	public:
 		Location();
 		Location(string path,
@@ -24,8 +26,11 @@ class Location {
 			string cgi_extension,
 			bool is_redirect,
 			string redirect,
-			int redirect_code);
+			int redirect_code,
+			bool has_deny,
+			vector<string> deny);
 		~Location();
+
 		string get_path() const;
 		string get_root() const;
 		string get_index() const;
@@ -36,7 +41,9 @@ class Location {
 		bool get_is_redirect() const;
 		string get_redirect() const;
 		int get_redirect_code() const;
-		
+		bool get_has_deny() const;
+		vector<string> get_deny() const;
+
 		void set_path(string path);
 		void set_root(string root);
 		void set_index(string index);
@@ -47,5 +54,8 @@ class Location {
 		void set_is_redirect(bool is_redirect);
 		void set_redirect(string redirect);
 		void set_redirect_code(int redirect_code);
+		void set_has_deny(bool has_deny);
+		void set_deny(vector<string> deny);
+		void add_deny(string deny);
 		void print_location();
 };
