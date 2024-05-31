@@ -9,7 +9,13 @@ ServerBlock::ServerBlock()
 	_index = "";
 }
 
-ServerBlock::ServerBlock(string listen, map<int, string> error_pages, vector<string> server_names, string client_max_body_size, string root, string index, vector<Location> locations)
+ServerBlock::ServerBlock(string listen,
+	string root,
+	string index,
+	string client_max_body_size,
+	vector<string> server_names,
+	map<int, string> error_pages,
+	vector<Location> locations)
 {
 	_listen = listen;
 	_error_pages = error_pages;
@@ -23,26 +29,22 @@ ServerBlock::ServerBlock(string listen, map<int, string> error_pages, vector<str
 ServerBlock::~ServerBlock() {}
 
 string ServerBlock::get_listen() const { return _listen; }
-vector<string> ServerBlock::get_server_names() const { return _server_names; }
-string ServerBlock::get_client_max_body_size() const { return _client_max_body_size; }
 string ServerBlock::get_root() const { return _root; }
 string ServerBlock::get_index() const { return _index; }
+string ServerBlock::get_client_max_body_size() const { return _client_max_body_size; }
+vector<string> ServerBlock::get_server_names() const { return _server_names; }
 vector<Location> ServerBlock::get_locations() const { return _locations; }
 map<int, string> ServerBlock::get_error_pages() const { return _error_pages; }
 
 void ServerBlock::set_listen(string listen) { _listen = listen; }
-void ServerBlock::set_server_names(vector<string> server_name) { _server_names = server_name; }
-void ServerBlock::add_server_name(string server_name) { _server_names.push_back(server_name); }
-
-void ServerBlock::add_error_page(int code, string page) { _error_pages[code] = page; }
-void ServerBlock::set_error_pages(map<int, string> error_pages) { _error_pages = error_pages; }
-
-
-void ServerBlock::set_client_max_body_size(string client_max_body_size) { _client_max_body_size = client_max_body_size; }
 void ServerBlock::set_root(string root) { _root = root; }
 void ServerBlock::set_index(string index) { _index = index; }
+void ServerBlock::set_client_max_body_size(string client_max_body_size) { _client_max_body_size = client_max_body_size; }
+void ServerBlock::set_server_names(vector<string> server_name) { _server_names = server_name; }
+void ServerBlock::add_server_name(string server_name) { _server_names.push_back(server_name); }
+void ServerBlock::add_error_page(int code, string page) { _error_pages[code] = page; }
+void ServerBlock::set_error_pages(map<int, string> error_pages) { _error_pages = error_pages; }
 void ServerBlock::set_locations(vector<Location> locations) { _locations = locations; }
-
 void ServerBlock::add_location(Location location) { _locations.push_back(location); }
 
 void ServerBlock::print_server_block() {

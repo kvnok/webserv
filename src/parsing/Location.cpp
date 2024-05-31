@@ -15,7 +15,16 @@ Location::Location()
 	_redirect_code = 0;
 }
 
-Location::Location(string path, string root, string index, bool autoindex, bool is_autoindex_set, bool is_cgi, string cgi_extension, bool is_redirect, string redirect, int redirect_code)
+Location::Location(string path,
+			string root,
+			string index,
+			bool autoindex,
+			bool is_autoindex_set,
+			bool is_cgi,
+			string cgi_extension,
+			bool is_redirect,
+			string redirect,
+			int redirect_code)
 {
 	_path = path;
 	_root = root;

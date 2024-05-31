@@ -13,7 +13,13 @@ class ServerBlock {
 		vector<Location> _locations;
 	public:
 		ServerBlock();
-		ServerBlock(string listen, map<int, string> error_pages, vector<string> server_names, string client_max_body_size, string root, string index, vector<Location> locations);
+		ServerBlock(string listen,
+			string root,
+			string index,
+			string client_max_body_size,
+			vector<string> server_names,
+			map<int, string> error_pages,
+			vector<Location> locations);
 		~ServerBlock();
 		string get_listen() const;
 		vector<string> get_server_names() const;

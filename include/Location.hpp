@@ -15,7 +15,16 @@ class Location {
 		int _redirect_code;
 	public:
 		Location();
-		Location(string path, string root, string index, bool autoindex, bool is_autoindex_set, bool is_cgi, string cgi_extension, bool is_redirect, string redirect, int redirect_code);
+		Location(string path,
+			string root,
+			string index,
+			bool autoindex,
+			bool is_autoindex_set,
+			bool is_cgi,
+			string cgi_extension,
+			bool is_redirect,
+			string redirect,
+			int redirect_code);
 		~Location();
 		string get_path() const;
 		string get_root() const;
