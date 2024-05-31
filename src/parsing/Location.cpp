@@ -74,12 +74,18 @@ void Location::add_deny(string deny) { _deny.push_back(deny); }
 
 
 void Location::print_location() {
-	cout << "Path: " << (_path.empty() ? is_not_set() : _path) << endl
-		 << "Root: " << (_root.empty() ? is_not_set() : _root) << endl
-		 << "Index: " << (_index.empty() ? is_not_set() : _index) << endl
-		 << "Autoindex: " << (_autoindex ? "true" : "false") << endl
-		 << "Is CGI: " << (_is_cgi ? "true" : "false") << endl
-		 << "CGI extension: " << (_cgi_extension.empty() ? is_not_set() : _cgi_extension) << endl
-		 << "Is redirect: " << (_is_redirect ? "true" : "false") << endl
-		 << "Redirect: " << (_redirect.empty() ? is_not_set() : _redirect) << endl;
+	cout << "Path: " << (_path.empty() ? is_not_set() : _path) << endl;
+	cout << "Root: " << (_root.empty() ? is_not_set() : _root) << endl;
+	cout << "Index: " << (_index.empty() ? is_not_set() : _index) << endl;
+	cout << "Autoindex: " << (_autoindex ? "true" : "false") << endl;
+	cout << "Is CGI: " << (_is_cgi ? "true" : "false") << endl;
+	cout << "CGI extension: " << (_cgi_extension.empty() ? is_not_set() : _cgi_extension) << endl;
+	cout << "Is redirect: " << (_is_redirect ? "true" : "false") << endl;
+	cout << "Redirect: " << (_redirect.empty() ? is_not_set() : _redirect) << endl;
+	cout << "has deny: " << (_has_deny ? "true" : "false") << endl;
+	cout << "Deny: " << (_deny.size() == 0 ? is_not_set() : "");
+	for (int i = 0; i < _deny.size(); i++) {
+		cout << _deny[i] << " ";
+	}
+	cout << endl;
 }
