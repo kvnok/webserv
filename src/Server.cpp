@@ -22,7 +22,7 @@ Server::Server(ServerBlock& blocks)
 {
     
     this->_port = stoi(blocks.get_listen());
-    this->_server_name = blocks.get_server_name();
+    this->_server_name = blocks.get_server_names()[0];
     try // just for now then change when kevin fixes parsing
     {
         this->_client_max_body_size = stoi(blocks.get_client_max_body_size());
@@ -32,7 +32,7 @@ Server::Server(ServerBlock& blocks)
         this->_client_max_body_size = 10;
     }
 	this->_index = blocks.get_index();
-	this->_error_page = blocks.get_error_page();
+	// this->_error_page = blocks.get_error_page();
 	this->_root = blocks.get_root();
 	this->_locations = blocks.get_locations();
 }

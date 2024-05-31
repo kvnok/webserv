@@ -15,7 +15,7 @@
 #include <arpa/inet.h>
 #include <vector>
 #include <poll.h>
-#include "config.hpp"
+#include "Config.hpp"
 
 using namespace std;
 
