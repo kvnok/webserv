@@ -3,18 +3,20 @@
 Server::Server( void )
 {
     this->_port = 0;
-    this->_server_name = "";
+    if (!this->_server_names.empty())
+        this->_server_names[0] = "";
     this->_client_max_body_size = 0;
     this->_index = "";
-    this->_error_page = "";
+    this->_error_pages[404] = "";
     this->_root = "";
 }
 
+
+vector<string> Server::getServerName(){return this->_server_names;};
 int Server::getPort(){return this->_port;};
-string Server::getServerName(){return this->_server_name;};
 int Server::getMaxBody(){return this->_client_max_body_size;};
 string Server::getIndex(){return this->_index;};
-string Server::getErrorPage(){return this->_error_page;};
+map<int, string> Server::getErrorPages(){return this->_error_pages;};
 string Server::getRoot(){return this->_root;};
 int Server::getFd(){return this->serverFd;};
 
@@ -22,8 +24,8 @@ Server::Server(ServerBlock& blocks)
 {
     
     this->_port = stoi(blocks.get_listen());
-    this->_server_name = blocks.get_server_names()[0];
-    try // just for now then change when kevin fixes parsing
+    this->_server_names = blocks.get_server_names();
+    try
     {
         this->_client_max_body_size = stoi(blocks.get_client_max_body_size());
     }
@@ -32,7 +34,7 @@ Server::Server(ServerBlock& blocks)
         this->_client_max_body_size = 10;
     }
 	this->_index = blocks.get_index();
-	// this->_error_page = blocks.get_error_page();
+    auto error_pages = blocks.get_error_pages();
 	this->_root = blocks.get_root();
 	this->_locations = blocks.get_locations();
 }
@@ -72,43 +74,35 @@ void Server::setSocket()
 
 void Server::parseRequestPath(string request)
 {
-    istringstream iss(request);
-    string request_line;
-    getline(iss, request_line);
-    istringstream iss_line(request_line);
-    string method , path, protocol;
-    iss_line >> method >> path >> protocol;
-    this->path = path;
+    this->path = this->_root + "/" + this->_index;
 }
 
 void Server::serveHtml(Server& server)
 {
-        // Get the path to the requested file
-    std::string filePath = "www/index.html";
-
-    // Open the file
-    std::ifstream file(filePath);
-
-    // Check if the file was opened successfully
+    std::ifstream file(this->path);
     if (!file)
     {
-        std::cerr << "Failed to open file: " << filePath << std::endl;
+        std::cerr << "Failed to open file: " << this->path << std::endl;
         return;
     }
-
-    // Read the file into a string
     std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 
-    // Prepare the HTTP response
-    server.response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + content;
+    std::string response = "HTTP/1.1 200 OK\r\n"
+                       "Content-Type: text/html\r\n"
+                       "Connection: close\r\n"
+                       "Content-Length: " + std::to_string(content.size()) + "\r\n\r\n"
+                       + content;
+
+    server.response = response;
 }
 
 int Server::connect( void )
 {
+    // create path to file
+
     char buffer[BUFFER_SIZE] = {0};
     while(true)
     {
-        printf("new socket: %d\n", this->serverFd);
         this->newSocket = accept(this->serverFd, (struct sockaddr *)&this->address, (socklen_t*)&this->addrlen);
         if (this->newSocket == -1)
         {
@@ -127,13 +121,9 @@ int Server::connect( void )
         else
         {
             this->request = buffer;
-            printf("Request: %s\n", this->request.c_str());
             this->parseRequestPath(this->request);
+            printf("Request path: %s\n", this->path.c_str());
             this->serveHtml(*this);
-            string response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
-            response += "<html><body><h1>Hello, World!</h1></body></html>";
-
-            // Send the response
             send(this->newSocket, response.c_str(), response.size(), 0);
         }
     }

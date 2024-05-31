@@ -5,28 +5,25 @@
 #include "Parser.hpp"
 #include "Server.hpp"
 
+#include <thread>
+
 void setServers(Config &config) {
 	vector<Server> Servers;
 	vector<ServerBlock> blocks = config.get_server_blocks();
+	vector<std::thread> threads; // only for testing purposises
+
     for (int i = 0; i < blocks.size(); i++)
     {
 		Servers.push_back(blocks[i]);
 	}
-	// for (int i = 0; i < Servers.size(); i++)
-	// {
-	// 	cout << "Server " << i << " port: " << Servers[i].getPort() << endl;
-	// 	cout << "Server " << i << " serveName: " << Servers[i].getServerName() << endl;
-	// 	cout << "Server " << i << " getMaxBody(): " << Servers[i].getMaxBody() << endl;
-	// 	cout << "Server " << i << " getIndex(): " << Servers[i].getIndex() << endl;
-	// 	cout << "Server " << i << " getErrorPage(): " << Servers[i].getErrorPage() << endl;
-	// 	cout << "Server " << i << " getRoot(): " << Servers[i].getRoot() << endl;
-	// }
 	for(int i = 0; i < Servers.size(); i++)
 	{
 		Servers[i].setSocket();
-		// printf("Server %d port: %d, fd: %d\n", i, Servers[i].getPort(), Servers[i].getFd());
+		threads.push_back(std::thread(&Server::connect, &Servers[i]));
 	}
-	Servers[0].connect();
+	for(auto &th : threads){
+        th.join();
+    }
 }
 
 int main(int argc, char **argv) {

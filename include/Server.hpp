@@ -1,13 +1,6 @@
 #pragma once
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
 #include <cstring>
-#include <cstdlib>
-#include <cstdio>
-#include <unistd.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -29,10 +22,10 @@ class Server
 {
 	private:
 		int _port;
-		string _server_name;
+		vector<string> _server_names;
 		int _client_max_body_size;
 		string _index;
-		string _error_page;
+		map<int, string> _error_pages;
 		string _root;
 		vector<Location> _locations;
 
@@ -52,10 +45,10 @@ class Server
 		void setPort(int port);
 		// -------- Getters -------- //
 		int getPort();
-		string getServerName();
+		vector<string> getServerName();
 		int getMaxBody();
 		string getIndex();
-		string getErrorPage();
+		map<int, string> getErrorPages();
 		string getRoot();
 		int getFd();
 		// ------------------------- //
