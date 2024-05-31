@@ -93,9 +93,3 @@ void parse_server_block(RAWSERV &s, ServerBlock &block) {
 	}
 	check_manadatory_directives(block);
 }
-/*
-check if the mandatory directives are present in the server block
-*/
-/*
-s[i][1] = s[i][1].substr(0, s[i][1].find(";"));
-*/

@@ -44,9 +44,3 @@ void parse_location(RAWSERV &s, Location &location, int &i)
 		l_directive_funcs[s[i][0]](s[i], location);
 	}
 }
-/*
-check if the mandatory directives are present in the location block
-*/
-/*
-s[i][1] = s[i][1].substr(0, s[i][1].find(";"));
-*/
