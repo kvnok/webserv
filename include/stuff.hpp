@@ -4,13 +4,6 @@
 #include <sstream>
 #include <fstream>
 #include <string>
-<<<<<<< HEAD
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <cstring>
-=======
 #include <algorithm>
 #include <stdexcept>
 #include <exception>
@@ -42,4 +35,3 @@ using namespace std;
 #define CYN "\033[1;36m"
 #define WHT "\033[1;37m"
 #define RESET "\033[0m"
->>>>>>> main
