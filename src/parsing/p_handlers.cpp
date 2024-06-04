@@ -2,14 +2,15 @@
 
 /*
 at the base of server block
+xxx.xxx.xxx.xxx:port
 */
 void s_listen(vector<string> &s, ServerBlock &block) {
 	if (block.get_listen() != "")
 		throw invalid_argument("listen: already set");
-	
-	string str = s[1].substr(0, s[1].size() - 1);
 	if (s.size() != 2)
 		throw invalid_argument("listen: invalid number of arguments");
+	
+	string str = s[1].substr(0, s[1].size() - 1);
 	//check if there is something else than digits, ':', and '.'
 	for (size_t i = 0; i < str.size(); i++) {
 		if (!isdigit(str[i]) && str[i] != ':' && str[i] != '.')
@@ -21,6 +22,8 @@ void s_listen(vector<string> &s, ServerBlock &block) {
 void s_server_name(vector<string> &s, ServerBlock &block) {
 	if (block.get_server_names().size() != 0)
 		throw invalid_argument("server_name: already set");
+	if (s.size() < 2)
+		throw invalid_argument("server_name: invalid number of arguments");
 	
 	// remove the ; from the last server name
 	s[s.size() - 1] = s[s.size() - 1].substr(0, s[s.size() - 1].size() - 1);
