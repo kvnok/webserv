@@ -5,28 +5,6 @@
 #include "Parser.hpp"
 #include "Server.hpp"
 
-#include <thread>
-
-void setServers(Config &config) {
-	vector<Server> Servers;
-	vector<ServerBlock> blocks = config.get_server_blocks();
-	// vector<std::thread> threads; // only for testing purposises
-
-    for (int i = 0; i < blocks.size(); i++)
-    {
-		Servers.push_back(blocks[i]);
-	}
-	for(int i = 0; i < Servers.size(); i++)
-	{
-		Servers[i].setSocket();
-		// threads.push_back(std::thread(&Server::connect, &Servers[i]));
-	}
-	// for(auto &th : threads){
-    //     th.join();
-    // }
-	Servers[0].connect();
-}
-
 int main(int argc, char **argv) {
 	try
 	{
@@ -39,7 +17,12 @@ int main(int argc, char **argv) {
 		Parser parser(config_file);
 		Config config;
 		parser.parse(config);
-		setServers(config);
+		vector<Server> Servers;
+		for(int i = 0; i < config.get_server_blocks().size(); i++)
+		{
+			Server server(config.get_server_blocks()[i]);
+			Servers.push_back(server);
+		}
 	} catch (exception &e) {
 		cerr << RED << "Exception: " << e.what() << RESET << endl;
 	}

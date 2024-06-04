@@ -9,16 +9,13 @@
 #include <vector>
 #include <poll.h>
 #include <unistd.h>
-
 #include "Config.hpp"
 
 using namespace std;
 
 #define MAX_CLIENTS 10
 #define BUFFER_SIZE 1024
-// #define RED     "\033[31m"
 #define GREEN   "\033[32m"
-// #define RESET   "\033[0m"
 
 class Server
 {
@@ -30,16 +27,11 @@ class Server
 		map<int, string> _error_pages;
 		string _root;
 		vector<Location> _locations;
-
 		int serverFd;
-		vector<pollfd> pollFds;
 		struct sockaddr_in address;
 		int opt;
 		int addrlen;
 		int newSocket;
-		string path;
-		string request;
-		string response;
 	public:
 		Server( void );
 		Server(ServerBlock& blocks);
@@ -55,7 +47,5 @@ class Server
 		int getFd();
 		// ------------------------- //
 		void setSocket();
-		int  connect( void );
-		void serveHtml(Server& server);
-		void parseRequestPath(string request);
 };
+
