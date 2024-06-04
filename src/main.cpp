@@ -4,6 +4,7 @@
 #include "Config.hpp"
 #include "Parser.hpp"
 #include "Server.hpp"
+#include "Connection.hpp"
 
 int main(int argc, char **argv) {
 	try
@@ -23,6 +24,8 @@ int main(int argc, char **argv) {
 			Server server(config.get_server_blocks()[i]);
 			Servers.push_back(server);
 		}
+		Connection connection(Servers);
+		connection.start();	
 	} catch (exception &e) {
 		cerr << RED << "Exception: " << e.what() << RESET << endl;
 	}

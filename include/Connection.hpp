@@ -5,9 +5,13 @@
 class Connection
 {
 	private:
-		/* data */
+		vector<Server> server;
+		vector<pollfd> fds;
 	public:
 		Connection(/* args */);
+		Connection( vector<Server> &server);
+		void start();
+		void setFds();
 		~Connection();
 };
 
