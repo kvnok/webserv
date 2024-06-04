@@ -1,4 +1,4 @@
-#include "parser.hpp"
+#include "Parser.hpp"
 
 void raw_extract(ifstream& file, RAWCONF &raw_config) {
 	string line;

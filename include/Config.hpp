@@ -1,6 +1,6 @@
 #pragma once
 #include "stuff.hpp"
-#include "serverBlock.hpp"
+#include "ServerBlock.hpp"
 
 class Config {
 	private:
