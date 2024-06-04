@@ -44,7 +44,17 @@ void Parser::parse(Config &config) {
 	for (int i = 0; i < raw_servers.size(); i++) {
 		ServerBlock server_block;
 		parse_server_block(raw_servers[i], server_block);
-		config.add_server_block(server_block);
+		// check for duplicate host:port
+		int flag = 0;
+		for (int j = 0; j < config.get_server_blocks().size(); j++) {
+			if (server_block.get_listen() == config.get_server_blocks()[j].get_listen()) {
+				flag = 1;
+				break;
+			}
+		}
+		if (flag == 0) {
+			config.add_server_block(server_block);
+		}
 	}
 	config.print_server_blocks();
 }
