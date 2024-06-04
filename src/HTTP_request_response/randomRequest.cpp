@@ -17,13 +17,13 @@ static std::string getRandomHttpVersion() {
 
 static std::map<std::string, std::string> getRandomHeaders() {
     std::map<std::string, std::string> headers;
-    const std::vector<std::string> headerNames = {"Host", "User-Agent", "Accept", "Content-Type", "Content-Length"};
-    const std::vector<std::string> headerValues = {"example.com", "test-agent", "*/*", "application/json", "15"};
-    int numHeaders = rand() % 5 + 1;
+    const std::vector<std::string> headerNames = {"Host", "User-Agent", "Accept", "Content-Type", "Content-Length", "TEST"};
+    const std::vector<std::string> headerValues = {"example.com", "test-agent", "*/*", "application/json", "15", "a ;b c d"};
+    int numHeaders = rand() % 6 + 1;
     for (int i = 0; i < numHeaders; ++i) {
         headers[headerNames[i]] = headerValues[i];
     }
-    numHeaders = rand() % 5 + 1;
+    numHeaders = rand() % 6 + 1;
     for (int i = 0; i < numHeaders; ++i) {
         headers[headerNames[i]] = headerValues[i];
     }

@@ -6,19 +6,43 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 09:56:01 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/04 10:38:03 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/06/04 15:08:19 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "httpParse.hpp"
 
-static bool validateRequest(Request& request) {
-	if (request.getMethod() == "POST" && request.getBody().empty()) {
-		std::cerr << "A body is needed when the method is 'POST'";
+static bool	parseHeaderLine(std::string line, Request& request)
+{
+	std::string	headerLine[2];
+	
+	size_t	splitPos = line.find(':');
+	if (line.back() != '\r' || line.length() <= splitPos + 2) {
+		std::cerr << "invalid header";
+		return (false);
+	}
+	headerLine[0] = line.substr(0, splitPos);
+	headerLine[1] = line.substr(splitPos + 2, line.length() - (splitPos + 2));
+	if (!headerLine[0].empty() && !headerLine[1].empty())
+		request.setHeader(headerLine[0], headerLine[1]);
+	else {
+		std::cerr << "invalid header";
 		return (false);
 	}
 	return (true);
 }
+
+static bool validatePath(std::string path) {
+	struct stat info;
+	
+	if (stat(path.c_str(), &info) != 0)
+	{
+		std::cerr << "invalid path\t";
+		return (false);
+	}
+	return (true);
+}
+
 
 static bool	parseRequestLine(std::string line, Request& request) {
 	std::string	requestLine[4];
@@ -43,13 +67,8 @@ static bool	parseRequestLine(std::string line, Request& request) {
 		std::cerr << "invalid version\t";
 		return (false);
 	}
-	const std::string path = request.getPath();
-	struct stat info;
-	if (stat(path.c_str(), &info) != 0)
-	{
-		std::cerr << "invalid path\t";
+	if (!validatePath(request.getPath()))
 		return (false);
-	}
 	return (true);
 }
 
@@ -68,16 +87,8 @@ static bool	readRequest(std::string const& requestData, Request& request) {
 		return (false);
 	}
 	while (std::getline(requestStream, line) && line != "\r") {
-		std::string	headerLine[3];
-		std::istringstream lineStream(line);
-		lineStream >> headerLine[0] >> headerLine[1] >> headerLine[2];
-		if (!headerLine[0].empty() && !headerLine[1].empty() \
-			&& headerLine[2].empty() && headerLine[0].back() == ':') {
-			headerLine[0].pop_back();
-			request.setHeader(headerLine[0], headerLine[1]);
-		}
-		else {
-			std::cerr << "invalid header";
+		if (!parseHeaderLine(line, request)) {
+			std::cerr << "header error";
 			return (false);
 		}
 	}
@@ -93,8 +104,10 @@ static bool	readRequest(std::string const& requestData, Request& request) {
 			return (false);
 		}
 	}
-	if (!validateRequest(request))
+	if (request.getMethod() == "POST" && request.getBody().empty()) {
+		std::cerr << "A body is needed when the method is 'POST'";
 		return (false);
+	}
 	return (true);
 }
 
