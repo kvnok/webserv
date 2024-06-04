@@ -14,7 +14,6 @@
 using namespace std;
 
 #define MAX_CLIENTS 10
-#define BUFFER_SIZE 1024
 #define GREEN   "\033[32m"
 
 class Server
@@ -22,7 +21,7 @@ class Server
 	private:
 		int _port;
 		vector<string> _server_names;
-		int _client_max_body_size;
+		string _client_max_body_size;
 		string _index;
 		map<int, string> _error_pages;
 		string _root;
@@ -32,6 +31,7 @@ class Server
 		int opt;
 		int addrlen;
 		int newSocket;
+		int max_clients;
 	public:
 		Server( void );
 		Server(ServerBlock& blocks);
@@ -40,11 +40,12 @@ class Server
 		// -------- Getters -------- //
 		int getPort();
 		vector<string> getServerName();
-		int getMaxBody();
+		string getMaxBody();
 		string getIndex();
 		map<int, string> getErrorPages();
 		string getRoot();
 		int getFd();
+		int getMaxClients();
 		// ------------------------- //
 		void setSocket();
 };
