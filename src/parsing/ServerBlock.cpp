@@ -4,12 +4,16 @@
 ServerBlock::ServerBlock()
 {
 	_listen = "";
+	_host = "";
+	_port = 0;
 	_client_max_body_size = "";
 	_root = "";
 	_index = "";
 }
 
 ServerBlock::ServerBlock(string listen,
+	string host,
+	int port,
 	string root,
 	string index,
 	string client_max_body_size,
@@ -18,6 +22,8 @@ ServerBlock::ServerBlock(string listen,
 	vector<Location> locations)
 {
 	_listen = listen;
+	_host = host;
+	_port = port;
 	_error_pages = error_pages;
 	_server_names = server_names;
 	_client_max_body_size = client_max_body_size;
@@ -29,6 +35,8 @@ ServerBlock::ServerBlock(string listen,
 ServerBlock::~ServerBlock() {}
 
 string ServerBlock::get_listen() const { return _listen; }
+string ServerBlock::get_host() const { return _host; }
+int ServerBlock::get_port() const { return _port; }
 string ServerBlock::get_root() const { return _root; }
 string ServerBlock::get_index() const { return _index; }
 string ServerBlock::get_client_max_body_size() const { return _client_max_body_size; }
@@ -37,6 +45,8 @@ vector<Location> ServerBlock::get_locations() const { return _locations; }
 map<int, string> ServerBlock::get_error_pages() const { return _error_pages; }
 
 void ServerBlock::set_listen(string listen) { _listen = listen; }
+void ServerBlock::set_host(string host) { _host = host; }
+void ServerBlock::set_port(int port) { _port = port; }
 void ServerBlock::set_root(string root) { _root = root; }
 void ServerBlock::set_index(string index) { _index = index; }
 void ServerBlock::set_client_max_body_size(string client_max_body_size) { _client_max_body_size = client_max_body_size; }
@@ -49,6 +59,8 @@ void ServerBlock::add_location(Location location) { _locations.push_back(locatio
 
 void ServerBlock::print_server_block() {
 	cout << "Listen: " << (_listen.empty() ? is_not_set() : _listen) << endl;
+	cout << "Host: " << _host << endl;
+	cout << "Port: " << _port << endl;
 	cout << "Server name: " << (_server_names.size() == 0 ? is_not_set() : "");
 	for (int i = 0; i < _server_names.size(); i++) {
 		cout << _server_names[i] << " ";

@@ -5,6 +5,8 @@
 class ServerBlock {
 	private:
 		string _listen;
+		string _host;
+		int _port;
 		map<int, string> _error_pages;
 		vector<string> _server_names;
 		string _client_max_body_size;
@@ -14,6 +16,8 @@ class ServerBlock {
 	public:
 		ServerBlock();
 		ServerBlock(string listen,
+			string host,
+			int port,
 			string root,
 			string index,
 			string client_max_body_size,
@@ -22,6 +26,8 @@ class ServerBlock {
 			vector<Location> locations);
 		~ServerBlock();
 		string get_listen() const;
+		string get_host() const;
+		int get_port() const;
 		vector<string> get_server_names() const;
 		string get_client_max_body_size() const;
 		string get_root() const;
@@ -30,6 +36,8 @@ class ServerBlock {
 		map<int, string> get_error_pages() const;
 
 		void set_listen(string listen);
+		void set_host(string host);
+		void set_port(int port);
 		void set_server_names(vector<string> server_names);
 		void add_server_name(string server_name);
 		void add_error_page(int code, string page);

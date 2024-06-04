@@ -61,6 +61,8 @@ void s_listen(vector<string> &s, ServerBlock &block) {
 	// free the address info
 	freeaddrinfo(res);
 
+	block.set_host(listen[0]);
+	block.set_port(port);
 	block.set_listen(str);
 }
 
