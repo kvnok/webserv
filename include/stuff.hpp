@@ -23,6 +23,18 @@
 #include <stack>
 #include <queue>
 #include <deque>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <sys/time.h>
+#include <sys/select.h>
+#include <cstring>
 
 using namespace std;
 

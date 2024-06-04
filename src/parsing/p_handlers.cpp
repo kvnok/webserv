@@ -1,5 +1,15 @@
 #include "Parser.hpp"
 
+vector<string> split(const string &s, char delimiter) {
+	vector<string> tokens;
+	string token;
+	istringstream tokenStream(s);
+	while (getline(tokenStream, token, delimiter)) {
+		tokens.push_back(token);
+	}
+	return tokens;
+}
+
 /*
 at the base of server block
 xxx.xxx.xxx.xxx:port
@@ -16,6 +26,41 @@ void s_listen(vector<string> &s, ServerBlock &block) {
 		if (!isdigit(str[i]) && str[i] != ':' && str[i] != '.')
 			throw invalid_argument("listen: invalid argument");
 	}
+	vector<string> listen = split(str, ':');
+	if (listen.size() != 2)
+		throw invalid_argument("listen: invalid argument");
+	for (size_t i = 0; i < listen[1].size(); i++) {
+		if (!isdigit(listen[1][i]))
+			throw invalid_argument("listen: invalid argument");
+	}
+
+	vector<string> ip = split(listen[0], '.');
+	if (ip.size() != 4)
+		throw invalid_argument("listen: invalid argument");
+	for (size_t i = 0; i < ip.size(); i++) {
+		if (stoi(ip[i]) < 0 || stoi(ip[i]) > 255)
+			throw invalid_argument("listen: invalid argument");
+	}
+
+	int port = stoi(listen[1]);
+	if (port < 0 || port > 65535)
+		throw invalid_argument("listen: invalid port");
+	
+	// check if the host is reachable
+	struct addrinfo hints, *res;
+	// make sure the struct is empty
+	memset(&hints, 0, sizeof hints);
+	// set the struct
+	// AF_INET for IPv4
+	hints.ai_family = AF_INET;
+	// SOCK_STREAM for TCP
+	hints.ai_socktype = SOCK_STREAM;
+	// get the address info
+	if (getaddrinfo(listen[0].c_str(), listen[1].c_str(), &hints, &res) != 0)
+		throw runtime_error("listen: cant connect to: " + str);
+	// free the address info
+	freeaddrinfo(res);
+
 	block.set_listen(str);
 }
 
