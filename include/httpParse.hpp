@@ -1,33 +1,21 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        ::::::::            */
-/*   request.hpp                                        :+:    :+:            */
+/*   httpParse.hpp                                      :+:    :+:            */
 /*                                                     +:+                    */
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
-/*   Created: 2024/06/01 17:54:54 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/02 08:34:14 by jvorstma      ########   odam.nl         */
+/*   Created: 2024/06/03 10:12:17 by jvorstma      #+#    #+#                 */
+/*   Updated: 2024/06/04 08:49:10 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
+#include "httpRequest.hpp"
 #include <iostream>
-#include <string>
-#include <vector>
-#include "header.hpp"
-#include "body.hpp"
+#include <sstream>
+#include <set>
+#include <sys/stat.h>
 
-class Request {
-	private:
-		std::string	_method;
-		std::string	_path;
-		std::string	_version;
-		std::vector<Header>	_header;
-		std::vector<Body> _body;
-	public:
-		Request();
-		~Request();
-		void	addBody(Body body);
-		void	addHeader(Header header);
-};
+int		parseMainTest();

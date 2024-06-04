@@ -50,7 +50,7 @@ A request has the following attributes:
 			* the asterisk form, used with OPTIONS
 	- Version of the protocol:
 		* Versoin of the HTTP protocol
-		* should this, in our case, always be HTTP/1.1
+		* should this, in our case, always be HTTP/1.1?
 	- Headers:
 		* optional
 		* are for additional information for the servers
