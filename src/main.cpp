@@ -24,8 +24,7 @@ int main(int argc, char **argv) {
 			Server server(config.get_server_blocks()[i]);
 			Servers.push_back(server);
 		}
-		Connection connection(Servers);
-		connection.start();	
+		Connection connection(Servers);	
 	} catch (exception &e) {
 		cerr << RED << "Exception: " << e.what() << RESET << endl;
 	}

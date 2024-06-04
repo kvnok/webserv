@@ -22,12 +22,10 @@ void Connection::setFds()
 		fd.events = POLLIN;
 		this->fds.push_back(fd);
 	}
-	cout << "fds size: " << this->fds.size() << endl;
 }
 
 void Connection::start()
 {
-	cout << "start" << endl;
 }
 
 Connection::~Connection( void )
