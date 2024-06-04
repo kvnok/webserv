@@ -10,6 +10,7 @@
 #include <poll.h>
 #include <unistd.h>
 #include "Config.hpp"
+#include "stuff.hpp"
 
 using namespace std;
 
@@ -20,6 +21,8 @@ class Server
 {
 	private:
 		int _port;
+		string _listen;
+		string _host;
 		vector<string> _server_names;
 		string _client_max_body_size;
 		string _index;
@@ -38,6 +41,8 @@ class Server
 		~Server( void );
 		void setPort(int port);
 		// -------- Getters -------- //
+		string getHost();
+		string getListen();
 		int getPort();
 		vector<string> getServerName();
 		string getMaxBody();

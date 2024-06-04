@@ -1,9 +1,10 @@
 #include "Server.hpp"
-#include "stuff.hpp"
 
 Server::Server( void )
 {
     this->_port = 0;
+    this->_listen = "";
+	this->_host = "";
     if (!this->_server_names.empty())
         this->_server_names[0] = "";
     this->_client_max_body_size = "";
@@ -16,6 +17,8 @@ Server::Server( void )
 
 vector<string> Server::getServerName(){return this->_server_names;};
 int Server::getPort(){return this->_port;};
+string Server::getHost(){return this->_host;};
+string Server::getListen(){return this->_listen;};
 string Server::getMaxBody(){return this->_client_max_body_size;};
 string Server::getIndex(){return this->_index;};
 map<int, string> Server::getErrorPages(){return this->_error_pages;};
@@ -25,7 +28,8 @@ int Server::getMaxClients(){return this->max_clients;};
 
 Server::Server(ServerBlock& blocks)
 {
-    
+    this->_listen = blocks.get_listen();
+    this->_host = blocks.get_host();
     this->_port = stoi(blocks.get_listen());
     this->_server_names = blocks.get_server_names();
     this->_client_max_body_size = blocks.get_client_max_body_size();
@@ -44,7 +48,7 @@ void Server::setSocket()
     this->address.sin_addr.s_addr = INADDR_ANY;
     this->address.sin_port = htons(this->_port);
 
-	if ((this->serverFd = socket(AF_INET, SOCK_MaxBody()STREAM, 0)) == -1)
+	if ((this->serverFd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 	{
 		perror("socket failed");
 		exit(EXIT_FAILURE);
