@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 09:56:01 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/04 09:12:41 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/06/04 10:38:03 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,31 +98,27 @@ static bool	readRequest(std::string const& requestData, Request& request) {
 	return (true);
 }
 
-int	parseMainTest() {
-	std::string SampleRequest =
-		"POST ./var/www/index.html HTTP/1.1\r\n"
-		"Host: example.com\r\n"
-		"Content-Type: app/x-www-form-urlencoded\r\n"
-		"Content-Length: 27\r\n"
-		"\r\n"
-		"field1=value1&field2=value2";
-	
-	Request request;
-	std::cout << "------REQUEST------\n";
-	if (readRequest(SampleRequest, request)) {
-		std::cout << "request line:\n";
-		std::cout << "method: " << request.getMethod() << "\n";
-		std::cout << "path: " << request.getPath() << " \n";
-		std::cout << "version" << request.getVersion() << "\n\n";
-		std::map<std::string, std::string> buf = request.getHeader();
-		std::cout << "header:\n";
-		for (auto& pair : buf)
-			std::cout << pair.first << ": " << pair.second << "\n";
-		std::cout << "\nbody:\n";
-		std::cout << request.getBody() << "\n";
-		std::cout << std::endl;
+int		parseMainTest() {
+	for (int i = 0; i < 2; i++){
+		std::string SampleRequest = generateRandomHttpRequest();
+
+		Request request;
+		std::cout << "------REQUEST------\n";
+		if (readRequest(SampleRequest, request)) {
+			std::cout << "request line:\n";
+			std::cout << "method: " << request.getMethod() << "\n";
+			std::cout << "path: " << request.getPath() << " \n";
+			std::cout << "version" << request.getVersion() << "\n\n";
+			std::map<std::string, std::string> buf = request.getHeader();
+			std::cout << "header:\n";
+			for (auto& pair : buf)
+				std::cout << pair.first << ": " << pair.second << "\n";
+			std::cout << "\nbody:\n";
+			std::cout << request.getBody() << "\n";
+			std::cout << std::endl;
+		}
+		else
+			std::cerr << std::endl;
 	}
-	else
-		std::cerr << std::endl;
 	return (0);
 }
