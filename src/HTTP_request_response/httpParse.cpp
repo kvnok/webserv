@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 09:56:01 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/04 15:08:19 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/06/05 13:14:37 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,11 +32,31 @@ static bool	parseHeaderLine(std::string line, Request& request)
 	return (true);
 }
 
-static bool validatePath(std::string path) {
-	struct stat info;
+
+static bool	validateMethod(std::string const method) {
+	if (httpMethods.find(method) != httpMethods.end()) {
+		std::cerr << "invalid method\t";
+		return (false);
+	}
+	if (validHttpMethods.find(method) != validHttpMethods.end()) {
+		std::cerr << "We dont handle this method\t";
+		return (false);
+	}
+	return (true);
+}
+
+static bool validateVersion(std::string const version) {
+	if (version != "HTTP/1.1") {
+		std::cerr << "invalid version\t";
+		return (false);
+	}
+	return (true);
+}
+
+static bool validatePath(std::string const path) {
+	std::filesystem::path fsPath(path);
 	
-	if (stat(path.c_str(), &info) != 0)
-	{
+	if (!std::filesystem::exists(fsPath) || !std::filesystem::is_regular_file(fsPath)) {
 		std::cerr << "invalid path\t";
 		return (false);
 	}
@@ -54,22 +74,11 @@ static bool	parseRequestLine(std::string line, Request& request) {
 		request.setMethod(requestLine[0]);
 		request.setPath(requestLine[1]);
 		request.setVersion(requestLine[2]);
+		if (validateMethod(request.getMethod()) || validateVersion(request.getVersion()) \
+			|| validatePath(request.getPath()))
+			return (true);
 	}
-	else
-		return (false);
-
-	const std::set<std::string> validMethods = {"GET", "POST", "DELETE"};
-	if (validMethods.find(request.getMethod()) == validMethods.end()) {
-		std::cerr << "invalid method\t";
-		return (false);
-	}
-	if (request.getVersion() != "HTTP/1.1") {
-		std::cerr << "invalid version\t";
-		return (false);
-	}
-	if (!validatePath(request.getPath()))
-		return (false);
-	return (true);
+	return (false);
 }
 
 static bool	readRequest(std::string const& requestData, Request& request) {
