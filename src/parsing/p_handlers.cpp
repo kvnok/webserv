@@ -1,15 +1,5 @@
 #include "Parser.hpp"
 
-vector<string> split(const string &s, char delimiter) {
-	vector<string> tokens;
-	string token;
-	istringstream tokenStream(s);
-	while (getline(tokenStream, token, delimiter)) {
-		tokens.push_back(token);
-	}
-	return tokens;
-}
-
 /*
 at the base of server block
 xxx.xxx.xxx.xxx:port
@@ -77,7 +67,7 @@ void s_server_name(vector<string> &s, ServerBlock &block) {
 	//check if there is something else than digits and alphabetic characters
 	for (size_t i = 1; i < s.size(); i++) {
 		for (size_t j = 0; j < s[i].size(); j++) {
-			if (!isalnum(s[i][j]) && s[i][j] != '.')
+			if (!isalnum(s[i][j]) && s[i][j] != '.' && s[i][j] != '-' && s[i][j] != '_')
 				throw invalid_argument("server_name: invalid argument");
 		}
 	}

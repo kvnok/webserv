@@ -68,3 +68,13 @@ void print_i_raw_serv(RAWSERV &server) {
 string is_not_set() {
 	return string(RED) + "not set" + string(RESET);
 }
+
+vector<string> split(const string &s, char delimiter) {
+	vector<string> tokens;
+	string token;
+	istringstream tokenStream(s);
+	while (getline(tokenStream, token, delimiter)) {
+		tokens.push_back(token);
+	}
+	return tokens;
+}

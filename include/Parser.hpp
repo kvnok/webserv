@@ -44,6 +44,7 @@ void extract_raw_servers(RAWCONF &raw_config, RAWSERVS &servers);
 void print_raw_servers(RAWSERVS &servers);
 void print_i_raw_serv(RAWSERV &server);
 void check_brackets(RAWSERV &raw_server);
+vector<string> split(const string &s, char delimiter);
 
 void parse_server_block(RAWSERV &s, ServerBlock &block);
 void parse_location(RAWSERV &s, Location &location, int &i);
