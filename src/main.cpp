@@ -3,6 +3,9 @@
 #include "ServerBlock.hpp"
 #include "Config.hpp"
 #include "Parser.hpp"
+#include "Server.hpp"
+#include "Connection.hpp"
+#include "httpParse.hpp"
 
 int main(int argc, char **argv) {
 	try
@@ -16,19 +19,17 @@ int main(int argc, char **argv) {
 		Parser parser(config_file);
 		Config config;
 		parser.parse(config);
+		vector<Server> Servers;
+		for(int i = 0; i < config.get_server_blocks().size(); i++)
+		{
+			Server server(config.get_server_blocks()[i]);
+			Servers.push_back(server);
+		}
+		Connection connection(Servers);	
 	} catch (exception &e) {
 		cerr << RED << "Exception: " << e.what() << RESET << endl;
 	}
+	parseMainTest();
 	return 0;
 }
 
-/*
-make
-./webserv
-./webserv configs/config.conf
-./webserv configs/test.conf
-./webserv configs/random.conf
-
-./run.sh random
-./run.sh simplem
-*/
