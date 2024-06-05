@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 09:56:01 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/05 13:26:03 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/06/05 15:05:13 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,11 +34,11 @@ static bool	parseHeaderLine(std::string line, Request& request)
 
 
 static bool	validateMethod(std::string const method) {
-	if (httpMethods.find(method) != httpMethods.end()) {
+	if (httpMethods.find(method) == httpMethods.end()) {
 		std::cerr << "invalid method\t";
 		return (false);
 	}
-	if (validHttpMethods.find(method) != validHttpMethods.end()) {
+	if (validHttpMethods.find(method) == validHttpMethods.end()) {
 		std::cerr << "We dont handle this method\t";
 		return (false);
 	}
@@ -53,17 +53,6 @@ static bool validateVersion(std::string const version) {
 	return (true);
 }
 
-static bool validatePath(std::string const path) {
-		
-	if (path == "*") {
-		std::cerr << "this option is only used for the method OPTION, which we dont allow\t";
-		return (false);
-	}
-	
-	return (true);
-}
-
-
 static bool	parseRequestLine(std::string line, Request& request) {
 	std::string	requestLine[4];
 	std::istringstream lineStream(line);
@@ -74,8 +63,7 @@ static bool	parseRequestLine(std::string line, Request& request) {
 		request.setMethod(requestLine[0]);
 		request.setPath(requestLine[1]);
 		request.setVersion(requestLine[2]);
-		if (validateMethod(request.getMethod()) || validateVersion(request.getVersion()) \
-			|| validatePath(request.getPath()))
+		if (validateMethod(request.getMethod()) && validateVersion(request.getVersion()))
 			return (true);
 	}
 	return (false);
@@ -113,6 +101,12 @@ static bool	readRequest(std::string const& requestData, Request& request) {
 			return (false);
 		}
 	}
+	else {
+		std::stringstream bodyStream;
+		while (std::getline(requestStream, line))
+			bodyStream << line << '\n';
+		request.setBody(bodyStream.str());
+	}
 	if (request.getMethod() == "POST" && request.getBody().empty()) {
 		std::cerr << "A body is needed when the method is 'POST'";
 		return (false);
@@ -121,26 +115,23 @@ static bool	readRequest(std::string const& requestData, Request& request) {
 }
 
 int		parseMainTest() {
-	for (int i = 0; i < 2; i++){
-		std::string SampleRequest = generateRandomHttpRequest();
-
-		Request request;
-		std::cout << "------REQUEST------\n";
-		if (readRequest(SampleRequest, request)) {
-			std::cout << "request line:\n";
-			std::cout << "method: " << request.getMethod() << "\n";
-			std::cout << "path: " << request.getPath() << " \n";
-			std::cout << "version" << request.getVersion() << "\n\n";
-			std::map<std::string, std::string> buf = request.getHeader();
-			std::cout << "header:\n";
-			for (auto& pair : buf)
-				std::cout << pair.first << ": " << pair.second << "\n";
-			std::cout << "\nbody:\n";
-			std::cout << request.getBody() << "\n";
-			std::cout << std::endl;
-		}
-		else
-			std::cerr << std::endl;
+	std::string SampleRequest = "GET /home HTTP/1.1\r\nHeader1: Value1\r\nHeader2: Value2\r\n\r\nBody text \nbla\nbla\nbla\nbla";
+	Request request;
+	std::cout << "------REQUEST------\n";
+	if (readRequest(SampleRequest, request)) {
+		std::cout << "request line:\n";
+		std::cout << "method: " << request.getMethod() << "\n";
+		std::cout << "path: " << request.getPath() << " \n";
+		std::cout << "version: " << request.getVersion() << "\n\n";
+		std::map<std::string, std::string> buf = request.getHeader();
+		std::cout << "headers:\n";
+		for (auto& pair : buf)
+			std::cout << pair.first << ": " << pair.second << "\n";
+		std::cout << "\nbody:\n";
+		std::cout << request.getBody() << "\n";
+		std::cout << std::endl;
 	}
+	else
+		std::cerr << std::endl;
 	return (0);
 }
