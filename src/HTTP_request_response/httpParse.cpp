@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 09:56:01 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/05 13:14:37 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/06/05 13:26:03 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,12 +54,12 @@ static bool validateVersion(std::string const version) {
 }
 
 static bool validatePath(std::string const path) {
-	std::filesystem::path fsPath(path);
-	
-	if (!std::filesystem::exists(fsPath) || !std::filesystem::is_regular_file(fsPath)) {
-		std::cerr << "invalid path\t";
+		
+	if (path == "*") {
+		std::cerr << "this option is only used for the method OPTION, which we dont allow\t";
 		return (false);
 	}
+	
 	return (true);
 }
 
