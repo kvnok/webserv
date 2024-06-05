@@ -14,3 +14,7 @@ class CGI {
 		string get_cgi_path() const;
 		void set_cgi_path(string cgi_path);
 };
+
+
+string do_cgi(string &ret, string cgi_path);
+int test_cgi();

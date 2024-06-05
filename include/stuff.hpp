@@ -36,6 +36,7 @@
 #include <sys/select.h>
 #include <cstring>
 #include <signal.h>
+#include <sys/wait.h>
 
 using namespace std;
 

@@ -6,6 +6,7 @@
 #include "Server.hpp"
 #include "Connection.hpp"
 #include "httpParse.hpp"
+#include "CGI.hpp"
 
 void ignoreSignals() {
 	/* for the pipe */
@@ -47,6 +48,8 @@ int main(int argc, char **argv) {
 		cerr << RED << "Exception: " << e.what() << RESET << endl;
 	}
 	parseMainTest();
+
+	test_cgi();
 	return 0;
 }
 
