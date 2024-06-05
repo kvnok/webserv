@@ -11,6 +11,7 @@ Server::Server( void )
     this->_index = "";
     this->_error_pages[404] = "";
     this->_root = "";
+    this->serverFd = 0;
     this->max_clients = MAX_CLIENTS;
 }
 
@@ -30,13 +31,14 @@ Server::Server(ServerBlock& blocks)
 {
     this->_listen = blocks.get_listen();
     this->_host = blocks.get_host();
-    this->_port = stoi(blocks.get_listen());
+    this->_port = blocks.get_port();
     this->_server_names = blocks.get_server_names();
     this->_client_max_body_size = blocks.get_client_max_body_size();
 	this->_index = blocks.get_index();
     this->_error_pages = blocks.get_error_pages();
 	this->_root = blocks.get_root();
 	this->_locations = blocks.get_locations();
+    this->setSocket();
 }
 
 void Server::setSocket()
@@ -50,25 +52,19 @@ void Server::setSocket()
 
 	if ((this->serverFd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 	{
-		perror("socket failed");
-		exit(EXIT_FAILURE);
+		cerr << "socket failed";
 	}
 	if (setsockopt(this->serverFd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &this->opt, sizeof(this->opt)) == -1)
 	{
-        perror("setsockopt failed");
-        exit(EXIT_FAILURE);
+        cerr << "setsockopt failed";
     }
 	if (bind(this->serverFd, (struct sockaddr *)&this->address, this->addrlen) == -1) {
-        perror("bind failed");
-        exit(EXIT_FAILURE);
+        cerr << "bind failed";
     }
 
-    // Listen for incoming connections
     if (listen(this->serverFd, this->getMaxClients()) == -1) {
-        perror("listen failed");
-        exit(EXIT_FAILURE);
+        cerr << "listen failed";
     }
-    printf("this->serverfd: %d\n", this->serverFd);
 }
 
 Server::~Server( void )

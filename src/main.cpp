@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
 			Servers.push_back(server);
 		}
 		Connection connection(Servers);
-		connection.start();	
+		connection.start();
 	} catch (exception &e) {
 		cerr << RED << "Exception: " << e.what() << RESET << endl;
 	}
