@@ -46,7 +46,7 @@ void Connection::start()
 				if (this->fds[i].fd == this->server[i].getFd())
                 {
 					int clientSocket = accept(this->server[i].getFd(), NULL, NULL);
-					cout << "clientSocket: " << clientSocket << endl;
+					// cout << "clientSocket: " << clientSocket << endl;
                 	if (clientSocket == -1)
 					{
                     	cerr << "accept failed" << endl;
@@ -54,7 +54,7 @@ void Connection::start()
 					}
                 	else
                 	{
-                    	std::cout << "New connection accepted" << std::endl;
+                    	// std::cout << "New connection accepted" << std::endl;
                     	this->fds.push_back({clientSocket, POLLIN});
                 	}
 				}
@@ -73,18 +73,33 @@ void Connection::start()
 					}
 					else
 					{
-						std::cout << "Received message from client: " << buffer << std::endl;
+						// std::cout << "Received message from client: " << buffer << std::endl;
         				// parse http request from jagijs
 						Request request;
-						parseMainTest(buffer, request);
+						if (readRequest(buffer, request))
+						{// this to check
 
 						//create response
+						std::string content;
+						if (request.getPath() == "/") 
+						{
+    						std::string path = "www/index.html";
+    						std::ifstream file(path);
+    						if (file) {
+    						    content = std::string ((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    						    // Now send 'response' as the body of the HTTP response
+    						} else {
+    						    std::cerr << "Failed to open file: " << path << std::endl;
+    						}
+						}
+						cout << "Request Path: " << request.getPath() << endl;
 						string response = request.getVersion() + " " + to_string(request.getStatusCode()) + " OK\r\n"
-						   "Content-Type: text/plain\r\n"
-						   "Connection: close\r\n"
-						   "Content-Length: 5\r\n\r\n"
-						   "Hello\r\n";
+						   "Content-Type: text/html\r\n"
+						//    "Connection: close\r\n"
+						   "Content-Length: " + std::to_string(content.size()) + "\r\n\r\n"
+						   + content;
 						send(clientSocket, response.c_str() , response.size(), 0);
+						}// this to check
 					}
 				}
         	}
