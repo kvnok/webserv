@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 10:12:17 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/05 17:16:12 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/06/05 18:26:58 by ibehluli      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,4 +38,4 @@ const unordered_set<string> supportedHttpVersions = {
 	"HTTP/1.1"
 };
 
-int		parseMainTest();
+void		parseMainTest(string SampleRequest, Request &request);

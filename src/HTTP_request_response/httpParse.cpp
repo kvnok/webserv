@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 09:56:01 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/05 17:22:02 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/06/05 18:45:22 by ibehluli      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,11 +112,8 @@ static bool	readRequest(string const& requestData, Request& request) {
 	return (true);
 }
 
-int		parseMainTest() {
-	string SampleRequest = "GET /home HTTP/1.1\r\nHeader1: Value1\r\nHeader2: Value2\r\n"
-								"Host: localhost.8080\r\nConnection: keep-alive\r\n\r\n"
-								"Body text \nbla\nbla\nbla\nbla";
-	Request request;
+void		parseMainTest(string SampleRequest, Request& request)
+{
 	cout << "------REQUEST------\n";
 	if (readRequest(SampleRequest, request)) {
 		cout << "request line:\n";
@@ -134,5 +131,4 @@ int		parseMainTest() {
 		cout << endl;
 	}
 	cerr << "Status Code: " << request.getStatusCode() << endl;
-	return (0);
 }

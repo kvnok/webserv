@@ -1,4 +1,5 @@
 #include "Connection.hpp"
+#include "httpParse.hpp"
 
 Connection::Connection( void )
 {
@@ -74,9 +75,11 @@ void Connection::start()
 					{
 						std::cout << "Received message from client: " << buffer << std::endl;
         				// parse http request from jagijs
+						Request request;
+						parseMainTest(buffer, request);
 
 						//create response
-						string response = "HTTP/1.1 200 OK\r\n"
+						string response = request.getVersion() + " " + to_string(request.getStatusCode()) + " OK\r\n"
 						   "Content-Type: text/plain\r\n"
 						   "Connection: close\r\n"
 						   "Content-Length: 5\r\n\r\n"

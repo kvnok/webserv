@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
 	} catch (exception &e) {
 		cerr << RED << "Exception: " << e.what() << RESET << endl;
 	}
-	parseMainTest();
+	// parseMainTest();
 	return 0;
 }
 
