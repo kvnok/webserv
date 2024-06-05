@@ -5,6 +5,7 @@
 #include "Parser.hpp"
 #include "Server.hpp"
 #include "Connection.hpp"
+#include "httpParse.hpp"
 
 int main(int argc, char **argv) {
 	try
@@ -29,6 +30,7 @@ int main(int argc, char **argv) {
 	} catch (exception &e) {
 		cerr << RED << "Exception: " << e.what() << RESET << endl;
 	}
+	parseMainTest();
 	return 0;
 }
 
