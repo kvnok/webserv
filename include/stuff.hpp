@@ -35,6 +35,7 @@
 #include <sys/time.h>
 #include <sys/select.h>
 #include <cstring>
+#include <signal.h>
 
 using namespace std;
 

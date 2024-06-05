@@ -7,11 +7,28 @@
 #include "Connection.hpp"
 #include "httpParse.hpp"
 
+void ignoreSignals() {
+	/* for the pipe */
+	signal(SIGPIPE, SIG_IGN);
+	/* ctrl + c */
+	signal(SIGINT, SIG_IGN);
+	/* ctrl + \ */
+	signal(SIGQUIT, SIG_IGN);
+	/* ctrl + z */
+	signal(SIGTERM, SIG_IGN);
+	// SIGTSTP means stop process
+	signal(SIGTSTP, SIG_IGN);
+	// SIGTTIN means terminal input for background process
+	signal(SIGTTIN, SIG_IGN);
+}
+
 int main(int argc, char **argv) {
 	try
 	{
 		if (argc != 1 && argc != 2)
 			throw invalid_argument("usage: ./webserv [config_file]");
+		// ignore signals for the parent class
+		// ignoreSignals();
 		string config_file = "default.conf";
 		if (argc == 2)
 			config_file = argv[1];
