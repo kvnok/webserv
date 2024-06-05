@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:54:54 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/05 13:06:31 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/06/05 15:59:19 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,5 +38,6 @@ class Request {
 		std::string	getVersion() const;
 		std::string getBody() const;
 		int			getStatusCode() const;
-		std::map<std::string, std::string> getHeader() const;
+		std::map<std::string, std::string>	getHeaders() const;
+		std::string	getHeaderValue(std::string key) const;
 };
