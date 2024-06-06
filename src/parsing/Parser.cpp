@@ -131,7 +131,6 @@ void Parser::parse(Config &config) {
 			config.add_server_block(server_block);
 		}
 	}
-	config.print_server_blocks();
 	file.close();
 }
 

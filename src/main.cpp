@@ -13,15 +13,17 @@ int main(int argc, char **argv) {
 	{
 		if (argc != 1 && argc != 2)
 			throw invalid_argument("usage: ./webserv [config_file]");
-		// ignore signals for the parent class
-		// ignoreSignals();
+		
 		string config_file = "default.conf";
 		if (argc == 2)
 			config_file = argv[1];
 		is_file_name_correct(config_file);
+
 		Parser parser(config_file);
 		Config config;
 		parser.parse(config);
+		// config.print_server_blocks();
+
 		vector<Server> Servers;
 		for(int i = 0; i < config.get_server_blocks().size(); i++)
 		{
@@ -32,7 +34,7 @@ int main(int argc, char **argv) {
 	} catch (exception &e) {
 		cerr << RED << "Exception: " << e.what() << RESET << endl;
 	}
-	parseMainTest();
+	// parseMainTest();
 
 	cgi_multiple_tests();
 	return 0;
