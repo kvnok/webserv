@@ -102,9 +102,13 @@ int test_cgi(string cgi_path) {
 
 int cgi_multiple_tests() {
 	cout << "-----------------\nTesting CGI\n-----------------" << endl;
-	test_cgi("./var/cgi-bin/js-time.cgi");
-	test_cgi("./var/cgi-bin/sh_basic.sh");
-	test_cgi("./var/cgi-bin/py-page.cgi");
-	test_cgi("./var/cgi-bin/simple-page.cgi");
+	string cgi_path = "./var/cgi-bin/";
+	test_cgi(cgi_path + "page.cgi");
+	test_cgi(cgi_path + "get_time.cgi");
+	// test_cgi(cgi_path + "upload.cgi");
+	// test_cgi(cgi_path + "form_processing.cgi");
+	test_cgi(cgi_path + "enviroment.cgi");
+	test_cgi(cgi_path + "server_info.cgi");
+	test_cgi(cgi_path + "json_response.cgi");
 	return 0;
 }
