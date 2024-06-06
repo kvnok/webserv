@@ -3,14 +3,10 @@
 int test_cgi(string cgi_path) {
 	cout << GRN << "Testing for " << cgi_path << RESET << endl;
 	string ret = "";
-	if (access(cgi_path.c_str(), F_OK) == -1) {
-		cout << "The file does not exist." << endl;
-		return 1;
-	}
-
-	string err = do_cgi(ret, cgi_path);
-	cout << RED << "Error: |" << err << "|" << RESET << endl;
-	cout << BLU << "Output: |" << ret << "|" << RESET << endl;
+	string status = "succes";
+	do_cgi(ret, cgi_path, status);
+	cout << RED << "Status: |" << status << "|" << RESET << endl;
+	cout << BLU << "Output: |" << ret << "|\n" << RESET << endl;
 	return 0;
 }
 
@@ -24,5 +20,6 @@ int cgi_multiple_tests() {
 	test_cgi(cgi_path + "enviroment.cgi");
 	test_cgi(cgi_path + "server_info.cgi");
 	test_cgi(cgi_path + "json_response.cgi");
+	test_cgi(cgi_path + "blabla.cgi");
 	return 0;
 }
