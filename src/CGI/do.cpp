@@ -28,6 +28,7 @@ string do_cgi(string &ret, string cgi_path) {
 		cgi_child(pipefd, cgi_path);
 		// If execve returns, it must have failed
 		// cout << "Failed to execute the script.";
+		// not allowed to use exit so just doing kill
 		kill(getpid(), SIGKILL);
 	}
 	else {  // Parent process
