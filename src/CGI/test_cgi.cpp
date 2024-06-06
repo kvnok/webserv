@@ -26,6 +26,12 @@ void cgi_parent(int pipefd[2], string &ret) {
 	while ((count = read(pipefd[0], buffer, sizeof(buffer)-1)) > 0) {
 		buffer[count] = '\0';
 		ret += buffer;
+		// cout << "inside buffer: |" << buffer << "|" << endl;
+	}
+
+	if (count == -1) {
+		// Handle read error
+		// cout << "Failed to read from the pipe." << endl;
 	}
 
 	// Close the read end of the pipe
@@ -36,6 +42,14 @@ string do_cgi(string &ret, string cgi_path) {
 	CGI cgi(cgi_path);
 	int pipefd[2];
 	pid_t pid;
+
+	if (access(cgi_path.c_str(), F_OK) == -1) {
+		return "The file does not exist.";
+	}
+	// Check if the file has execute permission
+	if (access(cgi_path.c_str(), X_OK) == -1) {
+		return "The file does not have execute permission.";
+	}
 
 	// Create a pipe
 	if (pipe(pipefd) == -1) {
@@ -52,31 +66,40 @@ string do_cgi(string &ret, string cgi_path) {
 		cgi_child(pipefd, cgi_path);
 		// If execve returns, it must have failed
 		// cout << "Failed to execute the script.";
-		exit(EXIT_FAILURE);
+
 	}
 	else {  // Parent process
-		if (waitpid(pid, NULL, 0) == -1) {
-			return "Failed to wait for the child process.";
-		}
-		if (WIFEXITED(pid) && WEXITSTATUS(pid) != 0) {
-			return "The child process exited with an error.";
-		}
+		// if (waitpid(pid, NULL, 0) == -1) {
+		// 	return "Failed to wait for the child process.";
+		// }
+		// if (WIFEXITED(pid) && WEXITSTATUS(pid) != 0) {
+		// 	return "The child process exited with an error.";
+		// }
 		cgi_parent(pipefd, ret);
 	}
-
-	return ret;
+	// cout << "inside: |" << ret << "|" << endl;
+	return "succes";
 }
 
-int test_cgi() {
-	string ret;
-	// string cgi_path = "./var/cgi-bin/js-time.cgi";
-	string cgi_path = "./var/cgi-bin/sh_basic.sh";
+int test_cgi(string cgi_path) {
+	cout << GRN << "Testing for " << cgi_path << RESET << endl;
+	string ret = "";
 	if (access(cgi_path.c_str(), F_OK) == -1) {
 		cout << "The file does not exist." << endl;
 		return 1;
 	}
-	cout << "do_cgi: |" << do_cgi(ret, cgi_path) << "|" << endl;
-	cout << "|"  << ret << "|"  << endl;
-	cout << "hello" << endl;
+
+	string err = do_cgi(ret, cgi_path);
+	cout << RED << "Error: |" << err << "|" << RESET << endl;
+	cout << BLU << "Output: |" << ret << "|" << RESET << endl;
+	return 0;
+}
+
+int cgi_multiple_tests() {
+	cout << "-----------------\nTesting CGI\n-----------------" << endl;
+	test_cgi("./var/cgi-bin/js-time.cgi");
+	test_cgi("./var/cgi-bin/sh_basic.sh");
+	test_cgi("./var/cgi-bin/py-page.cgi");
+	test_cgi("./var/cgi-bin/simple-page.cgi");
 	return 0;
 }

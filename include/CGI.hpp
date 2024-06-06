@@ -17,4 +17,5 @@ class CGI {
 
 
 string do_cgi(string &ret, string cgi_path);
-int test_cgi();
+int test_cgi(std::string cgi_path);
+int cgi_multiple_tests();

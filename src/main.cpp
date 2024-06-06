@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
 	}
 	parseMainTest();
 
-	test_cgi();
+	cgi_multiple_tests();
 	return 0;
 }
 
