@@ -17,7 +17,7 @@ string do_cgi(string &ret, string cgi_path) {
 	if (pipe(pipefd) == -1) {
 		return "Failed to create a pipe.";
 	}
-
+	ignoreSignals();
 	// Fork a child process
 	pid = fork();
 	if (pid == -1) {
@@ -25,6 +25,7 @@ string do_cgi(string &ret, string cgi_path) {
 	}
 
 	if (pid == 0) {  // Child process
+		defaultSignals();
 		cgi_child(pipefd, cgi_path);
 		// If execve returns, it must have failed
 		// cout << "Failed to execute the script.";
@@ -40,6 +41,7 @@ string do_cgi(string &ret, string cgi_path) {
 		// }
 		cgi_parent(pipefd, ret);
 	}
+	defaultSignals();
 	// cout << "inside: |" << ret << "|" << endl;
 	if (ret.empty()) {
 		return "The script did not produce any output.";
