@@ -5,7 +5,6 @@ FLAGS = #-Wall -Wextra -Werror
 SRCS := $(shell find ./src -iname "*.cpp")
 # to keep the same dir structure in obj as in src
 OBJS := $(patsubst ./src/%.cpp,./obj/%.o,$(SRCS))
-CHECKFLAGS = valgrind --leak-check=full
 
 # vpath searches all dirs and subdirs for .cpp files
 vpath %.cpp $(sort $(dir $(SRCS)))
@@ -16,9 +15,6 @@ BLUE = \033[34;01m
 RESET = \033[0m
 
 all: $(NAME)
-
-check: all
-	$(CHECKFLAGS) ./$(NAME)
 
 $(NAME): $(OBJS)
 	@$(CC) $(FLAGS) -o $@ $^
