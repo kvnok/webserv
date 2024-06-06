@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+node
 
 console.log("Content-type: text/html\n");
 console.log("<html>");

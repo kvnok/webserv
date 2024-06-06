@@ -38,6 +38,8 @@ void cgi_parent(int pipefd[2], string &ret) {
 	close(pipefd[0]);
 }
 
+
+
 string do_cgi(string &ret, string cgi_path) {
 	CGI cgi(cgi_path);
 	int pipefd[2];
@@ -66,7 +68,7 @@ string do_cgi(string &ret, string cgi_path) {
 		cgi_child(pipefd, cgi_path);
 		// If execve returns, it must have failed
 		// cout << "Failed to execute the script.";
-
+		kill(getpid(), SIGKILL);
 	}
 	else {  // Parent process
 		// if (waitpid(pid, NULL, 0) == -1) {
@@ -78,6 +80,9 @@ string do_cgi(string &ret, string cgi_path) {
 		cgi_parent(pipefd, ret);
 	}
 	// cout << "inside: |" << ret << "|" << endl;
+	if (ret.empty()) {
+		return "The script did not produce any output.";
+	}
 	return "succes";
 }
 
