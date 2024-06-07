@@ -1,2 +1,4 @@
 obj
 webserv
+.vscode
+src/autoindex/outfile.html

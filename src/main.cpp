@@ -7,6 +7,7 @@
 #include "Connection.hpp"
 #include "httpParse.hpp"
 #include "CGI.hpp"
+#include "autoindex.hpp"
 
 int main(int argc, char **argv) {
 	try
@@ -35,8 +36,8 @@ int main(int argc, char **argv) {
 		cerr << RED << "Exception: " << e.what() << RESET << endl;
 	}
 	// parseMainTest();
-
-	cgi_multiple_tests();
+	// cgi_multiple_tests();
+	test_autoindex();
 	return 0;
 }
 
