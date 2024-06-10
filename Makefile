@@ -1,5 +1,5 @@
 NAME = webserv
-CC = c++
+CC = c++ -std=c++17
 HEADER ?= $(shell find ./include -iname "*.hpp")
 FLAGS = #-Wall -Wextra -Werror
 SRCS := $(shell find ./src -iname "*.cpp")

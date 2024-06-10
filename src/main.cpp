@@ -8,6 +8,7 @@
 #include "httpParse.hpp"
 #include "CGI.hpp"
 #include "autoindex.hpp"
+#include "smartLocs.hpp"
 
 int main(int argc, char **argv) {
 	try
@@ -24,6 +25,7 @@ int main(int argc, char **argv) {
 		Config config;
 		parser.parse(config);
 		// config.print_server_blocks();
+		test_smartLocs(config); // test smartLocs
 
 		vector<Server> Servers;
 		for(int i = 0; i < config.get_server_blocks().size(); i++)
@@ -37,7 +39,7 @@ int main(int argc, char **argv) {
 	}
 	// parseMainTest();
 	// cgi_multiple_tests();
-	test_autoindex();
+	// test_autoindex();
 	return 0;
 }
 
