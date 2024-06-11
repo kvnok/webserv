@@ -29,10 +29,8 @@ class Server
 		map<int, string> _error_pages;
 		string _root;
 		vector<Location> _locations;
-		int serverFd;
-		struct sockaddr_in address;
-		int opt;
-		int addrlen;
+		int _serverFd;
+		int _opt;
 		int newSocket;
 		int max_clients;
 	public:
@@ -53,5 +51,7 @@ class Server
 		int getMaxClients();
 		// ------------------------- //
 		void setSocket();
-};
+		void setBind();
+		void setListen();
+} ;
 

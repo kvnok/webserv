@@ -1,7 +1,7 @@
 NAME = webserv
 CC = c++
 HEADER ?= $(shell find ./include -iname "*.hpp")
-FLAGS = #-Wall -Wextra -Werror
+FLAGS = -fsanitize=address#-Wall -Wextra -Werror
 SRCS := $(shell find ./src -iname "*.cpp")
 OBJS := $(addprefix obj/,$(notdir $(SRCS:.cpp=.o)))
 CHECKFLAGS = valgrind --leak-check=full

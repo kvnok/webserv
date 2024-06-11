@@ -35,18 +35,18 @@ void Connection::start()
     {
         int ret = poll(this->fds.data(), this->fds.size(), 0);
         if (ret == -1)
-            cerr << "poll failed" << endl;
+            throw runtime_error("poll failed");
         // cout << "fds size: " << this->fds.size() << endl;
         for (int i = 0; i < this->fds.size(); i++)
         {
-			char buffer[1024] = {0};
+			vector<char> buffer(1024);
 			// cout << "fds[i].fd: " << this->fds[i].fd << endl;
             if (this->fds[i].revents & POLLIN)
             {
-				if (this->fds[i].fd == this->server[i].getFd())
+				if (i < this->server.size() && this->fds[i].fd == this->server[i].getFd())
                 {
 					int clientSocket = accept(this->server[i].getFd(), NULL, NULL);
-					// cout << "clientSocket: " << clientSocket << endl;
+					// cout << "clientSocket: " << this->fds[i].fd << endl;
                 	if (clientSocket == -1)
 					{
                     	cerr << "accept failed" << endl;
@@ -61,11 +61,12 @@ void Connection::start()
 				else
 				{
 					int clientSocket = this->fds[i].fd;
-					// cout << "clientSocket Down: " << clientSocket << endl;
-					ssize_t bytes = recv(clientSocket, buffer, sizeof(buffer), 0);
+					// cout << "clientSocket Down: " << this->fds[i].fd << endl;
+					ssize_t bytes = recv(clientSocket, buffer.data(), buffer.size(), 0);
 					if (bytes < 0)
 					{
-						cerr << "Failed to receive data: " << strerror(errno) << endl;
+						// throw runtime_error("recv failed");
+						cerr << "recv failed" << endl;
 					}
 					else if ( bytes == 0 )
 					{
@@ -75,8 +76,9 @@ void Connection::start()
 					{
 						// std::cout << "Received message from client: " << buffer << std::endl;
         				// parse http request from jagijs
+						buffer.resize(bytes);
 						Request request;
-						if (readRequest(buffer, request))
+						if (readRequest(buffer.data(), request))
 						{// this to check
 
 						//create response
