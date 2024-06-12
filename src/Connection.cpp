@@ -15,7 +15,6 @@ Connection::Connection( vector<Server> &server)
 
 void Connection::setFds()
 {
-	vector<pollfd> fds;
 	for (int i = 0; i < this->server.size(); i++)
 	{
 		pollfd fd;
@@ -36,7 +35,6 @@ void Connection::start()
         int ret = poll(this->fds.data(), this->fds.size(), 0);
         if (ret == -1)
             throw runtime_error("poll failed");
-        // cout << "fds size: " << this->fds.size() << endl;
         for (int i = 0; i < this->fds.size(); i++)
         {
 			vector<char> buffer(1024);
@@ -46,7 +44,7 @@ void Connection::start()
 				if (i < this->server.size() && this->fds[i].fd == this->server[i].getFd())
                 {
 					int clientSocket = accept(this->server[i].getFd(), NULL, NULL);
-					// cout << "clientSocket: " << this->fds[i].fd << endl;
+					cout << "clientSocket: " << this->fds[i].fd << endl;
                 	if (clientSocket == -1)
 					{
                     	cerr << "accept failed" << endl;
@@ -54,14 +52,14 @@ void Connection::start()
 					}
                 	else
                 	{
-                    	// std::cout << "New connection accepted" << std::endl;
+                    	std::cout << "New connection accepted" << std::endl;
                     	this->fds.push_back({clientSocket, POLLIN});
                 	}
 				}
 				else
 				{
 					int clientSocket = this->fds[i].fd;
-					// cout << "clientSocket Down: " << this->fds[i].fd << endl;
+					cout << "clientSocket Down: " << this->fds[i].fd << endl;
 					ssize_t bytes = recv(clientSocket, buffer.data(), buffer.size(), 0);
 					if (bytes < 0)
 					{
@@ -70,7 +68,8 @@ void Connection::start()
 					}
 					else if ( bytes == 0 )
 					{
-						// cout << "Connection closed" << endl;
+						cout << "Connection closed" << clientSocket << endl;
+						close(clientSocket);
 					}
 					else
 					{
