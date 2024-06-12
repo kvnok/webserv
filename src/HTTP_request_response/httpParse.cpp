@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 09:56:01 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/05 17:22:02 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/06/05 19:13:02 by ibehluli      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,7 +71,7 @@ static bool	parseRequestLine(string line, Request& request) {
 	return (false);
 }
 
-static bool	readRequest(string const& requestData, Request& request) {
+bool	readRequest(string const& requestData, Request& request) {
 	istringstream	requestStream(requestData);
 	string	line;
 	
@@ -112,27 +112,23 @@ static bool	readRequest(string const& requestData, Request& request) {
 	return (true);
 }
 
-int		parseMainTest() {
-	string SampleRequest = "GET /home HTTP/1.1\r\nHeader1: Value1\r\nHeader2: Value2\r\n"
-								"Host: localhost.8080\r\nConnection: keep-alive\r\n\r\n"
-								"Body text \nbla\nbla\nbla\nbla";
-	Request request;
-	cout << "------REQUEST------\n";
-	if (readRequest(SampleRequest, request)) {
-		cout << "request line:\n";
-		cout << "method: " << request.getMethod() << "\n";
-		cout << "path: " << request.getPath() << " \n";
-		cout << "version: " << request.getVersion() << "\n\n";
-		map<string, string> buf = request.getHeaders();
-		cout << "headers:\n";
-		for (auto& pair : buf)
-			cout << pair.first << ": " << pair.second << "\n";
-		cout << "\nprint Host Header: " << request.getHeaderValue("Host") << "\n";
-		cout << "print Connection Header: " << request.getHeaderValue("Connection") << "\n";
-		cout << "\nbody:\n";
-		cout << request.getBody() << "\n";
-		cout << endl;
-	}
-	cerr << "Status Code: " << request.getStatusCode() << endl;
-	return (0);
-}
+// void		parseMainTest(string SampleRequest, Request& request)
+// {
+// 	cout << "------REQUEST------\n";
+// 	if (readRequest(SampleRequest, request)) {
+// 		cout << "request line:\n";
+// 		cout << "method: " << request.getMethod() << "\n";
+// 		cout << "path: " << request.getPath() << " \n";
+// 		cout << "version: " << request.getVersion() << "\n\n";
+// 		map<string, string> buf = request.getHeaders();
+// 		cout << "headers:\n";
+// 		for (auto& pair : buf)
+// 			cout << pair.first << ": " << pair.second << "\n";
+// 		cout << "\nprint Host Header: " << request.getHeaderValue("Host") << "\n";
+// 		cout << "print Connection Header: " << request.getHeaderValue("Connection") << "\n";
+// 		cout << "\nbody:\n";
+// 		cout << request.getBody() << "\n";
+// 		cout << endl;
+// 	}
+// 	cerr << "Status Code: " << request.getStatusCode() << endl;
+// }
