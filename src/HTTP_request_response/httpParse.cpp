@@ -6,11 +6,11 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 09:56:01 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/05 19:13:02 by ibehluli      ########   odam.nl         */
+/*   Updated: 2024/06/12 13:16:26 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "httpParse.hpp"
+#include "httpRequest.hpp"
 
 static bool	parseHeaderLine(string line, Request& request)
 {
@@ -22,7 +22,7 @@ static bool	parseHeaderLine(string line, Request& request)
 	headerLine[0] = line.substr(0, splitPos);
 	headerLine[1] = line.substr(splitPos + 2, line.length() - (splitPos + 2));
 	if (!headerLine[0].empty() && !headerLine[1].empty())
-		request.setHeader(headerLine[0], headerLine[1]);
+		request.addHeader(headerLine[0], headerLine[1]);
 	else
 		return (false);
 	return (true);
@@ -54,8 +54,8 @@ static bool validateVersion(string const version, Request& request) {
 }
 
 static bool	parseRequestLine(string line, Request& request) {
-	string	requestLine[4];
-	istringstream lineStream(line);
+	string			requestLine[4];
+	istringstream	lineStream(line);
 
 	lineStream >> requestLine[0] >> requestLine[1] >> requestLine[2] >> requestLine[3];
 	if (!requestLine[0].empty() && !requestLine[1].empty() && !requestLine[2].empty() \
@@ -71,22 +71,22 @@ static bool	parseRequestLine(string line, Request& request) {
 	return (false);
 }
 
-bool	readRequest(string const& requestData, Request& request) {
+void	readRequest(string const& requestData, Request& request) {
 	istringstream	requestStream(requestData);
-	string	line;
+	string			line;
 	
 	if (getline(requestStream, line)) {
 		if (!parseRequestLine(line, request))
-			return (false);
+			return ;
 	}
 	else {
 		request.setStatusCode(400);
-		return (false);
+		return ;
 	}
 	while (getline(requestStream, line) && line != "\r")
 		if (!parseHeaderLine(line, request)) {
 			request.setStatusCode(400);
-			return (false);
+			return ;
 		}
 	if (!request.getHeaderValue("Content-Length").empty()) {
 		size_t len = stoi(request.getHeaderValue("Content-Length"));
@@ -96,7 +96,7 @@ bool	readRequest(string const& requestData, Request& request) {
 		request.setBody(body);
 		if (request.getBody().length() != len) {
 			request.setStatusCode(400);
-			return (false);
+			return ;
 		}
 	}
 	else {
@@ -107,28 +107,7 @@ bool	readRequest(string const& requestData, Request& request) {
 	}
 	if (request.getMethod() == "POST" && request.getBody().empty()) {
 		request.setStatusCode(400);
-		return (false);
+		return ;
 	}
-	return (true);
+	return ;
 }
-
-// void		parseMainTest(string SampleRequest, Request& request)
-// {
-// 	cout << "------REQUEST------\n";
-// 	if (readRequest(SampleRequest, request)) {
-// 		cout << "request line:\n";
-// 		cout << "method: " << request.getMethod() << "\n";
-// 		cout << "path: " << request.getPath() << " \n";
-// 		cout << "version: " << request.getVersion() << "\n\n";
-// 		map<string, string> buf = request.getHeaders();
-// 		cout << "headers:\n";
-// 		for (auto& pair : buf)
-// 			cout << pair.first << ": " << pair.second << "\n";
-// 		cout << "\nprint Host Header: " << request.getHeaderValue("Host") << "\n";
-// 		cout << "print Connection Header: " << request.getHeaderValue("Connection") << "\n";
-// 		cout << "\nbody:\n";
-// 		cout << request.getBody() << "\n";
-// 		cout << endl;
-// 	}
-// 	cerr << "Status Code: " << request.getStatusCode() << endl;
-// }

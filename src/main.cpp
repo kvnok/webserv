@@ -5,7 +5,6 @@
 #include "Parser.hpp"
 #include "Server.hpp"
 #include "Connection.hpp"
-#include "httpParse.hpp"
 #include "CGI.hpp"
 #include "autoindex.hpp"
 #include "smartLocs.hpp"
