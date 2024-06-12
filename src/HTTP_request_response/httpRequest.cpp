@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:55:00 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/07 17:16:54 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/06/12 20:11:20 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,11 +31,10 @@ string	Request::getBody() const { return (this->_body); }
 int		Request::getStatusCode() const { return (this->_statusCode); }
 unordered_map<string, string> Request::getHeaders() const { return (this->_header); }
 
-string	Request::getHeaderValue(string key) const{
-	unordered_map<string, string> headers = this->getHeaders();
-	auto iterator = headers.find(key);
+string	Request::getHeaderValue(const string& key) const{
+	auto iterator = this->_header.find(key);
 	
-	if (iterator == headers.end())
+	if (iterator == this->_header.end())
 		return ("");
 	return (iterator->second);
 }

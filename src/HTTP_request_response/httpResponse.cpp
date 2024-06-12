@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 08:58:38 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/10 17:21:37 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/06/12 20:08:23 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,23 +35,21 @@ int		Response::getStatusCode() const { return (this->_statusCode); }
 string	Response::getBody() const { return (this->_body); }
 unordered_map<string, string> Response::getHeaders() const { return (this->_header); }
 
-string	Response::getHeaderValue(string key) const {
-	unordered_map<string, string> headers = this->getHeaders();
-	auto iterator = headers.find(key);
+string	Response::getHeaderValue(const string& key) const {
+	auto iterator = this->_header.find(key);
 	
-	if (iterator == headers.end())
+	if (iterator == this->_header.end())
 		return ("");
 	return (iterator->second);
 }
 
 string	Response::createResponseString() const {
-	string	buf;
-	unordered_map<string, string> headers = this->getHeaders();
+	string	response;
 
-	buf = this->getVersion() + " " + to_string(this->getStatusCode()) + " " + this->getStatusMessage() + "\r\n";
-	for (auto& pair : headers)
-		buf +=  pair.first + ": " + pair.second + "\r\n";
-	buf += "\r\n";
-	buf += this->getBody();
-	return (buf);
+	response = this->_version + " " + to_string(this->_statusCode) + " " + this->_statusMessage + "\r\n";
+	for (auto& pair : this->_header)
+		response +=  pair.first + ": " + pair.second + "\r\n";
+	response += "\r\n";
+	response += this->_body;
+	return (response);
 }

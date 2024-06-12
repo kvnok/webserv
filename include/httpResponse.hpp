@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 08:54:10 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/07 17:19:36 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/06/12 20:09:58 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,8 +26,8 @@ class Response {
 		int								_statusCode;
 		unordered_map<string, string>	_header;
 		string							_body;
-	public:
 		Response();
+	public:
 		Response(Request request);
 		~Response();
 		void	setVersion(string const version);
@@ -41,6 +41,6 @@ class Response {
 		int		getStatusCode() const;
 		string	getBody() const;
 		unordered_map<string, string>	getHeaders() const;
-		string	getHeaderValue(string key) const;
+		string	getHeaderValue(const string& key) const;
 		string	createResponseString() const;
 };

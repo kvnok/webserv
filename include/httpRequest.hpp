@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:54:54 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/12 13:16:56 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/06/12 20:10:52 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,7 @@ class Request {
 		string	getBody() const;
 		int		getStatusCode() const;
 		unordered_map<string, string>	getHeaders() const;
-		string	getHeaderValue(string key) const;
+		string	getHeaderValue(const string& key) const;
 };
 
 void	readRequest(string const& requestData, Request& request);
