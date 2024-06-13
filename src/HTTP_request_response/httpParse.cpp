@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 09:56:01 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/13 14:51:21 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/06/13 16:31:00 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,6 +67,15 @@ static bool validatePath(string const path, Request& request) {
 		request.setStatusCode(400);
 		return (false);
 	}
+	// check if file exists
+	// string local_path = root + path_van_request;
+	// ifstream file(local_path);
+	// if (!file.is_open()) {
+	// 	statuscode set
+	// 	file.close();
+	// 	return false;
+	// }
+	// file.close();
 	return (true);	
 }
 static bool	parseRequestLine(string line, Request& request) {

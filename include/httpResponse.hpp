@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 08:54:10 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/12 20:09:58 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/06/13 15:50:05 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,4 +43,5 @@ class Response {
 		unordered_map<string, string>	getHeaders() const;
 		string	getHeaderValue(const string& key) const;
 		string	createResponseString() const;
+		string	fourZeroFourResponse() const;
 };

@@ -20,6 +20,3 @@ class Connection
 		void handleExistingConnection(int i);
 		void handleRequest(int clientSocket, Request& request, Response& response, int i);
 };
-
-
-
