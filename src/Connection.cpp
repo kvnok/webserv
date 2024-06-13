@@ -66,6 +66,7 @@ void Connection::handleExistingConnection(int i)
 	// here is where Jangijs magic happens
     Request request;
     readRequest(buffer.data(), request);
+    // cout << "Request: " << request.getMethod() << endl;  
     Response response(request);
     // in Resoponse class not here //
     checkAndSetContentTypeExtesion(request.getPath(), response);
@@ -125,6 +126,7 @@ void Connection::handleRequest(int clientSocket, Request& request, Response& res
        "Content-Type: " + responseClass.getHeaderValue("Content-Type") + "\r\n"
        "Content-Length: " + std::to_string(responseClass.getBody().size()) + "\r\n\r\n"
        + responseClass.getBody();
+    // cout << response.c_str() << endl;
     send(clientSocket, response.c_str() , response.size(), 0);
 }
 
