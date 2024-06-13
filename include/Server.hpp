@@ -33,6 +33,7 @@ class Server
 		int _opt;
 		int newSocket;
 		int max_clients;
+		string _currentPath;
 	public:
 		Server( void );
 		Server(ServerBlock& blocks);
@@ -49,6 +50,8 @@ class Server
 		string getRoot();
 		int getFd();
 		int getMaxClients();
+		string getCurrentPath();
+		vector<Location> getLocations();
 		// ------------------------- //
 		void setSocket();
 		void setBind();

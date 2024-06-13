@@ -19,68 +19,132 @@ void Connection::setFds() {
 	}
 }
 
-void Connection::start() {
-	for (int i = 0; i < this->server.size(); i++)
-		cout << "Listening at port: " << this->server[i].getPort() << endl;
-	while (true) {
-		int ret = poll(this->fds.data(), this->fds.size(), 0);
-		if (ret == -1)
-			cerr << "poll failed" << endl;
-		for (int i = 0; i < this->fds.size(); i++) {
-			char buffer[1024] = {0};
-			if (this->fds[i].revents & POLLIN) {
-				if (this->fds[i].fd == this->server[i].getFd()) {
-					int clientSocket = accept(this->server[i].getFd(), NULL, NULL);
-					if (clientSocket == -1) {
-						cerr << "accept failed" << endl;
-						continue ;
-					}
-					else
-						this->fds.push_back({clientSocket, POLLIN});
-				}
-				else {
-					int clientSocket = this->fds[i].fd;
-					ssize_t bytes = recv(clientSocket, buffer, sizeof(buffer), 0);
-					if (bytes < 0)
-						cerr << "Failed to receive data: " << strerror(errno) << endl;
-					else if ( bytes == 0 )
-						cout << "connection closed" << endl;
-					else
-					{
-						cout << "Received message from client: " << buffer << std::endl;
-						Request request;
-						readRequest(buffer, request);
-						Response response(request);
-						string content = "";
-						if (request.getStatusCode() == 200) {
-							if (request.getPath() == "/") {
-								string path = "www/index.html";
-								ifstream file(path);
-								if (file) 
-									content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-								else
-									cerr << "Failed to open file: " << path << endl;
-								response.addHeader("Content-Type", "text/html");
-							}
-						}
-						else {
-							string path = getHtmlPath(response.getStatusCode());
-							ifstream file(path);
-							if (file) 
-								content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-							else
-								cerr << "Failed to open file: " << path << endl;
-							response.addHeader("Content-Type", getHtmlPath(response.getStatusCode()));
-						}
-						response.addHeader("Content-Length", to_string(content.size()));
-						response.setBody(content);
-						string responseString = response.createResponseString();
-						send(clientSocket, responseString.c_str(), responseString.size(), 0);
-					}
-				}
-			}
-		}
-	}
+void Connection::handleNewConnection(int i)
+{
+    int clientSocket = accept(this->server[i].getFd(), NULL, NULL);
+    if (clientSocket == -1)
+    {
+        cerr << "accept failed" << endl;
+        // we can also add an exception or send the client to a page with a status code and a message
+        return;
+    }
+    this->fds.push_back({clientSocket, POLLIN});
+}
+
+// add in response utils
+void checkAndSetContentTypeExtesion(string header, Response &response)
+{
+    string extension = header.substr(header.find_last_of(".") + 1);
+    if (extension == "html")
+        response.addHeader("Content-Type", "text/html");
+    else if (extension == "css")
+        response.addHeader("Content-Type", "text/css");
+    else if (extension == "ico")
+        response.addHeader("Content-Type", "image/x-icon");
+
+}
+
+void Connection::handleExistingConnection(int i)
+{
+    vector<char> buffer(4092); // max size of request to fix Maybe we can use Max body size and then resize;
+    int clientSocket = this->fds[i].fd;
+    ssize_t bytes = recv(clientSocket, buffer.data(), buffer.size(), 0);
+    if (bytes < 0)
+    {
+        cerr << "recv failed" << endl;
+        return;
+    }
+    else if ( bytes == 0 )
+    {
+        cout << "Connection closed" << clientSocket << endl;
+        close(clientSocket);
+        this->fds.erase(this->fds.begin() + i);
+        return;
+    }
+    // if there is a max buffer size we can check here
+    buffer.resize(bytes);
+	// here is where Jangijs magic happens
+    Request request;
+    readRequest(buffer.data(), request);
+    Response response(request);
+    // in Resoponse class not here //
+    checkAndSetContentTypeExtesion(request.getPath(), response);
+    handleRequest(clientSocket, request, response, i); // Jangijs magic
+}
+
+// bool pathIsLocation(string path, vector<Location> location)
+// {
+//     for (int i = 0; i < location.size(); i++)
+//     {
+//         if (location[i].get_path() == path)
+//             return true;
+//     }
+//     return false;
+// }
+
+// in Resoponse class not here //
+void Connection::handleRequest(int clientSocket, Request& request, Response& responseClass, int i)
+{
+    /* Response schema
+    |  Version StatusCode StatusMessage     ||-- We have that in the response class --||
+    |  Header                               ||-- We have that in the response class --||
+ -------   ||||||| Possible we need to add more things to the header ||||||| --------
+    |  "Content-Type: " create a funtion that returns the content type based on the file extension
+    |  "Content-Length: " + content size() + "\r\n\r\n"
+    |  Content  
+    */
+// if cgi we can call the cgi class
+    // if simple request we can call the request class
+    // here we can split if cgi or simple request
+    // if cgi we can call the cgi class
+    // if simple request we can call the request class
+    std::string path;
+    // if (pathIsLocation(request.getPath(), this->server[i].getLocations()))
+    // {
+    //     cout << "location found" << endl;
+    //     // allowed methods change if we have to ch
+    // }
+    // else
+    //     cout << "location not found" << endl;
+
+    if (request.getPath() == "/") 
+        path = "www/index.html";
+    else
+        path = "www" + request.getPath();
+    std::ifstream file(path);
+    std::string content;
+    if (file)
+        content = std::string ((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    else
+        std::cerr << "Failed to open file: " << path << std::endl;
+    responseClass.setBody(content);
+    string response = request.getVersion() + " " + to_string(request.getStatusCode()) + " OK\r\n"
+       "Content-Type: " + responseClass.getHeaderValue("Content-Type") + "\r\n"
+       "Content-Length: " + std::to_string(responseClass.getBody().size()) + "\r\n\r\n"
+       + responseClass.getBody();
+    send(clientSocket, response.c_str() , response.size(), 0);
+}
+
+void Connection::start()
+{
+    for (int i = 0; i < this->server.size(); i++)
+        cout << "Listening at port: " << this->server[i].getPort() << endl;
+    while (true)
+    {
+        int ret = poll(this->fds.data(), this->fds.size(), 0);
+        if (ret == -1)
+            throw runtime_error("poll failed");
+        for (int i = 0; i < this->fds.size(); i++)
+        {
+            if (this->fds[i].revents & POLLIN)
+            {
+                if (i < this->server.size() && this->fds[i].fd == this->server[i].getFd())
+                    handleNewConnection(i);
+                else
+                    handleExistingConnection(i);
+            }
+        }
+    }
 }
 
 Connection::~Connection( void ) { }
