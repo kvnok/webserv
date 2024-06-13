@@ -1,18 +1,17 @@
 #include "Connection.hpp"
-#include "httpParse.hpp"
+#include "httpRequest.hpp"
+#include "httpResponse.hpp"
+#include "httpStatus.hpp"
 
-Connection::Connection( void ) {}
+Connection::Connection( void ) { }
 
-Connection::Connection( vector<Server> &server)
-{
-	this->server = server;
+Connection::Connection( vector<Server> &servers) {
+	this->server = servers;
 	this->setFds();
 }
 
-void Connection::setFds()
-{
-	for (int i = 0; i < this->server.size(); i++)
-	{
+void Connection::setFds() {
+	for (int i = 0; i < this->server.size(); i++) {
 		pollfd fd;
 		fd.fd = this->server[i].getFd();
 		fd.events = POLLIN;
@@ -52,8 +51,8 @@ void Connection::handleExistingConnection(int i)
     buffer.resize(bytes);
 	// here is where Jangijs magic happens
     Request request;
-    if (readRequest(buffer.data(), request))
-        handleRequest(clientSocket, request); // Jangijs magic
+    readRequest(buffer.data(), request);
+    handleRequest(clientSocket, request); // Jangijs magic
 }
 
 void Connection::handleRequest(int clientSocket, Request& request)
@@ -102,7 +101,4 @@ void Connection::start()
     }
 }
 
-Connection::~Connection( void )
-{
-
-}
+Connection::~Connection( void ) { }
