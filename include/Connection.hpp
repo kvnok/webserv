@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Server.hpp"
+#include "httpRequest.hpp"
 
 class Connection
 {
@@ -14,6 +15,9 @@ class Connection
 		void start();
 		void setFds();
 		~Connection();
+		void handleNewConnection(int i);
+		void handleExistingConnection(int i);
+		void handleRequest(int clientSocket, Request& request);
 };
 
 

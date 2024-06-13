@@ -53,7 +53,10 @@ void Server::setBind()
     address.sin_port = htons(this->_port);
     int addrlen = sizeof(address);
 	if (bind(this->_serverFd, (struct sockaddr *)&address, addrlen) == -1)
+    {
+        perror("bind failed");
         throw runtime_error("bind failed");
+    }
 }
 
 void Server::setListen()
