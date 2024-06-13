@@ -26,6 +26,7 @@ void Connection::handleNewConnection(int i)
     if (clientSocket == -1)
     {
         cerr << "accept failed" << endl;
+        // we can also add an exception or send the client to a page with a status code and a message
         return;
     }
     this->fds.push_back({clientSocket, POLLIN});
@@ -33,7 +34,7 @@ void Connection::handleNewConnection(int i)
 
 void Connection::handleExistingConnection(int i)
 {
-    vector<char> buffer(1024);
+    vector<char> buffer(5000000); // max size of request to fix Maybe we can use Max body size and then resize;
     int clientSocket = this->fds[i].fd;
     ssize_t bytes = recv(clientSocket, buffer.data(), buffer.size(), 0);
     if (bytes < 0)
