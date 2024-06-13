@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 09:56:01 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/13 12:03:52 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/06/13 13:29:48 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,7 +103,8 @@ void	readRequest(string const& requestData, Request& request) {
 		request.setStatusCode(400);
 		return ;
 	}
-	if (request.getMethod() == "POST" && (request.getPath() == "/coffee" \
+	// should be "POST" instead of "GET", but switched for now for testing
+	if (request.getMethod() == "GET" && (request.getPath() == "/coffee" \
 		|| request.getPath() == "/brew")) {
 		request.setStatusCode(418);
 		return ; 

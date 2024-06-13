@@ -106,11 +106,14 @@ void Connection::handleRequest(int clientSocket, Request& request, Response& res
     // }
     // else
     //     cout << "location not found" << endl;
-
-    if (request.getPath() == "/") 
+    if (request.getStatusCode() == 200) {
+        if (request.getPath() == "/") 
         path = "www/index.html";
+        else
+            path = "www" + request.getPath();
+    }
     else
-        path = "www" + request.getPath();
+        path = getHtmlPath(request.getStatusCode());
     std::ifstream file(path);
     std::string content;
     if (file)
