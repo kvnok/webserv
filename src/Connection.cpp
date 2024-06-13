@@ -20,7 +20,6 @@ void Connection::setFds()
 	}
 }
 
-
 void Connection::handleNewConnection(int i)
 {
     int clientSocket = accept(this->server[i].getFd(), NULL, NULL);
@@ -49,8 +48,8 @@ void Connection::handleExistingConnection(int i)
         this->fds.erase(this->fds.begin() + i);
         return;
     }
-	// here is where Jangijs magic happens
     buffer.resize(bytes);
+	// here is where Jangijs magic happens
     Request request;
     if (readRequest(buffer.data(), request))
         handleRequest(clientSocket, request); // Jangijs magic
@@ -58,6 +57,9 @@ void Connection::handleExistingConnection(int i)
 
 void Connection::handleRequest(int clientSocket, Request& request)
 {
+    // here we can split if cgi or simple request
+    // if cgi we can call the cgi class
+    // if simple request we can call the request class
     std::string content;
     if (request.getPath() == "/") 
     {
