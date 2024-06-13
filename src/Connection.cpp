@@ -98,7 +98,7 @@ void Connection::handleRequest(int clientSocket, Request& request, Response& res
     // here we can split if cgi or simple request
     // if cgi we can call the cgi class
     // if simple request we can call the request class
-    std::string path;
+    string path;
     // if (pathIsLocation(request.getPath(), this->server[i].getLocations()))
     // {
     //     cout << "location found" << endl;
@@ -106,25 +106,26 @@ void Connection::handleRequest(int clientSocket, Request& request, Response& res
     // }
     // else
     //     cout << "location not found" << endl;
-    if (request.getStatusCode() == 200) {
-        if (request.getPath() == "/") 
-        path = "www/index.html";
-        else
-            path = "www" + request.getPath();
-    }
+    if (request.getPath() == "/") 
+    path = "www/index.html";
     else
+        path = "www" + request.getPath();
+    if (request.getStatusCode() != 200)
         path = getHtmlPath(request.getStatusCode());
-    std::ifstream file(path);
-    std::string content;
+    ifstream file(path);
+    string content;
     if (file)
-        content = std::string ((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    else
-        std::cerr << "Failed to open file: " << path << std::endl;
+        content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+    else {
+        cerr << "Failed to open file: " << path << endl;
+        request.setStatusCode(404);
+        path = getHtmlPath(request.getStatusCode());
+        ifstream file(path);
+        content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+    }
     responseClass.setBody(content);
-    string response = request.getVersion() + " " + to_string(request.getStatusCode()) + " OK\r\n"
-       "Content-Type: " + responseClass.getHeaderValue("Content-Type") + "\r\n"
-       "Content-Length: " + std::to_string(responseClass.getBody().size()) + "\r\n\r\n"
-       + responseClass.getBody();
+    responseClass.addHeader("Content-Length", to_string(content.size()));
+    string response = responseClass.createResponseString();
     send(clientSocket, response.c_str() , response.size(), 0);
 }
 

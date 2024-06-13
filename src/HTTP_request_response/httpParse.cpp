@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 09:56:01 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/13 13:29:48 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/06/13 14:51:21 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,9 +67,7 @@ static bool validatePath(string const path, Request& request) {
 		request.setStatusCode(400);
 		return (false);
 	}
-	return (true);
-//	string canonicalPath = filesystem::weakly_canonical(path).string();
-	
+	return (true);	
 }
 static bool	parseRequestLine(string line, Request& request) {
 
