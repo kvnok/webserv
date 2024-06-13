@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:54:54 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/12 20:10:52 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/06/13 11:39:51 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,12 @@
 #include <unordered_map>
 #include <sstream>
 #include <set>
+#include <filesystem>
+#include <regex>
 
 using namespace std;
+
+#define MAX_URI_LENGTH 4096
 
 const set<string> validHttpMethods = {
 	"GET", "POST", "DELETE",
