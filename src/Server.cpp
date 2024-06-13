@@ -16,7 +16,6 @@ Server::Server( void )
     this->max_clients = MAX_CLIENTS;
 }
 
-
 vector<string> Server::getServerName(){return this->_server_names;};
 int Server::getPort(){return this->_port;};
 string Server::getHost(){return this->_host;};
@@ -27,6 +26,8 @@ map<int, string> Server::getErrorPages(){return this->_error_pages;};
 string Server::getRoot(){return this->_root;};
 int Server::getFd(){return this->_serverFd;};
 int Server::getMaxClients(){return this->max_clients;};
+string Server::getCurrentPath(){return this->_currentPath;};
+vector<Location> Server::getLocations(){return this->_locations;};
 
 Server::Server(ServerBlock& blocks)
 {
@@ -39,6 +40,10 @@ Server::Server(ServerBlock& blocks)
     this->_error_pages = blocks.get_error_pages();
 	this->_root = blocks.get_root();
 	this->_locations = blocks.get_locations();
+    this->_opt = 1;
+    this->_serverFd = 0;
+    this->max_clients = MAX_CLIENTS;
+    this->_currentPath = blocks.get_root();
     this->setSocket();
 }
 

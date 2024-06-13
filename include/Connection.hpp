@@ -2,6 +2,7 @@
 
 #include "Server.hpp"
 #include "httpRequest.hpp"
+#include "httpResponse.hpp"
 
 class Connection
 {
@@ -17,7 +18,7 @@ class Connection
 		~Connection();
 		void handleNewConnection(int i);
 		void handleExistingConnection(int i);
-		void handleRequest(int clientSocket, Request& request);
+		void handleRequest(int clientSocket, Request& request, Response& response, int i);
 };
 
 
