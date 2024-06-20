@@ -1,5 +1,8 @@
 #include "Connection.hpp"
 
+// set where the actualy file path of where we are going
+// and set the status code for it
+
 
 // set path to the relative path to the file or the correct error page
 // if the path is not allowed, set the status code to 403
