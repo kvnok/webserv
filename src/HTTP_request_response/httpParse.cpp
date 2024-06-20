@@ -6,28 +6,68 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 09:56:01 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/13 16:31:00 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/06/20 09:08:17 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "httpRequest.hpp"
 
-static bool	parseHeaderLine(string line, Request& request)
-{
-	string	headerLine[2];
-	
-	size_t	splitPos = line.find(':');
-	if (line.back() != '\r' || line.length() <= splitPos + 2)
+static bool	parseBody(istringstream &streamBody, string line, Request& request) {
+	if (!request.getHeaderValue("Content-Length").empty()) {
+		size_t len = stoi(request.getHeaderValue("Content-Length"));
+		string body;
+		body.resize(len);
+		streamBody.read(&body[0], len);
+		request.setBody(body);
+		if (request.getBody().length() != len) {
+			request.setStatusCode(400);
+			return (false);
+		}
+	}
+	else if (!request.getHeaderValue("Transfer-Encoding").empty()) {
+		stringstream bodyStream;
+		while (getline(streamBody, line))
+			bodyStream << line << '\n';
+		request.setBody(bodyStream.str());
+	}
+	// if there is a body but not the correct header:  error? or not possible?
+	// Transfer-encoding and content-length might be present together, 
+	// transfer-endcoding can be set to chunked, in which case there are chunks of body
+	// need a way to parse that
+	if (request.getMethod() == "POST" && request.getBody().empty()) {
+		request.setStatusCode(400);
 		return (false);
-	headerLine[0] = line.substr(0, splitPos);
-	headerLine[1] = line.substr(splitPos + 2, line.length() - (splitPos + 2));
-	if (!headerLine[0].empty() && !headerLine[1].empty())
-		request.addHeader(headerLine[0], headerLine[1]);
-	else
-		return (false);
+	}
 	return (true);
 }
 
+static bool	parseHeaders(istringstream &headerStream, string line, Request& request) {
+	size_t	totLen = 0;
+
+	while (getline(headerStream, line) && line != "\r") {
+		size_t	len = line.length();
+		if (len > 5000 || totLen + len > 8000) {
+			request.setStatusCode(431);
+			return (false);
+		}
+		totLen += len;
+		string	headerLine[2];
+		size_t	splitPos = line.find(':');
+		if (line.back() != '\r' || line.length() <= splitPos + 2) {
+			request.setStatusCode(400);
+			return (false);
+		}
+		headerLine[0] = line.substr(0, splitPos);
+		headerLine[1] = line.substr(splitPos + 2, line.length() - (splitPos + 2));
+		if (!headerLine[0].empty() && !headerLine[1].empty())
+			request.addHeader(headerLine[0], headerLine[1]);
+		else {
+			request.setStatusCode(400);
+			return (false);
+		}
+	}
+	return (true);
+}
 
 static bool	validateMethod(string const method, Request& request) {
 	if (validHttpMethods.find(method) == validHttpMethods.end()) {
@@ -79,75 +119,43 @@ static bool validatePath(string const path, Request& request) {
 	return (true);	
 }
 static bool	parseRequestLine(string line, Request& request) {
-
 	string			requestLine[4];
 	istringstream	lineStream(line);
 
 	lineStream >> requestLine[0] >> requestLine[1] >> requestLine[2] >> requestLine[3];
-	if (!requestLine[0].empty() && !requestLine[1].empty() && !requestLine[2].empty() \
-		&& requestLine[3].empty()) {
-		request.setMethod(requestLine[0]);
-		request.setPath(requestLine[1]);
-		request.setVersion(requestLine[2]);
-		if (validateMethod(request.getMethod(), request) && validateVersion(request.getVersion(), request) \
-			&& validatePath(request.getPath(), request))
-			return (true);
-	}
-	else
+	if (requestLine[0].empty() || requestLine[1].empty() || requestLine[2].empty() \
+		|| !requestLine[3].empty()) {
 		request.setStatusCode(400);
-	return (false);
+		return (false);
+	}
+	request.setMethod(requestLine[0]);
+	request.setPath(requestLine[1]);
+	request.setVersion(requestLine[2]);
+	if (!validateMethod(request.getMethod(), request) || !validateVersion(request.getVersion(), request) \
+		|| !validatePath(request.getPath(), request))
+		return (false);
+	// should be "POST" instead of "GET", but switched for now for testing
+	if (request.getMethod() == "GET" && (request.getPath() == "/coffee" \
+		|| request.getPath() == "/brew")) {
+		request.setStatusCode(418);
+		return (false); 
+	}
+	return (true);
 }
 
 void	readRequest(string const& requestData, Request& request) {
 	istringstream	requestStream(requestData);
 	string			line;
 	
-	if (getline(requestStream, line)) {
-		if (!parseRequestLine(line, request))
-			return ;
-	}
-	else {
+	if (!getline(requestStream, line)) {
 		request.setStatusCode(400);
 		return ;
 	}
-	// should be "POST" instead of "GET", but switched for now for testing
-	if (request.getMethod() == "GET" && (request.getPath() == "/coffee" \
-		|| request.getPath() == "/brew")) {
-		request.setStatusCode(418);
-		return ; 
-	}
-	while (getline(requestStream, line) && line != "\r")
-		if (!parseHeaderLine(line, request)) {
-			request.setStatusCode(400);
-			return ;
-		}
-	if (!request.getHeaderValue("Content-Length").empty()) {
-		size_t len = stoi(request.getHeaderValue("Content-Length"));
-		string body;
-		body.resize(len);
-		requestStream.read(&body[0], len);
-		request.setBody(body);
-		if (request.getBody().length() != len) {
-			request.setStatusCode(400);
-			return ;
-		}
-	}
-	else if (!request.getHeaderValue("Transfer-Encoding").empty()) {
-		stringstream bodyStream;
-		while (getline(requestStream, line))
-			bodyStream << line << '\n';
-		request.setBody(bodyStream.str());
-	}
-	else if (getline(requestStream, line)) {
-		request.setStatusCode(400);
+	if (!parseRequestLine(line, request))
 		return ;
-	}
-	// Transfer-encoding and content-length might be present together, 
-	// transfer-endcoding can be set to chunked, in which case there are chunks of body
-	// need a way to parse that
-	if (request.getMethod() == "POST" && request.getBody().empty()) {
-		request.setStatusCode(400);
+	if (!parseHeaders(requestStream, line, request))
 		return ;
-	}
+	if (!parseBody(requestStream, line, request))
+		return ;
 	return ;
 }

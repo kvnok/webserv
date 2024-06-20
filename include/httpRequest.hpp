@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:54:54 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/13 11:39:51 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/06/16 11:08:16 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 #include <iostream>
 #include <string>
-#include <unordered_map>
+#include <map>
 #include <sstream>
 #include <set>
 #include <filesystem>
@@ -44,12 +44,12 @@ const set<string> supportedHttpVersions = {
 
 class Request {
 	private:
-		string							_method;
-		string							_path;
-		string							_version;
-		unordered_map<string, string>	_header;
-		string							_body;
-		int								_statusCode;
+		string				_method;
+		string				_path;
+		string				_version;
+		map<string, string>	_header;
+		string				_body;
+		int					_statusCode;
 	public:
 		Request();
 		~Request();
@@ -58,14 +58,14 @@ class Request {
 		void	setVersion(string const version);
 		void	setBody(string const body);
 		void	addHeader(string const key, string const value);
-		void	setHeader(unordered_map<string, string> const header);
+		void	setHeader(map<string, string> const header);
 		void	setStatusCode(int const statusCode);
 		string	getMethod() const;
 		string	getPath() const;
 		string	getVersion() const;
 		string	getBody() const;
 		int		getStatusCode() const;
-		unordered_map<string, string>	getHeaders() const;
+		map<string, string>	getHeaders() const;
 		string	getHeaderValue(const string& key) const;
 };
 

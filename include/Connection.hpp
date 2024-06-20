@@ -18,5 +18,6 @@ class Connection
 		~Connection();
 		void handleNewConnection(int i);
 		void handleExistingConnection(int i);
-		void handleRequest(int clientSocket, Request& request, Response& response, int i);
 };
+
+void handleRequestAndMakeResponse(vector<char>buffer, int clientSocket, int i);
