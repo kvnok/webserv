@@ -38,4 +38,5 @@ the location route path cannot have a . in it
 
 
 (optional) if we are looking for /file and there is no location route of /file, then search for file in server root
+
 */
