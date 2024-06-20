@@ -23,6 +23,7 @@ void	Request::setBody(string body) { this->_body = body; }
 void	Request::addHeader(string const key, string const value) { this->_header[key] = value; }
 void	Request::setHeader(map<string, string> const header) { this->_header = header; }
 void	Request::setStatusCode(int const statusCode) { this->_statusCode = statusCode; }
+void	Request::setServer(Server server) { this->_server = server; }
 
 string	Request::getMethod() const { return (this->_method); }
 string	Request::getPath() const { return (this->_path); }
@@ -30,6 +31,7 @@ string	Request::getVersion() const { return (this->_version); }
 string	Request::getBody() const { return (this->_body); }
 int		Request::getStatusCode() const { return (this->_statusCode); }
 map<string, string> Request::getHeaders() const { return (this->_header); }
+Server	Request::getServer() const { return (this->_server); }
 
 string	Request::getHeaderValue(const string& key) const{
 	auto iterator = this->_header.find(key);

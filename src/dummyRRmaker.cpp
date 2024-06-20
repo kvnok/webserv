@@ -26,11 +26,12 @@ static void handleRequest(int clientSocket, Request& request) {
     string path;
 
     // need to access the server blocks and locations here, so we can open the correct root
-    if (request.getPath() == "/") 
-       path = "www/index.html";
-    else
-        path = "www" + request.getPath();
-
+    // if (request.getPath() == "/") 
+    //    path = "www/index.html";
+    // else
+    //     path = "www" + request.getPath();
+    request_path_handler(path, request);
+    
     ifstream file(path);
     if (!file.is_open()) {
         handleError(clientSocket, 404);
@@ -48,9 +49,9 @@ static void handleRequest(int clientSocket, Request& request) {
     response.sendResponse();
 }
 
-void    handleRequestAndMakeResponse(vector<char>buffer, int clientSocket) {
+void    handleRequestAndMakeResponse(vector<char>buffer, int clientSocket, Server server) {
     Request request;
-
+    request.setServer(server);
     readRequest(buffer.data(), request);
     if (request.getStatusCode() == 200) //check if there are other statusCodes to continue request
         handleRequest(clientSocket, request);

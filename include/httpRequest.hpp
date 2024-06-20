@@ -20,6 +20,8 @@
 #include <filesystem>
 #include <regex>
 
+#include "Server.hpp"
+
 using namespace std;
 
 #define MAX_URI_LENGTH 4096
@@ -50,6 +52,7 @@ class Request {
 		map<string, string>	_header;
 		string				_body;
 		int					_statusCode;
+		Server				_server;
 	public:
 		Request();
 		~Request();
@@ -67,6 +70,9 @@ class Request {
 		int		getStatusCode() const;
 		map<string, string>	getHeaders() const;
 		string	getHeaderValue(const string& key) const;
+
+		void	setServer(Server server);
+		Server	getServer() const;
 };
 
 void	readRequest(string const& requestData, Request& request);

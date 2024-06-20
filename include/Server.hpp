@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include "Config.hpp"
 #include "stuff.hpp"
+#include "smartLocs.hpp"
 
 using namespace std;
 
@@ -34,6 +35,7 @@ class Server
 		int newSocket;
 		int max_clients;
 		string _currentPath;
+		smartLocs _smartLocs;
 	public:
 		Server( void );
 		Server(ServerBlock& blocks);
@@ -56,5 +58,8 @@ class Server
 		void setSocket();
 		void setBind();
 		void setListen();
-} ;
+		// ------------------------- //
+		smartLocs getSmartLocs();
+		void setSmartLocs(ServerBlock &block);
+};
 

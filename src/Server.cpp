@@ -28,23 +28,27 @@ int Server::getFd(){return this->_serverFd;};
 int Server::getMaxClients(){return this->max_clients;};
 string Server::getCurrentPath(){return this->_currentPath;};
 vector<Location> Server::getLocations(){return this->_locations;};
+smartLocs Server::getSmartLocs(){return this->_smartLocs;};
+void Server::setSmartLocs(ServerBlock &block){this->_smartLocs = smartLocs(block);};
 
-Server::Server(ServerBlock& blocks)
+Server::Server(ServerBlock& block)
 {
-    this->_listen = blocks.get_listen();
-    this->_host = blocks.get_host();
-    this->_port = blocks.get_port();
-    this->_server_names = blocks.get_server_names();
-    this->_client_max_body_size = blocks.get_client_max_body_size();
-	this->_index = blocks.get_index();
-    this->_error_pages = blocks.get_error_pages();
-	this->_root = blocks.get_root();
-	this->_locations = blocks.get_locations();
+    this->_listen = block.get_listen();
+    this->_host = block.get_host();
+    this->_port = block.get_port();
+    this->_server_names = block.get_server_names();
+    this->_client_max_body_size = block.get_client_max_body_size();
+	this->_index = block.get_index();
+    this->_error_pages = block.get_error_pages();
+	this->_root = block.get_root();
+	this->_locations = block.get_locations();
     this->_opt = 1;
     this->_serverFd = 0;
     this->max_clients = MAX_CLIENTS;
-    this->_currentPath = blocks.get_root();
+    this->_currentPath = block.get_root();
     this->setSocket();
+    smartLocs temp_smartLocs(block);
+    this->_smartLocs.set_locs(temp_smartLocs.get_locs());
 }
 
 void Server::setBind()

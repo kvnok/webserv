@@ -41,7 +41,7 @@ void Connection::handleExistingConnection(int i) {
     }
     else
         buffer.resize(bytes); // if there is a limit, we need to check if the bytes exceed this limit.
-    handleRequestAndMakeResponse(buffer, clientSocket);
+    handleRequestAndMakeResponse(buffer, clientSocket, this->server[i]);
 }
 
 void Connection::start()

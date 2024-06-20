@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
 		Parser parser(config_file);
 		Config config;
 		parser.parse(config);
-		config.print_server_blocks();
+		// config.print_server_blocks();
 		//test_smartLocs(config); // test smartLocs
 
 		vector<Server> Servers;

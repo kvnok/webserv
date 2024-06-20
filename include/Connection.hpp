@@ -20,4 +20,5 @@ class Connection
 		void handleExistingConnection(int i);
 };
 
-void handleRequestAndMakeResponse(vector<char>buffer, int clientSocket);
+void handleRequestAndMakeResponse(vector<char>buffer, int clientSocket, Server server);
+void request_path_handler(string &path, Request &request);
