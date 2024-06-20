@@ -67,3 +67,7 @@ void Connection::start()
 }
 
 Connection::~Connection( void ) { }
+
+// while true
+    // for i in servers
+        // loop through all client fds of server

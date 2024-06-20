@@ -112,7 +112,7 @@ void s_error_page(vector<string> &s, ServerBlock &block) {
 	{
 		throw invalid_argument("error_page: error code already set: " + error_code);
 	}
-	block.add_error_page(code, error_path);
+	block.add_error_page(code, path);
 }
 
 // in bytes

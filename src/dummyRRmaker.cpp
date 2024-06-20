@@ -30,6 +30,7 @@ static void handleRequest(int clientSocket, Request& request) {
        path = "www/index.html";
     else
         path = "www" + request.getPath();
+
     ifstream file(path);
     if (!file.is_open()) {
         handleError(clientSocket, 404);
@@ -41,7 +42,7 @@ static void handleRequest(int clientSocket, Request& request) {
   // get request.header(connection) = keep alive or close.
 
     string content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-    Response response(clientSocket, 200);
+    Response response(clientSocket, request.getStatusCode());
     response.setBody(content);
     response.setHeaders(content, path, "keep-alive");  
     response.sendResponse();

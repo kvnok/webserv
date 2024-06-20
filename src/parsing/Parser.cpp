@@ -127,7 +127,10 @@ void Parser::parse(Config &config) {
 				break;
 			}
 		}
+		// if its a unique listen, then add it to the config
 		if (flag == 0) {
+			// fill in the rest of the error pages
+			fill_error_pages(server_block);
 			config.add_server_block(server_block);
 		}
 	}
