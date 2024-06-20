@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
 		// config.print_server_blocks();
 		test_smartLocs(config); // test smartLocs
 
-		vector<Server> Servers;
+		vector<Server> Servers; // Servers is a vector of the parsed serverblocks
 		for(int i = 0; i < config.get_server_blocks().size(); i++)
 		{
 			Server server(config.get_server_blocks()[i]);

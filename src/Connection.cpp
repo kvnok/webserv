@@ -1,3 +1,4 @@
+
 #include "Connection.hpp"
 
 Connection::Connection( void ) { }

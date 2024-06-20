@@ -1,8 +1,6 @@
 #pragma once
 
 #include "Server.hpp"
-#include "httpRequest.hpp"
-#include "httpResponse.hpp"
 
 class Connection
 {
@@ -11,8 +9,8 @@ class Connection
 		vector<pollfd> fds;
 		vector<int> _firstConnection;
 	public:
-		Connection(/* args */);
-		Connection( vector<Server> &server);
+		Connection();
+		Connection(vector<Server> &server);
 		void start();
 		void setFds();
 		~Connection();
