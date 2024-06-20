@@ -28,3 +28,14 @@ void request_path_handler(string &path, Request &request) {
 /bla/bla/bla -> /bla/bla
 /test/one.html -> /test
 */
+
+/*
+rules:
+the path from the request should end with a / if its just asking a location
+if its asking for a file, it should not end with a /
+
+the location route path cannot have a . in it
+
+
+(optional) if we are looking for /file and there is no location route of /file, then search for file in server root
+*/
