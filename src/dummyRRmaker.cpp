@@ -26,11 +26,11 @@ static void handleRequest(int clientSocket, Request& request) {
     string path;
 
     // need to access the server blocks and locations here, so we can open the correct root
-    // if (request.getPath() == "/") 
-    //    path = "www/index.html";
-    // else
-    //     path = "www" + request.getPath();
-    request_path_handler(path, request);
+    if (request.getPath() == "/") 
+       path = "www/index.html";
+    else
+        path = "www" + request.getPath();
+    // request_path_handler(path, request);
     
     ifstream file(path);
     if (!file.is_open()) {
