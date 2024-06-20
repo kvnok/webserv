@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/07 16:46:25 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/13 23:24:09 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/06/20 13:35:32 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,13 +21,13 @@ const string	fourZeroFourBody() {
 
 	body = "<!DOCTYPE html>\n";
 	body += "<html>\n";
-	body += "	<head>\n";
-	body += "		<title>404 Error Page</title>\n";
-	body += "	</head>\n";
-	body += "	<body>\n";
-	body += "		<h1>404</h1>\n";
-	body += "		<p>Not Found</p>\n";
-	body +=	"	</body>\n";
+	body += "    <head>\n";
+	body += "        <title>404 Error Page</title>\n";
+	body += "    </head>\n";
+	body += "    <body>\n";
+	body += "        <h1>404</h1>\n";
+	body += "        <p>Not Found</p>\n";
+	body +=	"    </body>\n";
 	body += "</html>\n";
 	return (body);
 }

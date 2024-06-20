@@ -3,40 +3,56 @@
 #include "httpResponse.hpp"
 #include "httpStatus.hpp"
 
-static void checkAndSetContentTypeExtesion(string header, Response &response) {
-    string extension = header.substr(header.find_last_of(".") + 1);
-    if (extension == "html")
-        response.addHeader("Content-Type", "text/html");
-    else if (extension == "css")
-        response.addHeader("Content-Type", "text/css");
-    else if (extension == "ico")
-        response.addHeader("Content-Type", "image/x-icon");
-  //  response.addHeader("Connection", "close");
+static void handleError(int clientSocket, int statusCode) {
+    string path;
+    string content;
+
+    path = getHtmlPath(statusCode);
+    ifstream file(path);
+    if (!file.is_open()) {
+        content = fourZeroFourBody();
+        path = "404.html";
+        statusCode = 404;
+    }
+    else
+        content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+    Response response(clientSocket, statusCode);
+    response.setBody(content);
+    response.setHeaders(content, path, "keep-alive");
+    response.sendResponse();
 }
 
-static void handleRequest(int clientSocket, Request& request, Response& response, int i) {
+static void handleRequest(int clientSocket, Request& request) {
     string path;
 
+    // need to access the server blocks and locations here, so we can open the correct root
     if (request.getPath() == "/") 
        path = "www/index.html";
     else
         path = "www" + request.getPath();
-    if (request.getStatusCode() != 200) {
-        path = getHtmlPath(request.getStatusCode());
-        response.setStatusCode(404);
-    }
     ifstream file(path);
+    if (!file.is_open()) {
+        handleError(clientSocket, 404);
+        return ;
+    }
+
+  // check paht, run cgi, delete, 
+  // after 'execution' of request we end up with: file(which has the body), statusCode, clientSocket.
+  // get request.header(connection) = keep alive or close.
+
     string content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+    Response response(clientSocket, 200);
     response.setBody(content);
-    response.addHeader("Content-Length", to_string(content.size()));
-    checkAndSetContentTypeExtesion(path, response);
-    string responseString = response.createResponseString();
-    send(clientSocket, responseString.c_str() , responseString.size(), 0);   
+    response.setHeaders(content, path, "keep-alive");  
+    response.sendResponse();
 }
 
-void    handleRequestAndMakeResponse(vector<char>buffer, int clientSocket, int i) {
+void    handleRequestAndMakeResponse(vector<char>buffer, int clientSocket) {
     Request request;
+
     readRequest(buffer.data(), request);
-    Response response(request.getStatusCode());
-    handleRequest(clientSocket, request, response, i);
+    if (request.getStatusCode() == 200) //check if there are other statusCodes to continue request
+        handleRequest(clientSocket, request);
+    else
+        handleError(clientSocket, request.getStatusCode());
 }

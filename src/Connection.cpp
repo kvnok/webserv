@@ -41,7 +41,7 @@ void Connection::handleExistingConnection(int i) {
     }
     else
         buffer.resize(bytes); // if there is a limit, we need to check if the bytes exceed this limit.
-    handleRequestAndMakeResponse(buffer, clientSocket, i);
+    handleRequestAndMakeResponse(buffer, clientSocket);
 }
 
 void Connection::start()
@@ -59,7 +59,7 @@ void Connection::start()
             {
                 if (i < this->server.size() && this->fds[i].fd == this->server[i].getFd())
                     handleNewConnection(i);
-                //else
+                //else //not needed?
                 handleExistingConnection(i);
             }
         }

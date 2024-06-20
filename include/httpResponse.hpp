@@ -6,13 +6,14 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 08:54:10 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/16 11:10:06 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/06/20 15:20:44 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
 #include "httpRequest.hpp"
+#include "Server.hpp" //for send()
 #include <iostream>
 #include <string>
 #include <map>
@@ -25,19 +26,21 @@ class Response {
 		int					_statusCode;
 		map<string, string>	_header;
 		string				_body;
+		const int			_clientSocket;
 		Response();
 	public:
-		Response(int statusCode);
+		Response(int const clientSocket, int const statusCode);
 		~Response();
-		void	setStatusCode(int const statusCode);
+//		void	setStatusCode(int const statusCode);
 		void	setBody(string const body);
 		void	addHeader(string const key, string const value);
-		void	setHeader(map<string, string> const header);
-		int		getStatusCode() const;
-		string	getBody() const;
-		map<string, string>	getHeaders() const;
-		string	getHeaderValue(const string& key) const;
-		string	createResponseString() const;
+		void	setHeaders(string const content, string const path, string const connection);
+//		void	setHeader(map<string, string> const header);
+//		int		getStatusCode() const;
+//		string	getBody() const;
+//		map<string, string>	getHeaders() const;
+//		string	getHeaderValue(const string& key) const;
+		ssize_t	sendResponse() const;
 };
 
 // add fucntions outside class
