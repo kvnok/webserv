@@ -3,13 +3,10 @@
 #include "httpResponse.hpp"
 #include "httpStatus.hpp"
 
-static void handleError(int clientSocket, int statusCode) {
-    string path;
+static void handleResponse(const int clientSocket, int statusCode, ifstream& file, string path) {
     string content;
 
-    path = getHtmlPath(statusCode);
-    ifstream file(path);
-    if (!file.is_open()) {
+    if (statusCode == 404 && !file.is_open()) {
         content = fourZeroFourBody();
         path = "404.html";
         statusCode = 404;
@@ -22,37 +19,37 @@ static void handleError(int clientSocket, int statusCode) {
     response.sendResponse();
 }
 
-static void handleRequest(int clientSocket, Request& request) {
+static void handleRequest(const int clientSocket, Request& request) {
     string path;
 
     // need to access the server blocks and locations here, so we can open the correct root
-    if (request.getPath() == "/") 
-       path = "www/index.html";
-    else
-        path = "www" + request.getPath();
-    ifstream file(path);
-    if (!file.is_open()) {
-        handleError(clientSocket, 404);
-        return ;
+    if (request.getStatusCode() == 200) {
+        if (request.getPath() == "/") 
+            path = "www/index.html";
+        else
+            path = "www" + request.getPath();
+        ifstream file(path);
+        if (!file.is_open())
+            request.setStatusCode(404);
+        handleResponse(clientSocket, request.getStatusCode(), file, path);
     }
+    else {
+        path = getHtmlPath(request.getStatusCode());
+        ifstream file(path);
+        if (!file.is_open())
+            request.setStatusCode(404);
+        handleResponse(clientSocket, request.getStatusCode(), file, path);
+    }
+        
 
   // check paht, run cgi, delete, 
   // after 'execution' of request we end up with: file(which has the body), statusCode, clientSocket.
   // get request.header(connection) = keep alive or close.
-
-    string content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-    Response response(clientSocket, 200);
-    response.setBody(content);
-    response.setHeaders(content, path, "keep-alive");  
-    response.sendResponse();
 }
 
-void    handleRequestAndMakeResponse(vector<char>buffer, int clientSocket) {
+void    handleRequestAndMakeResponse(vector<char>buffer, const int clientSocket) {
     Request request;
 
     readRequest(buffer.data(), request);
-    if (request.getStatusCode() == 200) //check if there are other statusCodes to continue request
-        handleRequest(clientSocket, request);
-    else
-        handleError(clientSocket, request.getStatusCode());
+    handleRequest(clientSocket, request);
 }

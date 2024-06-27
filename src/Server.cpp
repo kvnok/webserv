@@ -54,7 +54,7 @@ void Server::setBind() {
     address.sin_port = htons(this->_port);
     int addrlen = sizeof(address);
 	if (bind(this->_serverFd, (struct sockaddr *)&address, addrlen) == -1) {
-        perror("bind failed");
+        perror("bind failed"); //why do we use perror here?
         throw runtime_error("bind failed");
     }
 }
@@ -69,10 +69,10 @@ void Server::setListen() {
 void Server::setSocket() {
 	if ((this->_serverFd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
         throw runtime_error("socket failed");
-    int flags = fcntl(this->_serverFd, F_GETFL, 0);
-    fcntl(this->_serverFd, F_SETFL, flags | O_NONBLOCK); //set it to non-blocking mode
 	if (setsockopt(this->_serverFd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &this->_opt, sizeof(this->_opt)) == -1)
         throw runtime_error("setsockopt failed");
+    if (fcntl(this->_serverFd, F_SETFL, fcntl(this->_serverFd, F_GETFL, 0) | O_NONBLOCK) == -1) //set it to non-blocking mode
+        throw runtime_error("fcntl failed");
     this->setBind();
     this->setListen();
 }
