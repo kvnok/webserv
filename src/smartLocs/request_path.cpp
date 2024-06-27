@@ -40,3 +40,27 @@ the location route path cannot have a . in it
 (optional) if we are looking for /file and there is no location route of /file, then search for file in server root
 
 */
+/*
+todo:
+- read all the text
+- what are the rules of the config loc path
+- what are the rules of the request path
+- when is the request path a file
+- when is the request path a folder
+- get the folder path from the request path
+- get the file path from the request path
+- compare the folder path with the loc path
+- or check in / for the server baseline
+
+- if the path matches something in the locs or baseline, then set path to the full file path
+- if the path does not match, set the status code to 404 and the path to the 404 page from _error_pages
+
+*/
+/*
+just set the status code
+and the path
+if statuscode changes, set the path to the error page
+if statuscode is 200, set the path to the file
+use _error_pages from server
+
+*/
