@@ -37,15 +37,15 @@ void Connection::handleExistingConnection(int& i) {
     ssize_t bytes = recv(clientSocket, buffer.data(), buffer.size(), 0);
     if (bytes < 0) {
         if (errno != EWOULDBLOCK && errno != EAGAIN) {
-            cerr << "recv failed" << endl;
+            cerr << "recv failed, close: " << clientSocket << endl;
             close (clientSocket);
-            this->fds.erase(this->fds.begin() + 1);
+            this->fds.erase(this->fds.begin() + i);
             --i;
         }
         return;
     }
     else if ( bytes == 0 ) {
-        cout << "Connection closed: " << clientSocket << endl;
+        cout << "Connection closed: " << this->fds[i].fd << endl;
         close(clientSocket);
         this->fds.erase(this->fds.begin() + i);
         --i;
