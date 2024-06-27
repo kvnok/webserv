@@ -10,8 +10,24 @@
 
 // check if they are asking for a file or a folder
 
+static void parse_path(string &path, string &folder, string &file) {
+	size_t pos = path.find_last_of('/');
+	if (pos == string::npos) {
+		folder = "/";
+		file = path;
+	}
+	else {
+		folder = path.substr(0, pos);
+		file = path.substr(pos + 1);
+	}
+}
+
 void request_path_handler(string &path, Request &request) {
 	// first check if its just / or /file or /folder/
+	string folder;
+	string file;
+	parse_path(path, folder, file);
+	
 
 	
 	
