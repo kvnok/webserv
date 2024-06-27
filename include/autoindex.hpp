@@ -1,6 +1,6 @@
 #include "stuff.hpp"
 #include "Location.hpp"
-#include "ServerBlock.hpp"
+#include "pServerBlock.hpp"
 #include "Config.hpp"
 #include "Parser.hpp"
 

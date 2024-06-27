@@ -2,7 +2,7 @@
 #include "stuff.hpp"
 #include "Location.hpp"	
 
-class ServerBlock {
+class pServerBlock {
 	private:
 		string _listen;
 		string _host;
@@ -14,8 +14,8 @@ class ServerBlock {
 		string _index;
 		vector<Location> _locations;
 	public:
-		ServerBlock();
-		ServerBlock(string listen,
+		pServerBlock();
+		pServerBlock(string listen,
 			string host,
 			int port,
 			string root,
@@ -24,7 +24,7 @@ class ServerBlock {
 			vector<string> server_names,
 			map<int, string> error_pages,
 			vector<Location> locations);
-		~ServerBlock();
+		~pServerBlock();
 		string get_listen() const;
 		string get_host() const;
 		int get_port() const;
@@ -50,4 +50,4 @@ class ServerBlock {
 		void print_server_block();
 };
 
-void fill_error_pages(ServerBlock &block);
+void fill_error_pages(pServerBlock &block);

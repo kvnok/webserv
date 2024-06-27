@@ -6,7 +6,7 @@ bool is_valid_server_block_directive(const string& directive) {
 	return s_directives.count(directive) > 0;
 }
 
-map<string, function<void(vector<string> &, ServerBlock&)>> s_directive_funcs = {
+map<string, function<void(vector<string> &, pServerBlock&)>> s_directive_funcs = {
 	{"server_name", s_server_name},
 	{"listen", s_listen},
 	{"root", s_root},
@@ -39,7 +39,7 @@ void check_location_block(Location loc) {
 	}
 }
 
-void check_manadatory_directives(ServerBlock &block) {
+void check_manadatory_directives(pServerBlock &block) {
 	if (block.get_listen().empty())
 		throw logic_error("listen directive is mandatory");
 	if (block.get_root().empty())
@@ -65,7 +65,7 @@ void check_manadatory_directives(ServerBlock &block) {
 	}
 }
 
-void parse_server_block(RAWSERV &s, ServerBlock &block) {
+void parse_server_block(RAWSERV &s, pServerBlock &block) {
 	if (s.size() == 0)
 		throw logic_error("empty server block");
 	if (s[0].size() != 2 || s[0][0] != "server" || s[0][1] != "{")

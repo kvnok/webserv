@@ -38,7 +38,7 @@ class Server
 		smartLocs _smartLocs;
 	public:
 		Server( void );
-		Server(ServerBlock& blocks);
+		Server(pServerBlock& blocks);
 		~Server( void );
 		void setPort(int port);
 		// -------- Getters -------- //
@@ -60,6 +60,6 @@ class Server
 		void setListen();
 		// ------------------------- //
 		smartLocs getSmartLocs();
-		void setSmartLocs(ServerBlock &block);
+		void setSmartLocs(pServerBlock &block);
 };
 

@@ -9,7 +9,7 @@ class smartLocs {
 		map<string, Loc> _locs;
 	public:
 		smartLocs();
-		smartLocs(ServerBlock &block);
+		smartLocs(pServerBlock &block);
 		~smartLocs();
 
 		void print_locs();

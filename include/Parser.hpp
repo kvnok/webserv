@@ -2,7 +2,7 @@
 
 #include "stuff.hpp"
 #include "Location.hpp"
-#include "ServerBlock.hpp"
+#include "pServerBlock.hpp"
 #include "Config.hpp"
 
 using namespace std;
@@ -46,16 +46,16 @@ void print_i_raw_serv(RAWSERV &server);
 void check_brackets(RAWSERV &raw_server);
 vector<string> split(const string &s, char delimiter);
 
-void parse_server_block(RAWSERV &s, ServerBlock &block);
+void parse_server_block(RAWSERV &s, pServerBlock &block);
 void parse_location(RAWSERV &s, Location &location, int &i);
 
 /*p_handlers*/
-void s_listen(vector<string> &s, ServerBlock &block);
-void s_server_name(vector<string> &s, ServerBlock &block);
-void s_error_page(vector<string> &s, ServerBlock &block);
-void s_client_max_body_size(vector<string> &s, ServerBlock &block);
-void s_root(vector<string> &s, ServerBlock &block);
-void s_index(vector<string> &s, ServerBlock &block);
+void s_listen(vector<string> &s, pServerBlock &block);
+void s_server_name(vector<string> &s, pServerBlock &block);
+void s_error_page(vector<string> &s, pServerBlock &block);
+void s_client_max_body_size(vector<string> &s, pServerBlock &block);
+void s_root(vector<string> &s, pServerBlock &block);
+void s_index(vector<string> &s, pServerBlock &block);
 
 void l_root(vector<string> &s, Location &location);
 void l_index(vector<string> &s, Location &location);

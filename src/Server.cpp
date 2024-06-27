@@ -29,9 +29,9 @@ int Server::getMaxClients(){return this->max_clients;};
 string Server::getCurrentPath(){return this->_currentPath;};
 vector<Location> Server::getLocations(){return this->_locations;};
 smartLocs Server::getSmartLocs(){return this->_smartLocs;};
-void Server::setSmartLocs(ServerBlock &block){this->_smartLocs = smartLocs(block);};
+void Server::setSmartLocs(pServerBlock &block){this->_smartLocs = smartLocs(block);};
 
-Server::Server(ServerBlock& block)
+Server::Server(pServerBlock& block)
 {
     this->_listen = block.get_listen();
     this->_host = block.get_host();

@@ -4,7 +4,7 @@
 at the base of server block
 xxx.xxx.xxx.xxx:port
 */
-void s_listen(vector<string> &s, ServerBlock &block) {
+void s_listen(vector<string> &s, pServerBlock &block) {
 	if (block.get_listen() != "")
 		throw invalid_argument("listen: already set");
 	if (s.size() != 2)
@@ -56,7 +56,7 @@ void s_listen(vector<string> &s, ServerBlock &block) {
 	block.set_listen(str);
 }
 
-void s_server_name(vector<string> &s, ServerBlock &block) {
+void s_server_name(vector<string> &s, pServerBlock &block) {
 	if (block.get_server_names().size() != 0)
 		throw invalid_argument("server_name: already set");
 	if (s.size() < 2)
@@ -80,7 +80,7 @@ void s_server_name(vector<string> &s, ServerBlock &block) {
 
 // path is the route on top of the root
 // so if root is ./var and path is /404.html, it will be ./var/404.html
-void s_error_page(vector<string> &s, ServerBlock &block) {
+void s_error_page(vector<string> &s, pServerBlock &block) {
 	if (s.size() != 3)
 		throw invalid_argument("error_page: invalid number of arguments");
 	string error_code = s[1];
@@ -116,7 +116,7 @@ void s_error_page(vector<string> &s, ServerBlock &block) {
 }
 
 // in bytes
-void s_client_max_body_size(vector<string> &s, ServerBlock &block) {
+void s_client_max_body_size(vector<string> &s, pServerBlock &block) {
 	if (block.get_client_max_body_size() != "")
 		throw invalid_argument("client_max_body_size: already set");
 	
@@ -133,7 +133,7 @@ void s_client_max_body_size(vector<string> &s, ServerBlock &block) {
 	block.set_client_max_body_size(str);
 }
 
-void s_root(vector<string> &s, ServerBlock &block) {
+void s_root(vector<string> &s, pServerBlock &block) {
 	if (block.get_root() != "")
 		throw invalid_argument("root: already set");
 	
@@ -150,7 +150,7 @@ void s_root(vector<string> &s, ServerBlock &block) {
 	block.set_root(str);
 }
 
-void s_index(vector<string> &s, ServerBlock &block) {
+void s_index(vector<string> &s, pServerBlock &block) {
 	if (block.get_index() != "")
 		throw invalid_argument("index: already set");
 	if (block.get_root() == "")
