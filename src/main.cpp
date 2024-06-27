@@ -35,6 +35,7 @@ int main(int argc, char **argv) {
 		Connection connection(Servers);
 		connection.start();
 	} catch (exception &e) {
+		//also need to close fd's if they are open
 		cerr << RED << "Exception: " << e.what() << RESET << endl;
 	}
 	// parseMainTest();

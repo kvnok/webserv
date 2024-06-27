@@ -19,6 +19,7 @@ void Connection::setFds() {
 
 void Connection::handleNewConnection(int& i) {
     int clientSocket = accept(this->server[i].getFd(), NULL, NULL);
+    cout << "new Clientsocket: " << clientSocket << endl;
     if (clientSocket == -1) {
         cerr << "accept failed" << endl; // implement error/exception meganism
         return ;
@@ -68,10 +69,12 @@ void Connection::start() {
                 else
                     handleExistingConnection(i);
             }
-            if (this->fds[i].revents & POLLOUT) {
-                cout << "writing to a client" << endl;
-                //prob used for sending a response in chunks
-            }
+            //if (this->fds[i].revents & POLLOUT) {
+            //    cout << "writing to a client: " << this->fds[i].fd << endl;
+            //    //prob used for sending a response in chunks
+            //}
+            // need to check pollout for writing on a socket, so only for the clientsocket
+            // so we need to be able to know if a fd is from client or server.
             if (this->fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                 cerr << "socket error on fd: " << this->fds[i].fd << endl;
                 close (this->fds[i].fd);
