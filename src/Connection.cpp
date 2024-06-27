@@ -44,7 +44,7 @@ void Connection::handleExistingConnection(int& i) {
         }
         return;
     }
-    else if ( bytes == 0 ) {
+    else if (bytes == 0) {
         cout << "Connection closed: " << this->fds[i].fd << endl;
         close(clientSocket);
         this->fds.erase(this->fds.begin() + i);
@@ -56,8 +56,6 @@ void Connection::handleExistingConnection(int& i) {
 }
 
 void Connection::start() {
-    for (int i = 0; i < this->server.size(); i++)
-        cout << "Listening at port: " << this->server[i].getPort() << endl; //just for printing, can remove it
     while (true) {
         int ret = poll(this->fds.data(), this->fds.size(), -1); // -1 will block until an event occurs, 0 will be non-blocking, but only the sockets need to be non-blocking
         if (ret == -1)

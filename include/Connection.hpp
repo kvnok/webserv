@@ -7,7 +7,6 @@ class Connection
 	private:
 		vector<Server> server;
 		vector<pollfd> fds;
-		vector<int> _firstConnection;
 	public:
 		Connection();
 		Connection(vector<Server> &server);
