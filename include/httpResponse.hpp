@@ -6,14 +6,14 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 08:54:10 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/20 15:20:44 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/06/29 11:41:26 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
 #include "httpRequest.hpp"
-#include "Server.hpp" //for send()
+#include "ServerBlock.hpp" //for send()
 #include <iostream>
 #include <string>
 #include <map>

@@ -1,10 +1,10 @@
 #include "stuff.hpp"
 #include "Location.hpp"
-#include "ServerBlock.hpp"
+#include "ParseServerBlock.hpp"
 #include "Config.hpp"
 #include "Parser.hpp"
-#include "Server.hpp"
-#include "Connection.hpp"
+#include "ServerBlock.hpp"
+#include "Servers.hpp"
 #include "CGI.hpp"
 #include "autoindex.hpp"
 #include "smartLocs.hpp"
@@ -26,14 +26,13 @@ int main(int argc, char **argv) {
 		// config.print_server_blocks();
 		test_smartLocs(config); // test smartLocs
 
-		vector<Server> Servers; // Servers is a vector of the parsed serverblocks
-		for(int i = 0; i < config.get_server_blocks().size(); i++)
-		{
-			Server server(config.get_server_blocks()[i]);
-			Servers.push_back(server);
+		vector<ServerBlock> serverBlocks;
+		for(int i = 0; i < config.get_server_blocks().size(); i++) {
+			ServerBlock serverBlock(config.get_server_blocks()[i]);
+			serverBlocks.push_back(serverBlock);
 		}
-		Connection connection(Servers);
-		connection.start();
+		Servers servers(serverBlocks);
+		servers.start();
 	} catch (exception &e) {
 		//also need to close fd's if they are open
 		cerr << RED << "Exception: " << e.what() << RESET << endl;

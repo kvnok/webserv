@@ -1,6 +1,6 @@
-#include "Server.hpp"
+#include "ServerBlock.hpp"
 
-Server::Server( void ) {
+ServerBlock::ServerBlock( void ) {
     this->_port = 0;
     this->_listen = "";
 	this->_host = "";
@@ -13,22 +13,22 @@ Server::Server( void ) {
     this->_opt = 1;
     this->_serverFd = 0;
     this->max_clients = MAX_CLIENTS;
-} // do we need a default constructor? or should we alwasy get the constructor whti serverBlock?
+} // do we need a default constructor? or should we alwasy get the constructor whti pServerBlock?
 
-vector<string> Server::getServerName(){return this->_server_names;};
-int Server::getPort(){return this->_port;};
-string Server::getHost(){return this->_host;};
-string Server::getListen(){return this->_listen;};
-string Server::getMaxBody(){return this->_client_max_body_size;};
-string Server::getIndex(){return this->_index;};
-map<int, string> Server::getErrorPages(){return this->_error_pages;};
-string Server::getRoot(){return this->_root;};
-int Server::getFd(){return this->_serverFd;};
-int Server::getMaxClients(){return this->max_clients;};
-string Server::getCurrentPath(){return this->_currentPath;};
-vector<Location> Server::getLocations(){return this->_locations;};
+vector<string> ServerBlock::getServerName(){return this->_server_names;};
+int ServerBlock::getPort(){return this->_port;};
+string ServerBlock::getHost(){return this->_host;};
+string ServerBlock::getListen(){return this->_listen;};
+string ServerBlock::getMaxBody(){return this->_client_max_body_size;};
+string ServerBlock::getIndex(){return this->_index;};
+map<int, string> ServerBlock::getErrorPages(){return this->_error_pages;};
+string ServerBlock::getRoot(){return this->_root;};
+int ServerBlock::getFd(){return this->_serverFd;};
+int ServerBlock::getMaxClients(){return this->max_clients;};
+string ServerBlock::getCurrentPath(){return this->_currentPath;};
+vector<Location> ServerBlock::getLocations(){return this->_locations;};
 
-Server::Server(ServerBlock& block) {
+ServerBlock::ServerBlock(pServerBlock& block) {
     this->_listen = block.get_listen();
     this->_host = block.get_host();
     this->_port = block.get_port();
@@ -45,7 +45,7 @@ Server::Server(ServerBlock& block) {
     this->setSocket();
 }
 
-void Server::setBind() {
+void ServerBlock::setBind() {
     if (this->_serverFd == 0)
         throw runtime_error("socket not set");
     struct sockaddr_in address;
@@ -59,14 +59,14 @@ void Server::setBind() {
     }
 }
 
-void Server::setListen() {
+void ServerBlock::setListen() {
     if (this->_serverFd == 0)
         throw runtime_error("socket not set");
     if (listen(this->_serverFd, this->getMaxClients()) == -1)
         throw runtime_error("listen failed");
 }
 
-void Server::setSocket() {
+void ServerBlock::setSocket() {
 	if ((this->_serverFd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
         throw runtime_error("socket failed");
 	if (setsockopt(this->_serverFd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &this->_opt, sizeof(this->_opt)) == -1)
@@ -77,4 +77,4 @@ void Server::setSocket() {
     this->setListen();
 }
 
-Server::~Server( void ) {}
+ServerBlock::~ServerBlock( void ) {}
