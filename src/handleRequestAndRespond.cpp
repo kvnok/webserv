@@ -26,19 +26,32 @@ static void handleRequest(const int clientSocket, Request& request) {
     if (request.getStatusCode() == 200) {
         if (request.getPath() == "/") 
             path = "www/index.html";
+        else if (request.getPath() == "/uploadedImage")
+            path = to_string(clientSocket) + "uploadedImage.html";
         else
             path = "www" + request.getPath();
+        cout << path << endl;
         ifstream file(path);
         if (!file.is_open())
             request.setStatusCode(404);
-        handleResponse(clientSocket, request.getStatusCode(), file, path);
-    }
-    else {
-        path = getHtmlPath(request.getStatusCode());
-        ifstream file(path);
-        if (!file.is_open())
-            request.setStatusCode(404);
-        handleResponse(clientSocket, request.getStatusCode(), file, path);
+        if (request.getMethod() == "POST") // maybe to add smart location check kkroon
+        {
+            post_method(clientSocket, request, file);
+            return ;
+        }
+        else if (request.getMethod() == "DELETE") // maybe to add smart location check from kkroon
+        {
+            delete_method(clientSocket, request, file);
+        }
+        // else
+            handleResponse(clientSocket, request.getStatusCode(), file, path);
+        }
+        else {
+            path = getHtmlPath(request.getStatusCode());
+            ifstream file(path);
+            if (!file.is_open())
+                request.setStatusCode(404);
+            handleResponse(clientSocket, request.getStatusCode(), file, path);
     }
         
 

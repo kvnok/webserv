@@ -38,6 +38,7 @@ void Connection::handleExistingConnection(int& i) {
     if (bytes < 0) {
         if (errno != EWOULDBLOCK && errno != EAGAIN) {
             cerr << "recv failed, close: " << clientSocket << endl;
+            close_uploaded_image_page(clientSocket); // to see if we can use this function
             close (clientSocket);
             this->fds.erase(this->fds.begin() + i);
             --i;
@@ -46,6 +47,7 @@ void Connection::handleExistingConnection(int& i) {
     }
     else if ( bytes == 0 ) {
         cout << "Connection closed: " << this->fds[i].fd << endl;
+        close_uploaded_image_page(clientSocket); // to see if we can use this function
         close(clientSocket);
         this->fds.erase(this->fds.begin() + i);
         --i;
@@ -77,6 +79,7 @@ void Connection::start() {
             // so we need to be able to know if a fd is from client or server.
             if (this->fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                 cerr << "socket error on fd: " << this->fds[i].fd << endl;
+                close_uploaded_image_page(this->fds[i].fd); // to see if we can use this function
                 close (this->fds[i].fd);
                 this->fds.erase(this->fds.begin() + i);
                 --i;

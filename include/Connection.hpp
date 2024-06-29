@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Server.hpp"
+#include "httpRequest.hpp"
+#include "httpResponse.hpp"
 
 class Connection
 {
@@ -19,3 +21,4 @@ class Connection
 };
 
 void handleRequestAndMakeResponse(vector<char>buffer, const int clientSocket);
+void close_uploaded_image_page(int clientSocket);
