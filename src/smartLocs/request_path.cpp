@@ -12,36 +12,40 @@ static void parse_path(string &path, string &folder, string &file) {
 	}
 }
 
-void check_baseline(string &file, string &path, Server *server, map<int, string> err_pages) {
+void check_baseline(Request &request, string &file, string &path, Server *server, map<int, string> err_pages) {
 	string root = server->getRoot();
 	string root_and_file = root + "/" + file;
+	request.setStatusCode(200);
 
 	if (file.empty()) { // no file, check for index
-		string index = server->getIndex();
-		string root_and_index = root + "/" + index;
+		string root_and_index = root + "/" + server->getIndex();
 		ifstream stream(root_and_index);
 		if (stream.is_open()) {
 			path = root_and_index;
 			stream.close();
 		}
 		else { // 404
-			string err_page = err_pages[404];
-			if (err_page.empty()) {
-				throw runtime_error("404 error page not found");
-			}
-			path = root + "/" + err_page;
+			request.setStatusCode(404);
 		}
 	}
-	else { // 404
-		string err_page = err_pages[404];
-		if (err_page.empty()) {
-			throw runtime_error("404 error page not found");
+	else if (!file.empty()) { // check for file
+		ifstream stream(root_and_file);
+		if (stream.is_open()) {
+			path = root_and_file;
+			stream.close();
 		}
-		path = root + "/" + err_page;
+		else { // 404
+			request.setStatusCode(404);
+		}
+	}
+
+	int statusCode = request.getStatusCode();
+	if (statusCode != 200) {
+		path = root + "/" + err_pages[statusCode];
 	}
 }
 
-void check_locs(string &folder, string &file, string &path, map<int, string> err_pages, smartLocs sLocs) {
+void check_locs(Request &request, string &folder, string &file, string &path, map<int, string> err_pages, smartLocs sLocs) {
 
 }
 
@@ -62,10 +66,10 @@ void request_path_handler(string &path, Request &request) {
 	sLocs.set_locs(server->getSmartLocs().get_locs());
 
 	if (folder == "/") {
-		check_baseline(file, path, server, err_pages);
+		check_baseline(request, file, path, server, err_pages);
 	}
 	else {
-		check_locs(folder, file, path, err_pages, sLocs);
+		check_locs(request, folder, file, path, err_pages, sLocs);
 	}
 }
 

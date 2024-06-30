@@ -65,7 +65,7 @@ void Connection::start() {
     while (true) {
         int ret = poll(this->fds.data(), this->fds.size(), -1); // -1 will block until an event occurs, 0 will be non-blocking, but only the sockets need to be non-blocking
         if (ret == -1)
-            throw runtime_error("poll failed");
+            throw runtime_error("poll failed"); // catch this or dont throw it
         for (int i = 0; i < this->fds.size(); i++) {
             if (this->fds[i].revents & POLLIN) {
                 if (i < this->server.size() && this->fds[i].fd == this->server[i].getFd())
