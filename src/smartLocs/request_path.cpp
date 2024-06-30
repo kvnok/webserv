@@ -24,7 +24,7 @@ void check_baseline(Request &request, string &file, string &path, Server *server
 			path = root_and_index;
 			stream.close();
 		}
-		else { // 404
+		else { // can't open index
 			request.setStatusCode(404);
 		}
 	}
@@ -34,7 +34,7 @@ void check_baseline(Request &request, string &file, string &path, Server *server
 			path = root_and_file;
 			stream.close();
 		}
-		else { // 404
+		else { // can't open file part of the path
 			request.setStatusCode(404);
 		}
 	}
@@ -46,7 +46,57 @@ void check_baseline(Request &request, string &file, string &path, Server *server
 }
 
 void check_locs(Request &request, string &folder, string &file, string &path, map<int, string> err_pages, smartLocs sLocs) {
+	Loc loc;
+	try {
+		loc = sLocs.get_loc(folder);
+	}
+	catch (invalid_argument &e) {
+		request.setStatusCode(404);
+		path = folder + "/" + err_pages[404];
+		return;
+	}
 
+	string root = loc.get_root();
+	string root_and_file = root + "/" + file;
+	request.setStatusCode(200);
+
+	if (file.empty()) { // no file, check for index
+		if (loc.get_index() != "")
+		{
+			string root_and_index = root + "/" + loc.get_index();
+			ifstream stream(root_and_index);
+			if (stream.is_open()) {
+				path = root_and_index;
+				stream.close();
+			}
+			else { // can't open index	
+				request.setStatusCode(404);
+			}
+		}
+		else if (loc.get_autoindex() == "on") {
+			// do autoindex
+			// for now just 404 because autoindex is not implemented yet
+			request.setStatusCode(404);
+		}
+		else { // no index, no autoindex
+			request.setStatusCode(404);
+		}
+	}
+	else if (!file.empty()) { // check for file
+		ifstream stream(root_and_file);
+		if (stream.is_open()) {
+			path = root_and_file;
+			stream.close();
+		}
+		else { // can't open file part of the path
+			request.setStatusCode(404);
+		}
+	}
+
+	int statusCode = request.getStatusCode();
+	if (statusCode != 200) {
+		path = root + "/" + err_pages[statusCode];
+	}
 }
 
 void request_path_handler(string &path, Request &request) {
@@ -72,98 +122,3 @@ void request_path_handler(string &path, Request &request) {
 		check_locs(request, folder, file, path, err_pages, sLocs);
 	}
 }
-
-
-
-
-
-// if file is "", then check for index or autoindex or 404
-
-// leave open the check for opening the file
-
-/*
-
-	if (file == "") {
-		if (folder == "/") {
-			// check for index
-			if (request.getServer()->getSmartLocs().get_index() != "") {
-				path = folder + request.getServer()->getSmartLocs().get_index();
-			}
-			else {
-				// check for autoindex
-				if (request.getServer()->getSmartLocs().get_autoindex() == "on") {
-					// autoindex
-					// check for 404
-					path = folder + "404.html";
-				}
-				else {
-					// 404
-					path = folder + "404.html";
-				}
-			}
-		}
-		else {
-			// check for index
-			if (request.getServer()->getSmartLocs().get_index() != "") {
-				path = folder + "/" + request.getServer()->getSmartLocs().get_index();
-			}
-			else {
-				// check for autoindex
-				if (request.getServer()->getSmartLocs().get_autoindex() == "on") {
-					// autoindex
-					// check for 404
-					path = folder + "/404.html";
-				}
-				else {
-					// 404
-					path = folder + "/404.html";
-				}
-			}
-		}
-	}
-	else {
-		// check for file
-		path = folder + "/" + file;
-	}
-
-*/
-/*
-ifstream file(str);
-	if (!file.is_open()) {
-		throw runtime_error("block: invalid root: " + s[1]);
-	}
-	file.close();
-*/
-/*
-	if (file.empty()) { // no file, check for index
-		string index = server->getIndex();
-		string root_and_index = root + "/" + index;
-		ifstream file(root_and_index);
-		if (file.is_open()) {
-			path = root_and_index;
-			file.close();
-		}
-		else {
-			// check for autoindex
-			string autoindex = server->getSmartLocs().get_autoindex();
-			if (autoindex == "on") {
-				// autoindex
-				// check for 404
-				string err_page = err_pages[404];
-				if (err_page.empty()) {
-					throw runtime_error("404 error page not found");
-				}
-				path = root + "/" + err_page;
-			}
-			else {
-				// 404
-				string err_page = err_pages[404];
-				if (err_page.empty()) {
-					throw runtime_error("404 error page not found");
-				}
-				path = root + "/" + err_page;
-			}
-		}
-	}
-}
-*/
