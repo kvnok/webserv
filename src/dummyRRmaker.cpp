@@ -23,14 +23,15 @@ static void handleError(int clientSocket, int statusCode) {
 }
 
 static void handleRequest(int clientSocket, Request& request) {
-    string path;
+    cout << YEL << "HANDLEREQUEST" << RESET << endl;
 
-    // need to access the server blocks and locations here, so we can open the correct root
+    string path;
+    request_path_handler(path, request);
+    //need to access the server blocks and locations here, so we can open the correct root
     if (request.getPath() == "/") 
        path = "www/index.html";
     else
         path = "www" + request.getPath();
-    // request_path_handler(path, request);
     
     ifstream file(path);
     if (!file.is_open()) {
@@ -50,6 +51,8 @@ static void handleRequest(int clientSocket, Request& request) {
 }
 
 void    handleRequestAndMakeResponse(vector<char>buffer, int clientSocket, Server* server) {
+    cout << YEL << "HANDLEREQUESTANDMAKERESPONSE" << RESET << endl;
+
     Request request;
     request.setServer(server);
     readRequest(buffer.data(), request);

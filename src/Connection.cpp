@@ -18,6 +18,8 @@ void Connection::setFds() {
 }
 
 void Connection::handleNewConnection(int& i) {
+    cout << YEL << "new connection on server: " << this->server[i].getFd() << RESET << endl;
+
     int clientSocket = accept(this->server[i].getFd(), NULL, NULL);
     cout << "new Clientsocket: " << clientSocket << endl;
     if (clientSocket == -1) {
@@ -32,6 +34,8 @@ void Connection::handleNewConnection(int& i) {
 }
 
 void Connection::handleExistingConnection(int& i) {
+    cout << YEL << "reading from a client: " << this->fds[i].fd << RESET << endl;
+
     vector<char> buffer(4092); // max size of request to fix Maybe we can use Max body size and then resize;
     int clientSocket = this->fds[i].fd;
     ssize_t bytes = recv(clientSocket, buffer.data(), buffer.size(), 0);
