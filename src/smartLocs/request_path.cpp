@@ -22,8 +22,70 @@ void request_path_handler(string &path, Request &request) {
 	cout << YEL << "folder: " << folder << RESET << endl;
 	cout << YEL << "file: " << file << RESET << endl;
 
-	
-	
+	Server *server = request.getServer();
+
+	map<int, string> err_pages = server->getErrorPages();
 	smartLocs sLocs;
-	sLocs.set_locs(request.getServer()->getSmartLocs().get_locs());
+	sLocs.set_locs(server->getSmartLocs().get_locs());
+
+	// folder is / check baseline
+	// if file is "", then check for index or autoindex or 404
+
+	
+	
 }
+
+
+
+
+
+
+
+
+
+/*
+
+	if (file == "") {
+		if (folder == "/") {
+			// check for index
+			if (request.getServer()->getSmartLocs().get_index() != "") {
+				path = folder + request.getServer()->getSmartLocs().get_index();
+			}
+			else {
+				// check for autoindex
+				if (request.getServer()->getSmartLocs().get_autoindex() == "on") {
+					// autoindex
+					// check for 404
+					path = folder + "404.html";
+				}
+				else {
+					// 404
+					path = folder + "404.html";
+				}
+			}
+		}
+		else {
+			// check for index
+			if (request.getServer()->getSmartLocs().get_index() != "") {
+				path = folder + "/" + request.getServer()->getSmartLocs().get_index();
+			}
+			else {
+				// check for autoindex
+				if (request.getServer()->getSmartLocs().get_autoindex() == "on") {
+					// autoindex
+					// check for 404
+					path = folder + "/404.html";
+				}
+				else {
+					// 404
+					path = folder + "/404.html";
+				}
+			}
+		}
+	}
+	else {
+		// check for file
+		path = folder + "/" + file;
+	}
+
+*/
