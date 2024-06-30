@@ -26,22 +26,16 @@ static void handleRequest(int clientSocket, Request& request) {
     cout << YEL << "HANDLEREQUEST" << RESET << endl;
 
     string path;
-    request_path_handler(path, request);
+    // request_path_handler(path, request);
     //need to access the server blocks and locations here, so we can open the correct root
     if (request.getPath() == "/") 
        path = "www/index.html";
     else
         path = "www" + request.getPath();
-    
-    ifstream file(path);
-    if (!file.is_open()) {
-        handleError(clientSocket, 404);
-        return ;
-    }
 
-  // check paht, run cgi, delete, 
-  // after 'execution' of request we end up with: file(which has the body), statusCode, clientSocket.
-  // get request.header(connection) = keep alive or close.
+    // check paht, run cgi, delete, 
+    // after 'execution' of request we end up with: file(which has the body), statusCode, clientSocket.
+    // get request.header(connection) = keep alive or close.
 
     string content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
     Response response(clientSocket, request.getStatusCode());
