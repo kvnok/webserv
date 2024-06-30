@@ -13,6 +13,8 @@ static void parse_path(string &path, string &folder, string &file) {
 }
 
 void request_path_handler(string &path, Request &request) {
+	path = request.getPath();
+
 	// first check if its just / or /file or /folder/
 	string folder;
 	string file;
