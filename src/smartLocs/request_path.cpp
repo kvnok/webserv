@@ -17,7 +17,8 @@ void request_path_handler(string &path, Request &request) {
 	string folder;
 	string file;
 	parse_path(path, folder, file);
-
+	cout << YEL << "folder: " << folder << RESET << endl;
+	cout << YEL << "file: " << file << RESET << endl;
 
 	
 	
