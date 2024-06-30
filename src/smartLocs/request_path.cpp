@@ -12,6 +12,14 @@ static void parse_path(string &path, string &folder, string &file) {
 	}
 }
 
+void check_baseline(string &file, string &path, Server *server, map<int, string> err_pages) {
+
+}
+
+void check_locs(string &folder, string &file, string &path, map<int, string> err_pages, smartLocs sLocs) {
+
+}
+
 void request_path_handler(string &path, Request &request) {
 	path = request.getPath();
 
@@ -28,18 +36,19 @@ void request_path_handler(string &path, Request &request) {
 	smartLocs sLocs;
 	sLocs.set_locs(server->getSmartLocs().get_locs());
 
-	// folder is / check baseline
-	// if file is "", then check for index or autoindex or 404
-
-	
-	
+	if (folder == "/") {
+		check_baseline(file, path, server, err_pages);
+	}
+	else {
+		check_locs(folder, file, path, err_pages, sLocs);
+	}
 }
 
 
 
 
 
-
+// if file is "", then check for index or autoindex or 404
 
 
 
