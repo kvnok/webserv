@@ -49,7 +49,7 @@ static void handleRequest(int clientSocket, Request& request) {
     response.sendResponse();
 }
 
-void    handleRequestAndMakeResponse(vector<char>buffer, int clientSocket, Server server) {
+void    handleRequestAndMakeResponse(vector<char>buffer, int clientSocket, Server* server) {
     Request request;
     request.setServer(server);
     readRequest(buffer.data(), request);

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "stuff.hpp"
 #include "Location.hpp"
 #include "pServerBlock.hpp"

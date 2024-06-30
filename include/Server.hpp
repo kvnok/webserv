@@ -12,6 +12,7 @@
 #include "Config.hpp"
 #include "stuff.hpp"
 #include "smartLocs.hpp"
+#include "httpRequest.hpp"
 
 using namespace std;
 

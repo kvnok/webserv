@@ -44,6 +44,8 @@ const set<string> supportedHttpVersions = {
 	"HTTP/1.1"
 };
 
+class Server;
+
 class Request {
 	private:
 		string				_method;
@@ -52,7 +54,7 @@ class Request {
 		map<string, string>	_header;
 		string				_body;
 		int					_statusCode;
-		Server				_server;
+		Server*				_server;
 	public:
 		Request();
 		~Request();
@@ -71,8 +73,8 @@ class Request {
 		map<string, string>	getHeaders() const;
 		string	getHeaderValue(const string& key) const;
 
-		void	setServer(Server server);
-		Server	getServer() const;
+		void	setServer(Server* server);
+		Server*	getServer() const;
 };
 
-void	readRequest(string const& requestData, Request& request);
+void readRequest(string const& requestData, Request& request);

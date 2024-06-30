@@ -23,5 +23,5 @@ void request_path_handler(string &path, Request &request) {
 	
 	
 	smartLocs sLocs;
-	sLocs.set_locs(request.getServer().getSmartLocs().get_locs());
+	sLocs.set_locs(request.getServer()->getSmartLocs().get_locs());
 }
