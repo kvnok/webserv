@@ -32,8 +32,9 @@ void parse_location(RAWSERV &s, Location &location, int &i)
 		throw logic_error("location path must start with /");
 	// if path is something else then /, letter, digit, or _ then throw error
 	for (size_t j = 1; j < s[i][1].size(); j++) {
-		if (!isalnum(s[i][1][j]) && s[i][1][j] != '_' && s[i][1][j] != '/')
-			throw logic_error("location path can only contain letters, digits, and _");
+		char c = s[i][1][j];
+		if (!isalnum(c) && c != '_' && c != '/' && c != '-')
+			throw logic_error("location path can only contain letters, digits, - and _");
 	}
 	location.set_path(s[i][1]);
 	i++;

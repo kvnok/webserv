@@ -1,6 +1,7 @@
 #include "smartLocs.hpp"
 
 void test_smartLocs(Config &config) {
+	cout << RED << "Testing smartLocs" << RESET << endl;
 	vector<pServerBlock> server_blocks = config.get_server_blocks();
 	for (int i = 0; i < server_blocks.size(); i++)
 	{
