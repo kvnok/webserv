@@ -6,21 +6,20 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/27 15:53:03 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/02 08:33:56 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/02 13:38:57 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include "Servers.hpp"
 #include "httpResponse.hpp"
 #include "httpRequest.hpp"
 
-enum State {READ, PARSE, EXECUTE, WRITE, CLOSE, FINISHED};
+enum State {READ, PARSE, EXECUTE, WRITE, CLOSE};
 
 class Connection {
 	private:
-		const int		_fd;
+		int				_fd;
 		State			_nextState;
 		vector<char>	_buffer;
 		size_t			_bRead;
@@ -33,6 +32,9 @@ class Connection {
 		Connection(const int fd);
 		~Connection();
 
+		Connection& operator=(const Connection& other);
+		
+
 		void	setRequest(Request* request);
 		void	setResponse(Response* response);
 		void	setNextState(const State nextState);
@@ -41,6 +43,7 @@ class Connection {
 		void	addBytesRead(const size_t bRead);
 		void	addBytesWritten(const size_t bWritten);
 
+		int				getFd() const;
 		Request&		getRequest() const;
 		Response&		getResponse() const;
 		State			getNextState() const;

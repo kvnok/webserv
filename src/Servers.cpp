@@ -1,24 +1,25 @@
 
 #include "Servers.hpp"
+#include "Connection.hpp"
 
 Servers::Servers( void ) { }
 
 Servers::Servers( vector<ServerBlock> &serverBlocks) {
-	this->_servers = serverBlocks;
+	this->_serverBlocks = serverBlocks;
 	this->setFds();
 }
 
 void    Servers::setFds() {
-	for (int i = 0; i < this->_servers.size(); i++) {
+	for (int i = 0; i < this->_serverBlocks.size(); i++) {
 		pollfd fd;
-		fd.fd = this->_servers[i].getFd();
+		fd.fd = this->_serverBlocks[i].getFd();
 		fd.events = POLLIN;
 		this->_fds.push_back(fd);
 	}
 }
 
 void    Servers::handleNewConnection(int i) {
-    int clientSocket = accept(this->_servers[i].getFd(), NULL, NULL);
+    int clientSocket = accept(this->_serverBlocks[i].getFd(), NULL, NULL);
     cout << "new Clientsocket: " << clientSocket << endl;
     if (clientSocket == -1) {
         cerr << "accept failed" << endl; // implement error/exception meganism
@@ -32,51 +33,71 @@ void    Servers::handleNewConnection(int i) {
     this->_connections.emplace_back(clientSocket);
 }
 
-void    Servers::handleExistingConnection(int i) {
- // if there is a limit, we need to check if the bytes exceed this limit.
+void    Servers::handleExistingConnection(int& i) {
+    Connection& connection = this->_connections[i - this->_serverBlocks.size()];
+    State       state = connection.getNextState();
+    switch (state) {
+        case READ:
+            readRequest(connection);
+            break ;
+        case PARSE:
+            parseRequest(connection);
+            break ;
+        case EXECUTE:
+            executeRequest(connection);
+            break ;
+        case WRITE:
+            writeResponse(connection);
+            break ;
+        case CLOSE:
+            closeConnection(i);
+            break ;
+    }
 }
 
-void    Servers::readRequest() {
-    vector<char> buffer(4092); // max size of request to fix Maybe we can use Max body size and then resize;
-    int clientSocket = this->_fds[i].fd;
+void    Servers::readRequest(Connection& connection) {
+    vector<char> buffer = connection.getBuffer(); // max size of request to fix Maybe we can use Max body size and then resize;
+    int clientSocket = connection.getFd();
     ssize_t bytes = recv(clientSocket, buffer.data(), buffer.size(), 0);
     if (bytes < 0) {
         if (errno != EWOULDBLOCK && errno != EAGAIN) {
-            cerr << "recv failed, close: " << clientSocket << endl;
-            close (clientSocket);
-            this->_fds.erase(this->_fds.begin() + i);
-            --i;
+            connection.setNextState(CLOSE);
         }
         return;
     }
     else if (bytes == 0) {
-        cout << "Connection closed: " << this->_fds[i].fd << endl;
-        close(clientSocket);
-        this->_fds.erase(this->_fds.begin() + i);
-        --i;
+        connection.setNextState(CLOSE);
         return;
     }
     buffer.resize(bytes);
+    connection.setBuffer(buffer);
+    if (done)
+        connection.setNextState(PARSE);
 }
 
-void    Servers::parseRequest() {
-    handleRequestAndMakeResponse(buffer, clientSocket);
-}
-
-void    Servers::executeRequest() {
+void    Servers::parseRequest(Connection& connection) {
+    handleRequestAndMakeResponse(connection.getBuffer(), connection.getFd());
     // new part Kevin
+    connection.setNextState(EXECUTE);
 }
 
-void    Servers::writeResponse() {
+void    Servers::executeRequest(Connection& connection) {
+    cout << "handle: " << connection.getFd() << endl;
+    connection.setNextState(WRITE);
+}
 
+void    Servers::writeResponse(Connection& connection) {
+    // Response response;
+    connection.setNextState(CLOSE);
 }
 
 void    Servers::closeConnection(int &i) {
     cout << "Connection closed: " << this->_fds[i].fd << endl;
     close(this->_fds[i].fd);
     this->_fds.erase(this->_fds.begin() + i);
+    this->_connections.erase(this->_connections.begin() + (i - this->_serverBlocks.size()));
     --i;
-    return;   
+    return;
 }
 
 void    Servers::start() {
@@ -86,7 +107,7 @@ void    Servers::start() {
             throw runtime_error("poll failed");
         for (int i = 0; i < this->_fds.size(); i++) {
             if (this->_fds[i].revents & POLLIN) {
-                if (i < this->_servers.size() && this->_fds[i].fd == this->_servers[i].getFd())
+                if (i < this->_serverBlocks.size() && this->_fds[i].fd == this->_serverBlocks[i].getFd())
                     handleNewConnection(i);
                 else
                     handleExistingConnection(i);

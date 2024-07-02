@@ -1,11 +1,12 @@
 #pragma once
 
 #include "ServerBlock.hpp"
+#include "Connection.hpp"
 
 class Servers
 {
 	private:
-		vector<ServerBlock> _servers;
+		vector<ServerBlock> _serverBlocks;
 		vector<Connection> _connections;
 		vector<pollfd> _fds;
 	public:
@@ -15,7 +16,7 @@ class Servers
 		void	start();
 		void	setFds();
 		void	handleNewConnection(int i);
-		void	handleExistingConnection(int i);
+		void	handleExistingConnection(int& i);
 		void	readRequest(Connection& connection);
 		void	parseRequest(Connection& connection);
 		void	executeRequest(Connection& connection);
