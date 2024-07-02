@@ -8,7 +8,7 @@ Servers::Servers( vector<ServerBlock> &serverBlocks) {
 	this->setFds();
 }
 
-void Servers::setFds() {
+void    Servers::setFds() {
 	for (int i = 0; i < this->_servers.size(); i++) {
 		pollfd fd;
 		fd.fd = this->_servers[i].getFd();
@@ -17,7 +17,7 @@ void Servers::setFds() {
 	}
 }
 
-void Servers::handleNewConnection(int& i) {
+void    Servers::handleNewConnection(int i) {
     int clientSocket = accept(this->_servers[i].getFd(), NULL, NULL);
     cout << "new Clientsocket: " << clientSocket << endl;
     if (clientSocket == -1) {
@@ -29,9 +29,14 @@ void Servers::handleNewConnection(int& i) {
         return ;
     }
     this->_fds.push_back({clientSocket, POLLIN | POLLOUT, 0});
+    this->_connections.emplace_back(clientSocket);
 }
 
-void Servers::handleExistingConnection(int& i) {
+void    Servers::handleExistingConnection(int i) {
+ // if there is a limit, we need to check if the bytes exceed this limit.
+}
+
+void    Servers::readRequest() {
     vector<char> buffer(4092); // max size of request to fix Maybe we can use Max body size and then resize;
     int clientSocket = this->_fds[i].fd;
     ssize_t bytes = recv(clientSocket, buffer.data(), buffer.size(), 0);
@@ -51,11 +56,30 @@ void Servers::handleExistingConnection(int& i) {
         --i;
         return;
     }
-    buffer.resize(bytes); // if there is a limit, we need to check if the bytes exceed this limit.
+    buffer.resize(bytes);
+}
+
+void    Servers::parseRequest() {
     handleRequestAndMakeResponse(buffer, clientSocket);
 }
 
-void Servers::start() {
+void    Servers::executeRequest() {
+    // new part Kevin
+}
+
+void    Servers::writeResponse() {
+
+}
+
+void    Servers::closeConnection(int &i) {
+    cout << "Connection closed: " << this->_fds[i].fd << endl;
+    close(this->_fds[i].fd);
+    this->_fds.erase(this->_fds.begin() + i);
+    --i;
+    return;   
+}
+
+void    Servers::start() {
     while (true) {
         int ret = poll(this->_fds.data(), this->_fds.size(), -1); // -1 will block until an event occurs, 0 will be non-blocking, but only the sockets need to be non-blocking
         if (ret == -1)
@@ -67,12 +91,8 @@ void Servers::start() {
                 else
                     handleExistingConnection(i);
             }
-            //if (this->_fds[i].revents & POLLOUT) {
-            //    cout << "writing to a client: " << this->_fds[i].fd << endl;
-            //    //prob used for sending a response in chunks
-            //}
-            // need to check pollout for writing on a socket, so only for the clientsocket
-            // so we need to be able to know if a fd is from client or server.
+            //if (this->_fds[i].revents & POLLOUT && i >= this->_servers.size()?)
+            //    handleWriting()
             if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                 cerr << "socket error on fd: " << this->_fds[i].fd << endl;
                 close (this->_fds[i].fd);

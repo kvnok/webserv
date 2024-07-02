@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/27 15:53:03 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/29 15:18:05 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/02 08:33:56 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,12 +16,12 @@
 #include "httpResponse.hpp"
 #include "httpRequest.hpp"
 
-enum State {ACCEPTING, READING, PARSING, PROCESSING, WRITING, CLOSED};
+enum State {READ, PARSE, EXECUTE, WRITE, CLOSE, FINISHED};
 
 class Connection {
 	private:
 		const int		_fd;
-		State			_state;
+		State			_nextState;
 		vector<char>	_buffer;
 		size_t			_bRead;
 		size_t			_bWritten;
@@ -35,7 +35,7 @@ class Connection {
 
 		void	setRequest(Request* request);
 		void	setResponse(Response* response);
-		void	setState(const State state);
+		void	setNextState(const State nextState);
 		void	setBuffer(const vector<char> buffer);
 
 		void	addBytesRead(const size_t bRead);
@@ -43,7 +43,7 @@ class Connection {
 
 		Request&		getRequest() const;
 		Response&		getResponse() const;
-		State			getState() const;
+		State			getNextState() const;
 		size_t			getBytesRead() const;
 		size_t			getBytesWritten() const;
 		vector<char>	getBuffer() const;
