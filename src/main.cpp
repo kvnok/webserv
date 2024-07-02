@@ -37,6 +37,9 @@ int main(int argc, char **argv) {
 		//also need to close fd's if they are open
 		cerr << RED << "Exception: " << e.what() << RESET << endl;
 	}
+	
+	// here we want to delete all post requests and stuff
+
 	// parseMainTest();
 	// cgi_multiple_tests();
 	// test_autoindex();

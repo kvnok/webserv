@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/27 15:53:03 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/02 13:38:57 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/02 16:15:27 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,18 +25,18 @@ class Connection {
 		size_t			_bRead;
 		size_t			_bWritten;
 		Request*		_request;
-		Response*		_response;
+	//	Response*		_response;
 		Connection();
 
 	public:
 		Connection(const int fd);
+		Connection(const Connection& other);
 		~Connection();
 
 		Connection& operator=(const Connection& other);
-		
 
 		void	setRequest(Request* request);
-		void	setResponse(Response* response);
+	//	void	setResponse(Response* response);
 		void	setNextState(const State nextState);
 		void	setBuffer(const vector<char> buffer);
 
@@ -45,7 +45,7 @@ class Connection {
 
 		int				getFd() const;
 		Request&		getRequest() const;
-		Response&		getResponse() const;
+	//	Response&		getResponse() const;
 		State			getNextState() const;
 		size_t			getBytesRead() const;
 		size_t			getBytesWritten() const;
