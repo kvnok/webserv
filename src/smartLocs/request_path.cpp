@@ -2,6 +2,7 @@
 
 static void parse_path(string &path, string &folder, string &file) {
 	if (path == "/") {
+		cout << YEL << "path is /" << RESET << endl;
 		folder = "/";
 		file = "";
 		return;
@@ -19,6 +20,7 @@ static void parse_path(string &path, string &folder, string &file) {
 
 void check_baseline(Request &request, string &file, string &path, ServerBlock server, map<int, string> err_pages) {
 	string root = server.getRoot();
+	cout << YEL << "root: " << root << RESET << endl;
 	string root_and_file = root + "/" + file;
 	request.setStatusCode(200);
 
@@ -106,7 +108,31 @@ void check_locs(Request &request, string &folder, string &file, string &path, ma
 	}
 }
 
+static void print_server_block(ServerBlock &serverBlock) {
+	cout << "server block: " << endl;
+	cout << "port: " << serverBlock.getPort() << endl;
+	cout << "root: " << serverBlock.getRoot() << endl
+		 << "index: " << serverBlock.getIndex() << endl
+		 << "error pages: " << endl;
+	map<int, string> err_pages = serverBlock.getErrorPages();
+	for (map<int, string>::iterator it = err_pages.begin(); it != err_pages.end(); it++) {
+		cout << it->first << ": " << it->second << endl;
+	}
+	cout << "smart locations: " << endl;
+	smartLocs sLocs = serverBlock.getSmartLocs();
+	map<string, Loc> locs = sLocs.get_locs();
+	for (map<string, Loc>::iterator it = locs.begin(); it != locs.end(); it++) {
+		cout << "loc: " << it->first << endl;
+		cout << "root: " << it->second.get_root() << endl;
+		cout << "index: " << it->second.get_index() << endl;
+		cout << "autoindex: " << it->second.get_autoindex() << endl;
+	}
+}
+
 void request_path_handler(string &path, Request &request, ServerBlock &serverBlock) {
+	// clearly the serverBlock is still empty when we get here
+	print_server_block(serverBlock);
+
 	path = request.getPath();
 	cout << RED << "start path: " << path << RESET << endl;
 	// first check if its just / or /file or /folder/
