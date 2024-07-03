@@ -82,3 +82,21 @@ void ServerBlock::setSocket() {
 }
 
 ServerBlock::~ServerBlock( void ) {}
+
+ServerBlock& ServerBlock::operator=(const ServerBlock& other) {
+    this->_port = other._port;
+    this->_listen = other._listen;
+    this->_host = other._host;
+    this->_server_names = other._server_names;
+    this->_client_max_body_size = other._client_max_body_size;
+    this->_index = other._index;
+    this->_error_pages = other._error_pages;
+    this->_root = other._root;
+    this->_locations = other._locations;
+    this->_serverFd = other._serverFd;
+    this->_opt = other._opt;
+    this->max_clients = other.max_clients;
+    this->_currentPath = other._currentPath;
+    this->_smartLocs = other._smartLocs;
+    return *this;
+}
