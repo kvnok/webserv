@@ -40,7 +40,7 @@ void    Servers::handleExistingConnection(int& i) {
             readRequest(connection);
             break ;
         case PARSE:
-            parseRequest(connection);
+            parseRequest(connection, this->_serverBlocks[i]);
             break ;
         case EXECUTE:
             executeRequest(connection);
@@ -73,7 +73,7 @@ void    Servers::readRequest(Connection& connection) {
     connection.setNextState(PARSE);
 }
 
-void    Servers::parseRequest(Connection& connection) {
+void    Servers::parseRequest(Connection& connection, ServerBlock& serverBlock) {
     //still using old request and response class, not the response and request pointers from connectoin
     handleRequestAndMakeResponse(connection.getBuffer(), connection.getFd());
     // new part Kevin
