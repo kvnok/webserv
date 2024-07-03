@@ -23,8 +23,8 @@ int main(int argc, char **argv) {
 		Parser parser(config_file);
 		Config config;
 		parser.parse(config);
-		// config.print_server_blocks();
-		test_smartLocs(config); // test smartLocs
+		config.print_server_blocks();
+		// test_smartLocs(config); // test smartLocs
 
 		vector<ServerBlock> serverBlocks;
 		for(int i = 0; i < config.get_server_blocks().size(); i++) {
