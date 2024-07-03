@@ -24,10 +24,13 @@ static void handleRequest(const int clientSocket, Request& request) {
 
     // need to access the server blocks and locations here, so we can open the correct root
     if (request.getStatusCode() == 200) {
+        // ------------------------------
         if (request.getPath() == "/") 
             path = "www/index.html";
         else
             path = "www" + request.getPath();
+        // do own thing instead of the if else
+        // ------------------------------
         ifstream file(path);
         if (!file.is_open())
             request.setStatusCode(404);
