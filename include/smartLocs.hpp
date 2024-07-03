@@ -12,6 +12,8 @@ class smartLocs {
 		smartLocs(pServerBlock &block);
 		~smartLocs();
 
+		smartLocs& operator=(const smartLocs& other);
+
 		void print_locs();
 		map<string, Loc> &get_locs();
 		Loc &get_loc(string &path);
