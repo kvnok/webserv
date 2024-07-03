@@ -29,8 +29,10 @@ static void handleRequest(const int clientSocket, Request& request) {
             path = "www/index.html";
         else
             path = "www" + request.getPath();
-        // do own thing instead of the if else
         // ------------------------------
+        // request_path_handler(path, request);
+        // ------------------------------
+
         ifstream file(path);
         if (!file.is_open())
             request.setStatusCode(404);

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Parser.hpp"
 
 typedef Location Loc;
@@ -6,6 +8,7 @@ class smartLocs {
 	private:
 		map<string, Loc> _locs;
 	public:
+		smartLocs();
 		smartLocs(pServerBlock &block);
 		~smartLocs();
 
