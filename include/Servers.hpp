@@ -18,10 +18,10 @@ class Servers
 		void	handleNewConnection(int i);
 		void	handleExistingConnection(int& i);
 		void	readRequest(Connection& connection);
-		void	parseRequest(Connection& connection);
+		void	parseRequest(Connection& connection, ServerBlock& serverBlock);
 		void	executeRequest(Connection& connection);
 		void	writeResponse(Connection& connection);
 		void	closeConnection(int &i);
 };
 
-void handleRequestAndMakeResponse(vector<char>buffer, const int clientSocket);
+void handleRequestAndMakeResponse(vector<char>buffer, const int clientSocket, ServerBlock &serverBlock);

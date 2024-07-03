@@ -13,6 +13,13 @@ smartLocs::smartLocs(pServerBlock &block) {
 
 smartLocs::~smartLocs() {}
 
+smartLocs &smartLocs::operator=(const smartLocs &other) {
+	if (this == &other)
+		return *this;
+	_locs = other._locs;
+	return *this;
+}
+
 void smartLocs::print_locs() {
 	map<string, Loc>::iterator it = _locs.begin();
 	for (; it != _locs.end(); it++)

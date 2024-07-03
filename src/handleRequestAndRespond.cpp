@@ -19,7 +19,7 @@ static void handleResponse(const int clientSocket, int statusCode, ifstream& fil
     response.sendResponse();
 }
 
-static void handleRequest(const int clientSocket, Request& request) {
+static void handleRequest(const int clientSocket, Request& request, ServerBlock &serverBlock) {
     string path;
 
     // need to access the server blocks and locations here, so we can open the correct root
@@ -30,7 +30,8 @@ static void handleRequest(const int clientSocket, Request& request) {
         else
             path = "www" + request.getPath();
         // ------------------------------
-        // request_path_handler(path, request);
+        // request_path_handler(path, request, serverBlock);
+        // cout << GRN << "after path: " << path << RESET << endl;
         // ------------------------------
 
         ifstream file(path);
@@ -52,9 +53,9 @@ static void handleRequest(const int clientSocket, Request& request) {
   // get request.header(connection) = keep alive or close.
 }
 
-void    handleRequestAndMakeResponse(vector<char>buffer, const int clientSocket) {
+void    handleRequestAndMakeResponse(vector<char>buffer, const int clientSocket, ServerBlock &serverBlock) {
     Request request;
 
     readRequest(buffer.data(), request);
-    handleRequest(clientSocket, request);
+    handleRequest(clientSocket, request, serverBlock);
 }

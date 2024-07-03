@@ -41,6 +41,8 @@ class ServerBlock
 		ServerBlock( void );
 		ServerBlock(pServerBlock& blocks);
 		~ServerBlock( void );
+
+		ServerBlock& operator=(const ServerBlock& other);
 		// -------- Getters -------- //
 		string getHost();
 		string getListen();
