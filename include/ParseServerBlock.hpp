@@ -49,3 +49,5 @@ class pServerBlock {
 		void add_location(Location location);
 		void print_server_block();
 };
+
+void fill_error_pages(pServerBlock &block);
