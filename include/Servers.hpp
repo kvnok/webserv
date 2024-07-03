@@ -24,4 +24,4 @@ class Servers
 		void	closeConnection(int &i);
 };
 
-void handleRequestAndMakeResponse(vector<char>buffer, const int clientSocket);
+void handleRequestAndMakeResponse(vector<char>buffer, const int clientSocket, ServerBlock &serverBlock);

@@ -75,7 +75,7 @@ void    Servers::readRequest(Connection& connection) {
 
 void    Servers::parseRequest(Connection& connection, ServerBlock& serverBlock) {
     //still using old request and response class, not the response and request pointers from connectoin
-    handleRequestAndMakeResponse(connection.getBuffer(), connection.getFd());
+    handleRequestAndMakeResponse(connection.getBuffer(), connection.getFd(), serverBlock);
     // new part Kevin
     connection.setNextState(EXECUTE);
 }

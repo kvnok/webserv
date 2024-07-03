@@ -51,4 +51,4 @@ class Connection {
 		size_t			getBytesWritten() const;
 		vector<char>	getBuffer() const;
 };
-void request_path_handler(string &path, Request &request);
+void request_path_handler(string &path, Request &request, ServerBlock &serverBlock);

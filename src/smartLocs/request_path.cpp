@@ -106,7 +106,7 @@ void check_locs(Request &request, string &folder, string &file, string &path, ma
 	}
 }
 
-void request_path_handler(string &path, Request &request) {
+void request_path_handler(string &path, Request &request, ServerBlock &serverBlock) {
 	path = request.getPath();
 	cout << RED << "start path: " << path << RESET << endl;
 	// first check if its just / or /file or /folder/
