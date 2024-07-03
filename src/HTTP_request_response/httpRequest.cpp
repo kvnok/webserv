@@ -12,7 +12,7 @@
 
 #include "httpRequest.hpp"
 
-Request::Request() { this->_method = "", this->_path = "", this->_version = "", this->_body = "", this->_statusCode = 200; }
+Request::Request() { this->_method = "", this->_path = "", this->_version = "", this->_body = "", this->_statusCode = 200;}
 Request::Request(const Request& other) { *this = other;}
 Request::~Request() { }
 
