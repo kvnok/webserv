@@ -1,6 +1,11 @@
 #include "Connection.hpp"
 
 static void parse_path(string &path, string &folder, string &file) {
+	if (path == "/") {
+		folder = "/";
+		file = "";
+		return;
+	}
 	size_t pos = path.find_last_of('/');
 	if (pos == string::npos) {
 		folder = "/";
@@ -19,6 +24,8 @@ void check_baseline(Request &request, string &file, string &path, ServerBlock se
 
 	if (file.empty()) { // no file, check for index
 		string root_and_index = root + "/" + server.getIndex();
+		cout << YEL << "index: " << server.getIndex() << RESET << endl; // "index.html
+		cout << YEL << "root_and_index: " << root_and_index << RESET << endl;
 		ifstream stream(root_and_index);
 		if (stream.is_open()) {
 			path = root_and_index;
@@ -101,7 +108,7 @@ void check_locs(Request &request, string &folder, string &file, string &path, ma
 
 void request_path_handler(string &path, Request &request) {
 	path = request.getPath();
-
+	cout << RED << "start path: " << path << RESET << endl;
 	// first check if its just / or /file or /folder/
 	string folder;
 	string file;
@@ -116,9 +123,11 @@ void request_path_handler(string &path, Request &request) {
 	sLocs.set_locs(server.getSmartLocs().get_locs());
 
 	if (folder == "/") {
+		cout << YEL << "baseline" << RESET << endl;
 		check_baseline(request, file, path, server, err_pages);
 	}
 	else {
+		cout << YEL << "locs" << RESET << endl;
 		check_locs(request, folder, file, path, err_pages, sLocs);
 	}
 }

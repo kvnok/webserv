@@ -25,12 +25,13 @@ static void handleRequest(const int clientSocket, Request& request) {
     // need to access the server blocks and locations here, so we can open the correct root
     if (request.getStatusCode() == 200) {
         // ------------------------------
-        if (request.getPath() == "/") 
-            path = "www/index.html";
-        else
-            path = "www" + request.getPath();
+        // if (request.getPath() == "/") 
+        //     path = "www/index.html";
+        // else
+        //     path = "www" + request.getPath();
         // ------------------------------
-        // request_path_handler(path, request);
+        request_path_handler(path, request);
+        cout << GRN << "after path: " << path << RESET << endl;
         // ------------------------------
 
         ifstream file(path);
