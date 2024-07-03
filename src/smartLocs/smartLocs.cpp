@@ -1,6 +1,6 @@
 #include "smartLocs.hpp"
 
-smartLocs::smartLocs(ServerBlock &block) {
+smartLocs::smartLocs(pServerBlock &block) {
 	vector<Loc> locs = block.get_locations();
 	for (int i = 0; i < locs.size(); i++)
 	{

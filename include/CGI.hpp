@@ -1,8 +1,8 @@
 #pragma once
 #include "stuff.hpp"
 #include "Parser.hpp"
-#include "Server.hpp"
-#include "Connection.hpp"
+#include "ServerBlock.hpp"
+#include "Servers.hpp"
 
 class CGI {
 	private:

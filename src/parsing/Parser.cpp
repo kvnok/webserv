@@ -18,7 +18,7 @@ void check_outside(RAWCONF &a) {
 	}
 }
 
-void check_etc_hosts(ServerBlock &server_block) {
+void check_etc_hosts(pServerBlock &server_block) {
 	// check if server block host and server_name are in /etc/hosts
 	string path = "/etc/hosts";
 	ifstream file(path);
@@ -115,7 +115,7 @@ void Parser::parse(Config &config) {
 	}
 
 	for (int i = 0; i < raw_servers.size(); i++) {
-		ServerBlock server_block;
+		pServerBlock server_block;
 		parse_server_block(raw_servers[i], server_block);
 		// check if server block host and server_name are in /etc/hosts
 		check_etc_hosts(server_block);

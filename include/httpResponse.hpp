@@ -6,14 +6,14 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 08:54:10 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/20 15:20:44 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/02 15:50:13 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
 #include "httpRequest.hpp"
-#include "Server.hpp" //for send()
+#include "ServerBlock.hpp" //for send()
 #include <iostream>
 #include <string>
 #include <map>
@@ -31,15 +31,10 @@ class Response {
 	public:
 		Response(int const clientSocket, int const statusCode);
 		~Response();
-//		void	setStatusCode(int const statusCode);
+
 		void	setBody(string const body);
 		void	addHeader(string const key, string const value);
 		void	setHeaders(string const content, string const path, string const connection);
-//		void	setHeader(map<string, string> const header);
-//		int		getStatusCode() const;
-//		string	getBody() const;
-//		map<string, string>	getHeaders() const;
-//		string	getHeaderValue(const string& key) const;
 		ssize_t	sendResponse() const;
 };
 

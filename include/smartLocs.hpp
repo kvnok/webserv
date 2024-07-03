@@ -6,7 +6,7 @@ class smartLocs {
 	private:
 		map<string, Loc> _locs;
 	public:
-		smartLocs(ServerBlock &block);
+		smartLocs(pServerBlock &block);
 		~smartLocs();
 
 		void print_locs();
