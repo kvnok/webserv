@@ -1,4 +1,5 @@
 #include "ServerBlock.hpp"
+#include "smartLocs.hpp"
 
 ServerBlock::ServerBlock( void ) {
     this->_port = 0;

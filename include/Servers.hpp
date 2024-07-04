@@ -22,6 +22,12 @@ class Servers
 		void	executeRequest(Connection& connection);
 		void	writeResponse(Connection& connection);
 		void	closeConnection(int &i);
+		vector<ServerBlock> &get_serverBlocks();
+		vector<Connection> &get_connections();
+		vector<pollfd> &get_fds();
+		void	set_serverBlocks(vector<ServerBlock> &serverBlocks);
+		void	set_connections(vector<Connection> &connections);
+		void	set_fds(vector<pollfd> &fds);
 };
 
 void handleRequestAndMakeResponse(vector<char>buffer, const int clientSocket, ServerBlock &serverBlock);

@@ -19,6 +19,8 @@ using namespace std;
 #define MAX_CLIENTS 10
 #define GREEN   "\033[32m"
 
+class smartLocs;
+
 class ServerBlock
 {
 	private:
@@ -65,3 +67,4 @@ class ServerBlock
 		void setSmartLocs(pServerBlock &block);
 } ;
 
+void ok_print_server_block(ServerBlock &serverBlock);

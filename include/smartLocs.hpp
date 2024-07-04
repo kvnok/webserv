@@ -23,3 +23,4 @@ class smartLocs {
 };
 
 void test_smartLocs(Config &config);
+
