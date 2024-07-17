@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   Servers.hpp                                        :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/07/16 14:18:12 by jvorstma      #+#    #+#                 */
+/*   Updated: 2024/07/16 18:14:46 by jvorstma      ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #pragma once
 
 #include "ServerBlock.hpp"
@@ -9,8 +21,8 @@ class Servers
 		vector<ServerBlock> _serverBlocks;
 		vector<Connection> _connections;
 		vector<pollfd> _fds;
-	public:
 		Servers();
+	public:
 		Servers(vector<ServerBlock> &serverBlocks);
 		~Servers();
 		void	start();
@@ -23,5 +35,3 @@ class Servers
 		void	writeResponse(Connection& connection);
 		void	closeConnection(int &i);
 };
-
-void handleRequestAndMakeResponse(vector<char>buffer, const int clientSocket);

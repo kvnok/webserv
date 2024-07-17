@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 08:54:10 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/02 15:50:13 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/17 12:16:38 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,8 +27,8 @@ class Response {
 		map<string, string>	_header;
 		string				_body;
 		const int			_clientSocket;
-		Response();
 	public:
+		Response();
 		Response(int const clientSocket, int const statusCode);
 		~Response();
 
@@ -37,6 +37,8 @@ class Response {
 		void	setHeaders(string const content, string const path, string const connection);
 		ssize_t	sendResponse() const;
 };
+
+void	handleResponse(const int clientSocket, int statusCode, string path);
 
 // add fucntions outside class
 //	  - get file with body, open and read, create headers, fill response class

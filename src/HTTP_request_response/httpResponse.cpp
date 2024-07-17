@@ -6,14 +6,14 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 08:58:38 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/02 15:50:31 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/17 10:19:21 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "httpResponse.hpp"
 #include "httpStatus.hpp"
 
-Response::Response(int const clientSocket, int const statusCode) : _clientSocket(clientSocket), _statusCode(statusCode) {}
+Response::Response(int const clientSocket, int const statusCode) : _clientSocket(clientSocket), _statusCode(statusCode) { }
 Response::~Response() { }
 
 void	Response::setBody(string const body) { this->_body = body; }
@@ -44,4 +44,23 @@ ssize_t	Response::sendResponse() const {
 	response += this->_body;
 	
 	return (send(this->_clientSocket, response.c_str(), response.size(), 0));
+}
+
+void handleResponse(const int clientSocket, int statusCode, string path) {
+    string content;
+    ifstream file(path);
+
+    if (!file.is_open())
+        statusCode = 404;
+    if (statusCode == 404 && !file.is_open()) {
+        content = fourZeroFourBody();
+        path = "404.html";
+        statusCode = 404;
+    }
+    else
+        content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+    Response response(clientSocket, statusCode);
+    response.setBody(content);
+    response.setHeaders(content, path, "keep-alive");
+    response.sendResponse();
 }

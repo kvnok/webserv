@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:54:54 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/02 15:43:31 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/17 15:26:45 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,20 +57,21 @@ class Request {
 
 		Request& operator=(const Request& other);
 
-		void	setMethod(string const method);
-		void	setPath(string const path);
-		void	setVersion(string const version);
-		void	setBody(string const body);
-		void	addHeader(string const key, string const value);
-		void	setHeader(map<string, string> const header);
-		void	setStatusCode(int const statusCode);
-		string	getMethod() const;
-		string	getPath() const;
-		string	getVersion() const;
-		string	getBody() const;
-		int		getStatusCode() const;
+		void				setMethod(string const method);
+		void				setPath(string const path);
+		void				setVersion(string const version);
+		void				setBody(string const body);
+		void				addHeader(string const key, string const value);
+		void				setHeader(map<string, string> const header);
+		void				setStatusCode(int const statusCode);
+		string				getMethod() const;
+		string				getPath() const;
+		string				getVersion() const;
+		string				getBody() const;
+		int					getStatusCode() const;
 		map<string, string>	getHeaders() const;
-		string	getHeaderValue(const string& key) const;
+		string				getHeaderValue(const string& key) const;
 };
 
-void	readRequest(string const& requestData, Request& request);
+void	createRequestObject(string const& requestData, Request& request);
+void	handleRequest(const int clientSocket, Request& request);

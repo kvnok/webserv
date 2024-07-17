@@ -6,11 +6,14 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:55:00 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/02 15:43:51 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/17 10:35:48 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "httpRequest.hpp"
+#include "httpStatus.hpp"
+#include "httpResponse.hpp"
+#include "Servers.hpp"
 
 Request::Request() { this->_method = "", this->_path = "", this->_version = "", this->_body = "", this->_statusCode = 200; }
 Request::Request(const Request& other) { *this = other;}
@@ -36,11 +39,11 @@ void	Request::addHeader(string const key, string const value) { this->_header[ke
 void	Request::setHeader(map<string, string> const header) { this->_header = header; }
 void	Request::setStatusCode(int const statusCode) { this->_statusCode = statusCode; }
 
-string	Request::getMethod() const { return (this->_method); }
-string	Request::getPath() const { return (this->_path); }
-string	Request::getVersion() const { return (this->_version); }
-string	Request::getBody() const { return (this->_body); }
-int		Request::getStatusCode() const { return (this->_statusCode); }
+string				Request::getPath() const { return (this->_path); }
+string				Request::getMethod() const { return (this->_method); }
+string				Request::getVersion() const { return (this->_version); }
+string				Request::getBody() const { return (this->_body); }
+int					Request::getStatusCode() const { return (this->_statusCode); }
 map<string, string> Request::getHeaders() const { return (this->_header); }
 
 string	Request::getHeaderValue(const string& key) const{
@@ -49,4 +52,30 @@ string	Request::getHeaderValue(const string& key) const{
 	if (iterator == this->_header.end())
 		return ("");
 	return (iterator->second);
+}
+
+void handleRequest(const int clientSocket, Request& request) {
+    string path;
+
+    // need to access the server blocks and locations here, so we can open the correct root
+    if (request.getStatusCode() == 200) {
+        if (request.getPath() == "/") 
+            path = "www/index.html";
+        else
+            path = "www" + request.getPath();
+        ifstream file(path);
+        if (!file.is_open())
+            request.setStatusCode(404);
+        request.setPath(path);
+    }
+    else {
+        path = getHtmlPath(request.getStatusCode());
+        ifstream file(path);
+        if (!file.is_open())
+            request.setStatusCode(404);
+        request.setPath(path);
+    }
+  // check paht, run cgi, delete, 
+  // after 'execution' of request we end up with: file(which has the body), statusCode, clientSocket.
+  // get request.header(connection) = keep alive or close.
 }

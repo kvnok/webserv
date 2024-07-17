@@ -1,3 +1,14 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   Servers.cpp                                        :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/07/16 14:17:40 by jvorstma      #+#    #+#                 */
+/*   Updated: 2024/07/17 10:22:20 by jvorstma      ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "Servers.hpp"
 #include "Connection.hpp"
@@ -57,6 +68,7 @@ void    Servers::handleExistingConnection(int& i) {
 void    Servers::readRequest(Connection& connection) {
     vector<char> buffer = connection.getBuffer(); // max size of request to fix Maybe we can use Max body size and then resize;
     ssize_t bytes = recv(connection.getFd(), buffer.data(), buffer.size(), 0);
+    connection.addBytesRead(bytes);
     if (bytes < 0) {
         if (errno != EWOULDBLOCK && errno != EAGAIN) {
             connection.setNextState(CLOSE);
@@ -74,21 +86,31 @@ void    Servers::readRequest(Connection& connection) {
 }
 
 void    Servers::parseRequest(Connection& connection) {
-    //still using old request and response class, not the response and request pointers from connectoin
-    handleRequestAndMakeResponse(connection.getBuffer(), connection.getFd());
-    // new part Kevin
+    cout << "parse" << endl;
+    Request request;
+    string buffer(connection.getBuffer().begin(), connection.getBuffer().end());
+
+    connection.setRequest(&request);
+    createRequestObject(buffer, connection.getRequest());
     connection.setNextState(EXECUTE);
 }
 
 void    Servers::executeRequest(Connection& connection) {
+    //kevin path finder part
+    //+ execution
+    cout << "execute" << endl;
+    handleRequest(connection.getFd(), connection.getRequest());
     connection.setNextState(WRITE);
 }
 
 void    Servers::writeResponse(Connection& connection) {
+    cout << "response" << endl;
+    handleResponse(connection.getFd(), connection.getRequest().getStatusCode(), connection.getRequest().getPath());
     connection.setNextState(CLOSE);
 }
 
 void    Servers::closeConnection(int &i) {
+    cout << "closing socket: " << this->_fds[i].fd << endl;
     close(this->_fds[i].fd);
     this->_fds.erase(this->_fds.begin() + i);
     this->_connections.erase(this->_connections.begin() + (i - this->_serverBlocks.size()));
@@ -108,16 +130,17 @@ void    Servers::start() {
                 else
                     handleExistingConnection(i);
             }
-            if (this->_fds[i].revents & POLLOUT && i >= this->_serverBlocks.size())
+            else if (this->_fds[i].revents & POLLOUT && i >= this->_serverBlocks.size())
                 handleExistingConnection(i); // after read it will go to pollout
-            if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+            else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                 cerr << "socket error on fd: " << this->_fds[i].fd << endl;
-                close (this->_fds[i].fd);
+                close(this->_fds[i].fd);
                 this->_fds.erase(this->_fds.begin() + i);
-                --i;
+                if (i >= this->_serverBlocks.size())
+                    this->_connections.erase(this->_connections.begin() + (i - this->_serverBlocks.size()));
             }
         }
     }
 }
 
-Servers::~Servers( void ) { }
+Servers::~Servers( void ) {}
