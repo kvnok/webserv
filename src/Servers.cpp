@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/16 14:17:40 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/18 11:14:12 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/18 12:02:07 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,29 +81,29 @@ void    Servers::readRequest(Connection& connection) {
     }
     buffer.resize(bytes);
     connection.setBuffer(buffer);
-   // if (done)
+   // if all bytes have been read/received
     connection.setNextState(PARSE);
 }
 
 void    Servers::parseRequest(Connection& connection) {
-    cout << "parse" << endl;
     createRequest(connection.getBuffer(), connection.getRequest());
+    //if status code is still 200/ else execute correct status page
     connection.setNextState(EXECUTE);
 }
 
 void    Servers::executeRequest(Connection& connection) {
     //kevin path finder part
     //+ execution
-    cout << "execute" << endl;
     handleRequest(connection.getFd(), connection.getRequest());
     cout << connection.getRequest().getPath() << endl;
+    // if status code is updated, change execution to correct status page
     connection.setNextState(WRITE);
 }
 
 void    Servers::writeResponse(Connection& connection) {
-    cout << "response" << endl;
 //    connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
     createResponse(connection.getFd(), connection.getRequest().getStatusCode(), connection.getRequest().getPath());
+    // if all bytes have been written
     connection.setNextState(CLOSE);
 }
 

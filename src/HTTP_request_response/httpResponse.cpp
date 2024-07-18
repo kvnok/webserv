@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 08:58:38 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/18 10:54:52 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/18 12:02:34 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,4 +80,6 @@ void createResponse(int const clientSocket, int statusCode, string path) {
     response.setBody(content);
     response.setHeaders(content, path, "keep-alive");
     response.sendResponse();
+    // sending a response in chunks => read how much is send/how much you want to send
+    // update bytesWritten, loop untill everything is send.
 }
