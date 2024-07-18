@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:55:00 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/17 10:35:48 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/18 10:44:00 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,18 +15,18 @@
 #include "httpResponse.hpp"
 #include "Servers.hpp"
 
-Request::Request() { this->_method = "", this->_path = "", this->_version = "", this->_body = "", this->_statusCode = 200; }
-Request::Request(const Request& other) { *this = other;}
+Request::Request() : _method(""), _path(""), _version(""), _body(""), _statusCode(200) { }
+Request::Request(const Request& other) { *this = other; }
 Request::~Request() { }
 
 Request&	Request::operator=(const Request& other) {
 	if (this != &other) {
-		this->_method = other.getMethod();
-		this->_path = other.getPath();
-		this->_version = other.getVersion();
-		this->_header = other.getHeaders();
-		this->_body = other.getBody();
-		this->_statusCode = other.getStatusCode();
+		this->_method = other._method;
+		this->_path = other._path;
+		this->_version = other._version;
+		this->_header = other._header;
+		this->_body = other._body;
+		this->_statusCode = other._statusCode;
 	}
 	return (*this);
 }
@@ -44,7 +44,7 @@ string				Request::getMethod() const { return (this->_method); }
 string				Request::getVersion() const { return (this->_version); }
 string				Request::getBody() const { return (this->_body); }
 int					Request::getStatusCode() const { return (this->_statusCode); }
-map<string, string> Request::getHeaders() const { return (this->_header); }
+map<string, string> Request::getHeaders() const { return (this->_header); } //not using right now
 
 string	Request::getHeaderValue(const string& key) const{
 	auto iterator = this->_header.find(key);

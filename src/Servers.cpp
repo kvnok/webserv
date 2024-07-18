@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/16 14:17:40 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/17 10:22:20 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/18 11:14:12 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,11 +87,7 @@ void    Servers::readRequest(Connection& connection) {
 
 void    Servers::parseRequest(Connection& connection) {
     cout << "parse" << endl;
-    Request request;
-    string buffer(connection.getBuffer().begin(), connection.getBuffer().end());
-
-    connection.setRequest(&request);
-    createRequestObject(buffer, connection.getRequest());
+    createRequest(connection.getBuffer(), connection.getRequest());
     connection.setNextState(EXECUTE);
 }
 
@@ -100,12 +96,14 @@ void    Servers::executeRequest(Connection& connection) {
     //+ execution
     cout << "execute" << endl;
     handleRequest(connection.getFd(), connection.getRequest());
+    cout << connection.getRequest().getPath() << endl;
     connection.setNextState(WRITE);
 }
 
 void    Servers::writeResponse(Connection& connection) {
     cout << "response" << endl;
-    handleResponse(connection.getFd(), connection.getRequest().getStatusCode(), connection.getRequest().getPath());
+//    connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
+    createResponse(connection.getFd(), connection.getRequest().getStatusCode(), connection.getRequest().getPath());
     connection.setNextState(CLOSE);
 }
 

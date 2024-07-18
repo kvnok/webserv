@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:54:54 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/17 15:26:45 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/18 11:11:00 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,5 +73,5 @@ class Request {
 		string				getHeaderValue(const string& key) const;
 };
 
-void	createRequestObject(string const& requestData, Request& request);
+void	createRequest(vector<char> requestData, Request& request);
 void	handleRequest(const int clientSocket, Request& request);

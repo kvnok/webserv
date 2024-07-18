@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 08:54:10 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/17 12:16:38 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/18 10:57:08 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,18 +27,27 @@ class Response {
 		map<string, string>	_header;
 		string				_body;
 		const int			_clientSocket;
-	public:
 		Response();
-		Response(int const clientSocket, int const statusCode);
+	public:
+		Response(int const clientSocket);
+//		Response(const Response& other);
 		~Response();
 
-		void	setBody(string const body);
-		void	addHeader(string const key, string const value);
-		void	setHeaders(string const content, string const path, string const connection);
-		ssize_t	sendResponse() const;
+//		Response& operator=(const Response& other);
+
+		void				setBody(string const body);
+		void				setStatusCode(int const statusCode);
+		void				addHeader(string const key, string const value);
+		void				setHeaders(string const content, string const path, string const connection);
+		int					getStatusCode() const;
+		map<string, string>	getHeaders() const;
+		string				getBody() const;
+		int					getClientSocket() const;
+
+		ssize_t				sendResponse() const;
 };
 
-void	handleResponse(const int clientSocket, int statusCode, string path);
+void	createResponse(int const clientSocket, int statusCode, string path);
 
 // add fucntions outside class
 //	  - get file with body, open and read, create headers, fill response class
