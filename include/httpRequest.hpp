@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:54:54 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/18 11:11:00 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/18 11:18:05 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,10 +52,10 @@ class Request {
 		int					_statusCode;
 	public:
 		Request();
-		Request(const Request& other);
+//		Request(const Request& other);
 		~Request();
 
-		Request& operator=(const Request& other);
+//		Request& operator=(const Request& other);
 
 		void				setMethod(string const method);
 		void				setPath(string const path);
