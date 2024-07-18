@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/16 14:17:40 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/18 12:02:07 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/18 14:06:12 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ void    Servers::setFds() {
 
 void    Servers::handleNewConnection(int i) {
     int clientSocket = accept(this->_serverBlocks[i].getFd(), NULL, NULL);
+    cout << this->_serverBlocks[i].getPort() << endl;
     cout << "new Clientsocket: " << clientSocket << endl;
     if (clientSocket == -1) {
         cerr << "accept failed" << endl; // implement error/exception meganism
@@ -71,13 +72,15 @@ void    Servers::readRequest(Connection& connection) {
     connection.addBytesRead(bytes);
     if (bytes < 0) {
         if (errno != EWOULDBLOCK && errno != EAGAIN) {
-            connection.setNextState(CLOSE);
+            cout << "errno in reading part" << endl;
+            //connection.setNextState(CLOSE);
         }
         return;
     }
     else if (bytes == 0) {
-        connection.setNextState(CLOSE);
-        return;
+        cout << "close because 0 bytes have been read" << endl;
+       connection.setNextState(CLOSE);
+       return;
     }
     buffer.resize(bytes);
     connection.setBuffer(buffer);
@@ -104,7 +107,12 @@ void    Servers::writeResponse(Connection& connection) {
 //    connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
     createResponse(connection.getFd(), connection.getRequest().getStatusCode(), connection.getRequest().getPath());
     // if all bytes have been written
-    connection.setNextState(CLOSE);
+    if (connection.getRequest().getHeaderValue("Connection") == "close") {
+        cout << "close because connection is set to 'close'" << endl;
+        connection.setNextState(CLOSE);
+    }
+    else
+        connection.setNextState(READ);
 }
 
 void    Servers::closeConnection(int &i) {
