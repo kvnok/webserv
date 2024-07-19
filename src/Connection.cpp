@@ -6,13 +6,13 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/27 17:28:06 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/18 10:55:19 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/19 13:29:23 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Connection.hpp"
 
-Connection::Connection(const int fd) : _fd(fd), _buffer(4064), _nextState(READ), _bRead(0), _bWritten(0) {}
+Connection::Connection(const int fd) : _fd(fd), _buffer(0), _nextState(READ), _bRead(0), _bWritten(0) {}
 Connection::Connection(const Connection& other) { *this = other; }
 
 Connection& Connection::operator=(const Connection& other) {

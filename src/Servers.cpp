@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/16 14:17:40 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/18 14:06:12 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/19 13:49:41 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,13 +67,13 @@ void    Servers::handleExistingConnection(int& i) {
 }
 
 void    Servers::readRequest(Connection& connection) {
-    vector<char> buffer = connection.getBuffer(); // max size of request to fix Maybe we can use Max body size and then resize;
+    vector<char> buffer(1024); // max size of request to fix Maybe we can use Max body size and then resize;
+    if (set read size)
+        buffer.resize();
     ssize_t bytes = recv(connection.getFd(), buffer.data(), buffer.size(), 0);
-    connection.addBytesRead(bytes);
     if (bytes < 0) {
         if (errno != EWOULDBLOCK && errno != EAGAIN) {
-            cout << "errno in reading part" << endl;
-            //connection.setNextState(CLOSE);
+            cout << "THIS SHOULD NOT BE HAPPENING, WE CHECK THIS IN POLL()" << endl;
         }
         return;
     }
@@ -82,7 +82,10 @@ void    Servers::readRequest(Connection& connection) {
        connection.setNextState(CLOSE);
        return;
     }
-    buffer.resize(bytes);
+    else
+        connection.addBytesRead(bytes);
+    connection.getBuffer().resize(connection.getBytesRead());
+    connection.setBuffer(connection.getBuffer().insert+ buffer));
     connection.setBuffer(buffer);
    // if all bytes have been read/received
     connection.setNextState(PARSE);
@@ -126,18 +129,19 @@ void    Servers::closeConnection(int &i) {
 
 void    Servers::start() {
     while (true) {
-        int ret = poll(this->_fds.data(), this->_fds.size(), -1); // -1 will block until an event occurs, 0 will be non-blocking, but only the sockets need to be non-blocking
+        int ret = poll(this->_fds.data(), this->_fds.size(), 0);
         if (ret == -1)
             throw runtime_error("poll failed");
         for (int i = 0; i < this->_fds.size(); i++) {
-            if (this->_fds[i].revents & POLLIN) {
+            if (this->_fds[i].revents & POLLIN) { // Pollin == ready to read
                 if (i < this->_serverBlocks.size() && this->_fds[i].fd == this->_serverBlocks[i].getFd())
                     handleNewConnection(i);
                 else
                     handleExistingConnection(i);
             }
+           // else if (geen pollout of pollin, maar nog bezig met switch casses)
             else if (this->_fds[i].revents & POLLOUT && i >= this->_serverBlocks.size())
-                handleExistingConnection(i); // after read it will go to pollout
+                handleExistingConnection(i); // Pollout == ready to write
             else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                 cerr << "socket error on fd: " << this->_fds[i].fd << endl;
                 close(this->_fds[i].fd);
