@@ -12,10 +12,14 @@
 #include "Config.hpp"
 #include "stuff.hpp"
 
+#include "smartLocs.hpp"
+
 using namespace std;
 
 #define MAX_CLIENTS 10
 #define GREEN   "\033[32m"
+
+class smartLocs;
 
 class ServerBlock
 {
@@ -34,11 +38,13 @@ class ServerBlock
 		int newSocket;
 		int max_clients;
 		string _currentPath;
+		smartLocs _smartLocs;
 	public:
 		ServerBlock( void );
 		ServerBlock(pServerBlock& blocks);
 		~ServerBlock( void );
-		void setPort(int port);
+
+		ServerBlock& operator=(const ServerBlock& other);
 		// -------- Getters -------- //
 		string getHost();
 		string getListen();
@@ -56,5 +62,9 @@ class ServerBlock
 		void setSocket();
 		void setBind();
 		void setListen();
+		// ------------------------- //
+		smartLocs getSmartLocs();
+		void setSmartLocs(pServerBlock &block);
 } ;
 
+void ok_print_server_block(ServerBlock &serverBlock);

@@ -1,4 +1,5 @@
 #include "ServerBlock.hpp"
+#include "smartLocs.hpp"
 
 ServerBlock::ServerBlock( void ) {
     this->_port = 0;
@@ -27,6 +28,8 @@ int ServerBlock::getFd(){return this->_serverFd;};
 int ServerBlock::getMaxClients(){return this->max_clients;};
 string ServerBlock::getCurrentPath(){return this->_currentPath;};
 vector<Location> ServerBlock::getLocations(){return this->_locations;};
+smartLocs ServerBlock::getSmartLocs(){return this->_smartLocs;};
+void ServerBlock::setSmartLocs(pServerBlock &block){this->_smartLocs = smartLocs(block);};
 
 ServerBlock::ServerBlock(pServerBlock& block) {
     this->_listen = block.get_listen();
@@ -43,6 +46,8 @@ ServerBlock::ServerBlock(pServerBlock& block) {
     this->max_clients = MAX_CLIENTS;
     this->_currentPath = block.get_root();
     this->setSocket();
+    smartLocs temp_smartLocs(block);
+    this->_smartLocs.set_locs(temp_smartLocs.get_locs());
 }
 
 void ServerBlock::setBind() {
@@ -78,3 +83,21 @@ void ServerBlock::setSocket() {
 }
 
 ServerBlock::~ServerBlock( void ) {}
+
+ServerBlock& ServerBlock::operator=(const ServerBlock& other) {
+    this->_port = other._port;
+    this->_listen = other._listen;
+    this->_host = other._host;
+    this->_server_names = other._server_names;
+    this->_client_max_body_size = other._client_max_body_size;
+    this->_index = other._index;
+    this->_error_pages = other._error_pages;
+    this->_root = other._root;
+    this->_locations = other._locations;
+    this->_serverFd = other._serverFd;
+    this->_opt = other._opt;
+    this->max_clients = other.max_clients;
+    this->_currentPath = other._currentPath;
+    this->_smartLocs = other._smartLocs;
+    return *this;
+}

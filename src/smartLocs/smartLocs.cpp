@@ -1,5 +1,7 @@
 #include "smartLocs.hpp"
 
+smartLocs::smartLocs() {}
+
 smartLocs::smartLocs(pServerBlock &block) {
 	vector<Loc> locs = block.get_locations();
 	for (int i = 0; i < locs.size(); i++)
@@ -10,6 +12,13 @@ smartLocs::smartLocs(pServerBlock &block) {
 }
 
 smartLocs::~smartLocs() {}
+
+smartLocs &smartLocs::operator=(const smartLocs &other) {
+	if (this == &other)
+		return *this;
+	_locs = other._locs;
+	return *this;
+}
 
 void smartLocs::print_locs() {
 	map<string, Loc>::iterator it = _locs.begin();

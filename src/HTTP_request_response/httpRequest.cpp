@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:55:00 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/18 11:17:52 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/20 09:41:48 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,13 +38,15 @@ void	Request::setBody(string body) { this->_body = body; }
 void	Request::addHeader(string const key, string const value) { this->_header[key] = value; }
 void	Request::setHeader(map<string, string> const header) { this->_header = header; }
 void	Request::setStatusCode(int const statusCode) { this->_statusCode = statusCode; }
+void	Request::setServer(ServerBlock server) { this->_server = server; }
 
-string				Request::getPath() const { return (this->_path); }
-string				Request::getMethod() const { return (this->_method); }
-string				Request::getVersion() const { return (this->_version); }
-string				Request::getBody() const { return (this->_body); }
-int					Request::getStatusCode() const { return (this->_statusCode); }
-map<string, string> Request::getHeaders() const { return (this->_header); } //not using right now
+string	Request::getMethod() const { return (this->_method); }
+string	Request::getPath() const { return (this->_path); }
+string	Request::getVersion() const { return (this->_version); }
+string	Request::getBody() const { return (this->_body); }
+int		Request::getStatusCode() const { return (this->_statusCode); }
+map<string, string> Request::getHeaders() const { return (this->_header); }
+ServerBlock	Request::getServer() { return (this->_server); }
 
 string	Request::getHeaderValue(const string& key) const{
 	auto iterator = this->_header.find(key);

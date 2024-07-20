@@ -24,14 +24,17 @@ int main(int argc, char **argv) {
 		Config config;
 		parser.parse(config);
 		// config.print_server_blocks();
-		test_smartLocs(config); // test smartLocs
+		// test_smartLocs(config); // test smartLocs
 
 		vector<ServerBlock> serverBlocks;
 		for(int i = 0; i < config.get_server_blocks().size(); i++) {
 			ServerBlock serverBlock(config.get_server_blocks()[i]);
 			serverBlocks.push_back(serverBlock);
+			// ok_print_server_block(serverBlock);
 		}
 		Servers servers(serverBlocks);
+		cout << "IN MAIN" << endl;
+		ok_print_server_block(servers.get_serverBlocks()[0]);
 		servers.start();
 	} catch (exception &e) {
 		//also need to close fd's if they are open

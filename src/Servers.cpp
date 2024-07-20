@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/16 14:17:40 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/19 13:49:41 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/20 08:45:41 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,12 +47,14 @@ void    Servers::handleNewConnection(int i) {
 
 void    Servers::handleExistingConnection(int& i) {
     Connection& connection = this->_connections[i - this->_serverBlocks.size()];
+    cout << "handleExistingConnection" << endl;
+    ok_print_server_block(this->_serverBlocks[i]);
     switch (connection.getNextState()) {
         case READ:
             readRequest(connection);
             break ;
         case PARSE:
-            parseRequest(connection);
+            parseRequest(connection, this->_serverBlocks[i]);
             break ;
         case EXECUTE:
             executeRequest(connection);
@@ -128,21 +130,35 @@ void    Servers::closeConnection(int &i) {
 }
 
 void    Servers::start() {
+    cout << "IN START" << endl;
+    ok_print_server_block(this->_serverBlocks[0]);
     while (true) {
         int ret = poll(this->_fds.data(), this->_fds.size(), 0);
         if (ret == -1)
             throw runtime_error("poll failed");
         for (int i = 0; i < this->_fds.size(); i++) {
-            if (this->_fds[i].revents & POLLIN) { // Pollin == ready to read
+            if (this->_fds[i].revents & POLLIN) {
+                cout << "revents check" << endl;
+                cout << "i: " << i << endl;
+                ok_print_server_block(this->_serverBlocks[i]);
                 if (i < this->_serverBlocks.size() && this->_fds[i].fd == this->_serverBlocks[i].getFd())
+                {
+                    cout << "handleNewConnection" << endl;
                     handleNewConnection(i);
+                }
                 else
+                {
+                    cout << "handleExistingConnection" << endl;
+                    ok_print_server_block(this->_serverBlocks[i]);
                     handleExistingConnection(i);
+                }
             }
-           // else if (geen pollout of pollin, maar nog bezig met switch casses)
-            else if (this->_fds[i].revents & POLLOUT && i >= this->_serverBlocks.size())
-                handleExistingConnection(i); // Pollout == ready to write
-            else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+            if (this->_fds[i].revents & POLLOUT && i >= this->_serverBlocks.size()) {
+                cout << "POLLOUT" << endl;
+                ok_print_server_block(this->_serverBlocks[i]);
+                handleExistingConnection(i); // after read it will go to pollout
+            }
+            if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                 cerr << "socket error on fd: " << this->_fds[i].fd << endl;
                 close(this->_fds[i].fd);
                 this->_fds.erase(this->_fds.begin() + i);
@@ -153,4 +169,28 @@ void    Servers::start() {
     }
 }
 
-Servers::~Servers( void ) {}
+Servers::~Servers( void ) { }
+
+vector<ServerBlock> &Servers::get_serverBlocks() {
+    return this->_serverBlocks;
+}
+
+vector<Connection> &Servers::get_connections() {
+    return this->_connections;
+}
+
+vector<pollfd> &Servers::get_fds() {
+    return this->_fds;
+}
+
+void    Servers::set_serverBlocks(vector<ServerBlock> &serverBlocks) {
+    this->_serverBlocks = serverBlocks;
+}
+
+void    Servers::set_connections(vector<Connection> &connections) {
+    this->_connections = connections;
+}
+
+void    Servers::set_fds(vector<pollfd> &fds) {
+    this->_fds = fds;
+}
