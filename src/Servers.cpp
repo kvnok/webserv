@@ -34,15 +34,16 @@ void    Servers::handleNewConnection(int i) {
 }
 
 void    Servers::handleExistingConnection(int& i) {
-    Connection& connection = this->_connections[i - this->_serverBlocks.size()];
-    cout << "handleExistingConnection" << endl;
-    ok_print_server_block(this->_serverBlocks[i]);
+    int index = i - this->_serverBlocks.size();
+    Connection& connection = this->_connections[index];
+    // cout << "handleExistingConnection" << endl;
+    // ok_print_server_block(this->_serverBlocks[i]);
     switch (connection.getNextState()) {
         case READ:
             readRequest(connection);
             break ;
         case PARSE:
-            parseRequest(connection, this->_serverBlocks[i]);
+            parseRequest(connection, this->_serverBlocks[index]);
             break ;
         case EXECUTE:
             executeRequest(connection);
@@ -69,6 +70,10 @@ void    Servers::readRequest(Connection& connection) {
         connection.setNextState(CLOSE);
         return;
     }
+    else if (bytes == buffer.size()) {
+        connection.setNextState(CLOSE);
+        return;
+    }
     buffer.resize(bytes);
     connection.setBuffer(buffer);
    // if (done)
@@ -86,10 +91,11 @@ void    Servers::executeRequest(Connection& connection) {
 }
 
 void    Servers::writeResponse(Connection& connection) {
-    connection.setNextState(CLOSE);
+    connection.setNextState(READ);
 }
 
 void    Servers::closeConnection(int &i) {
+    cout << "closing connection: " << this->_fds[i].fd << endl;
     close(this->_fds[i].fd);
     this->_fds.erase(this->_fds.begin() + i);
     this->_connections.erase(this->_connections.begin() + (i - this->_serverBlocks.size()));
@@ -99,39 +105,39 @@ void    Servers::closeConnection(int &i) {
 
 void    Servers::start() {
     cout << "IN START" << endl;
-    ok_print_server_block(this->_serverBlocks[0]);
+    // ok_print_server_block(this->_serverBlocks[0]);
     while (true) {
-        int ret = poll(this->_fds.data(), this->_fds.size(), -1); // -1 will block until an event occurs, 0 will be non-blocking, but only the sockets need to be non-blocking
+        int ret = poll(this->_fds.data(), this->_fds.size(), 0); // -1 will block until an event occurs, 0 will be non-blocking, but only the sockets need to be non-blocking
         if (ret == -1)
             throw runtime_error("poll failed");
         for (int i = 0; i < this->_fds.size(); i++) {
             if (this->_fds[i].revents & POLLIN) {
-                cout << "revents check" << endl;
-                cout << "i: " << i << endl;
-                ok_print_server_block(this->_serverBlocks[i]);
+                // cout << "revents check" << endl;
+                // cout << "i: " << i << endl;
+                // ok_print_server_block(this->_serverBlocks[i]);
                 if (i < this->_serverBlocks.size() && this->_fds[i].fd == this->_serverBlocks[i].getFd())
                 {
-                    cout << "handleNewConnection" << endl;
+                    // cout << "handleNewConnection" << endl;
                     handleNewConnection(i);
                 }
                 else
                 {
-                    cout << "handleExistingConnection" << endl;
-                    ok_print_server_block(this->_serverBlocks[i]);
+                    // cout << "handleExistingConnection" << endl;
+                    // ok_print_server_block(this->_serverBlocks[i]);
                     handleExistingConnection(i);
                 }
             }
             if (this->_fds[i].revents & POLLOUT && i >= this->_serverBlocks.size()) {
-                cout << "POLLOUT" << endl;
-                ok_print_server_block(this->_serverBlocks[i]);
+                // cout << "POLLOUT" << endl;
+                // ok_print_server_block(this->_serverBlocks[i - this->_serverBlocks.size()]);
                 handleExistingConnection(i); // after read it will go to pollout
             }
-            if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-                cerr << "socket error on fd: " << this->_fds[i].fd << endl;
-                close (this->_fds[i].fd);
-                this->_fds.erase(this->_fds.begin() + i);
-                --i;
-            }
+            // if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+            //     cerr << "socket error on fd: " << this->_fds[i].fd << endl;
+            //     close (this->_fds[i].fd);
+            //     this->_fds.erase(this->_fds.begin() + i);
+            //     --i;
+            // }
         }
     }
 }

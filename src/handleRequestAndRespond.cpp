@@ -23,6 +23,7 @@ static void handleRequest(const int clientSocket, Request& request, ServerBlock 
     string path;
 
     // need to access the server blocks and locations here, so we can open the correct root
+    // ok_print_server_block(serverBlock);
     if (request.getStatusCode() == 200) {
         // ------------------------------
         if (request.getPath() == "/") 
