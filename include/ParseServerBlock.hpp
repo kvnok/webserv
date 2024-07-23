@@ -1,6 +1,9 @@
 #pragma once
+
 #include "stuff.hpp"
 #include "Location.hpp"	
+
+using namespace std;
 
 class pServerBlock {
 	private:

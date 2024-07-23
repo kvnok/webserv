@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:55:00 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/20 09:41:48 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/23 23:48:59 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ void	Request::setBody(string body) { this->_body = body; }
 void	Request::addHeader(string const key, string const value) { this->_header[key] = value; }
 void	Request::setHeader(map<string, string> const header) { this->_header = header; }
 void	Request::setStatusCode(int const statusCode) { this->_statusCode = statusCode; }
-void	Request::setServer(ServerBlock server) { this->_server = server; }
+//void	Request::setServer(ServerBlock server) { this->_server = server; }
 
 string	Request::getMethod() const { return (this->_method); }
 string	Request::getPath() const { return (this->_path); }
@@ -46,37 +46,42 @@ string	Request::getVersion() const { return (this->_version); }
 string	Request::getBody() const { return (this->_body); }
 int		Request::getStatusCode() const { return (this->_statusCode); }
 map<string, string> Request::getHeaders() const { return (this->_header); }
-ServerBlock	Request::getServer() { return (this->_server); }
+//ServerBlock	Request::getServer() { return (this->_server); }
 
 string	Request::getHeaderValue(const string& key) const{
 	auto iterator = this->_header.find(key);
 	
 	if (iterator == this->_header.end())
-		return ("");
+	  return ("");
 	return (iterator->second);
 }
 
-void handleRequest(const int clientSocket, Request& request) {
-    string path;
+void handleRequest(const int clientSocket, Request& request, ServerBlock serverBlock) {
+    string path = request.getPath();
 
     // need to access the server blocks and locations here, so we can open the correct root
-    if (request.getStatusCode() == 200) {
-        if (request.getPath() == "/") 
-            path = "www/index.html";
-        else
-            path = "www" + request.getPath();
-        ifstream file(path);
-        if (!file.is_open())
-            request.setStatusCode(404);
-        request.setPath(path);
-    }
-    else {
-        path = getHtmlPath(request.getStatusCode());
-        ifstream file(path);
-        if (!file.is_open())
-            request.setStatusCode(404);
-        request.setPath(path);
-    }
+    // if (request.getStatusCode() == 200) {
+    //     // if (request.getPath() == "/") 
+    //     //     path = "www/index.html";
+    //     // else
+    //     //     path = "www" + request.getPath();
+    //     // ------------------------------
+    //     request_path_handler(path, request, serverBlock);
+    //     // cout << GRN << "after path: " << path << RESET << endl;
+    //     // ------------------------------
+    //     ifstream file(path);
+    //     if (!file.is_open())
+    //         request.setStatusCode(404);
+    //     request.setPath(path);
+    // }
+    // else {
+    //     path = getHtmlPath(request.getStatusCode());
+    //     ifstream file(path);
+    //     if (!file.is_open())
+    //         request.setStatusCode(404);
+    //     request.setPath(path);
+    // }
+    request_path_handler(path, request, serverBlock);
   // check paht, run cgi, delete, 
   // after 'execution' of request we end up with: file(which has the body), statusCode, clientSocket.
   // get request.header(connection) = keep alive or close.

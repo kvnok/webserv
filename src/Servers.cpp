@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/16 14:17:40 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/20 08:45:41 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/23 23:14:57 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,6 @@ void    Servers::setFds() {
 
 void    Servers::handleNewConnection(int i) {
     int clientSocket = accept(this->_serverBlocks[i].getFd(), NULL, NULL);
-    cout << this->_serverBlocks[i].getPort() << endl;
     cout << "new Clientsocket: " << clientSocket << endl;
     if (clientSocket == -1) {
         cerr << "accept failed" << endl; // implement error/exception meganism
@@ -43,35 +42,31 @@ void    Servers::handleNewConnection(int i) {
     }
     this->_fds.push_back({clientSocket, POLLIN | POLLOUT, 0});
     this->_connections.emplace_back(clientSocket);
+    this->_connections[i].setServer(this->_serverBlocks[i]);
 }
 
-void    Servers::handleExistingConnection(int& i) {
-    Connection& connection = this->_connections[i - this->_serverBlocks.size()];
-    cout << "handleExistingConnection" << endl;
-    ok_print_server_block(this->_serverBlocks[i]);
+void    Servers::handleExistingConnection(Connection& connection) {
     switch (connection.getNextState()) {
         case READ:
             readRequest(connection);
             break ;
         case PARSE:
-            parseRequest(connection, this->_serverBlocks[i]);
+            parseRequest(connection);
             break ;
         case EXECUTE:
-            executeRequest(connection);
+            executeRequest(connection); //serverBlocks[i] doesnt exist
             break ;
         case WRITE:
             writeResponse(connection);
             break ;
         case CLOSE:
-            closeConnection(i);
+            closeConnection(connection.getIndex());
             break ;
     }
 }
 
 void    Servers::readRequest(Connection& connection) {
-    vector<char> buffer(1024); // max size of request to fix Maybe we can use Max body size and then resize;
-    if (set read size)
-        buffer.resize();
+    vector<char> buffer(1024);
     ssize_t bytes = recv(connection.getFd(), buffer.data(), buffer.size(), 0);
     if (bytes < 0) {
         if (errno != EWOULDBLOCK && errno != EAGAIN) {
@@ -81,16 +76,15 @@ void    Servers::readRequest(Connection& connection) {
     }
     else if (bytes == 0) {
         cout << "close because 0 bytes have been read" << endl;
-       connection.setNextState(CLOSE);
-       return;
+        connection.setNextState(CLOSE);
+        return;
     }
-    else
-        connection.addBytesRead(bytes);
-    connection.getBuffer().resize(connection.getBytesRead());
-    connection.setBuffer(connection.getBuffer().insert+ buffer));
-    connection.setBuffer(buffer);
+    connection.addBytesRead(bytes);
+    buffer.resize(bytes);
+    connection.addToBuffer(buffer);
    // if all bytes have been read/received
-    connection.setNextState(PARSE);
+    if (bytes < 1024)
+        connection.setNextState(PARSE);
 }
 
 void    Servers::parseRequest(Connection& connection) {
@@ -100,9 +94,8 @@ void    Servers::parseRequest(Connection& connection) {
 }
 
 void    Servers::executeRequest(Connection& connection) {
-    //kevin path finder part
-    //+ execution
-    handleRequest(connection.getFd(), connection.getRequest());
+    handleRequest(connection.getFd(), connection.getRequest(), connection.getServer());
+    cout << "update path to: ";
     cout << connection.getRequest().getPath() << endl;
     // if status code is updated, change execution to correct status page
     connection.setNextState(WRITE);
@@ -120,28 +113,22 @@ void    Servers::writeResponse(Connection& connection) {
         connection.setNextState(READ);
 }
 
-void    Servers::closeConnection(int &i) {
+void    Servers::closeConnection(int i) {
     cout << "closing socket: " << this->_fds[i].fd << endl;
     close(this->_fds[i].fd);
     this->_fds.erase(this->_fds.begin() + i);
     this->_connections.erase(this->_connections.begin() + (i - this->_serverBlocks.size()));
-    --i;
     return;
 }
 
 void    Servers::start() {
-    cout << "IN START" << endl;
-    ok_print_server_block(this->_serverBlocks[0]);
     while (true) {
         int ret = poll(this->_fds.data(), this->_fds.size(), 0);
         if (ret == -1)
             throw runtime_error("poll failed");
         for (int i = 0; i < this->_fds.size(); i++) {
             if (this->_fds[i].revents & POLLIN) {
-                cout << "revents check" << endl;
-                cout << "i: " << i << endl;
-                ok_print_server_block(this->_serverBlocks[i]);
-                if (i < this->_serverBlocks.size() && this->_fds[i].fd == this->_serverBlocks[i].getFd())
+                if (i < this->_serverBlocks.size()) //is this part needed?:  && this->_fds[i].fd == this->_serverBlocks[i].getFd())
                 {
                     cout << "handleNewConnection" << endl;
                     handleNewConnection(i);
@@ -149,16 +136,12 @@ void    Servers::start() {
                 else
                 {
                     cout << "handleExistingConnection" << endl;
-                    ok_print_server_block(this->_serverBlocks[i]);
-                    handleExistingConnection(i);
+                    handleExistingConnection(this->_connections[i - this->_serverBlocks.size()]);
                 }
             }
-            if (this->_fds[i].revents & POLLOUT && i >= this->_serverBlocks.size()) {
-                cout << "POLLOUT" << endl;
-                ok_print_server_block(this->_serverBlocks[i]);
-                handleExistingConnection(i); // after read it will go to pollout
-            }
-            if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+            else if (this->_fds[i].revents & POLLOUT && i >= this->_serverBlocks.size())
+                handleExistingConnection(this->_connections[i - this->_serverBlocks.size()]); // after read it will go to pollout
+            else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                 cerr << "socket error on fd: " << this->_fds[i].fd << endl;
                 close(this->_fds[i].fd);
                 this->_fds.erase(this->_fds.begin() + i);

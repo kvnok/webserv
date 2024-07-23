@@ -130,11 +130,7 @@ void ok_print_server_block(ServerBlock &serverBlock) {
 	// }
 }
 
-void request_path_handler(string &path, Request &request, ServerBlock &serverBlock) {
-	// clearly the serverBlock is still empty when we get here
-	ok_print_server_block(serverBlock);
-
-	path = request.getPath();
+void request_path_handler(string &path, Request &request, ServerBlock serverBlock) {
 	cout << RED << "start path: " << path << RESET << endl;
 	// first check if its just / or /file or /folder/
 	string folder;
@@ -143,7 +139,7 @@ void request_path_handler(string &path, Request &request, ServerBlock &serverBlo
 	cout << YEL << "folder: " << folder << RESET << endl;
 	cout << YEL << "file: " << file << RESET << endl;
 
-	ServerBlock server = request.getServer();
+	ServerBlock server = serverBlock;
 
 	map<int, string> err_pages = server.getErrorPages();
 	smartLocs sLocs;
@@ -157,4 +153,6 @@ void request_path_handler(string &path, Request &request, ServerBlock &serverBlo
 		cout << YEL << "locs" << RESET << endl;
 		check_locs(request, folder, file, path, err_pages, sLocs);
 	}
+	cout << RED << "end path: " << path << RESET << endl;
+	request.setPath(path);
 }

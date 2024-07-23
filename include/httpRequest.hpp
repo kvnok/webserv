@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:54:54 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/20 08:42:44 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/23 20:15:18 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,6 @@
 #include <set>
 #include <filesystem>
 #include <regex>
-
 #include "ServerBlock.hpp"
 
 using namespace std;
@@ -52,7 +51,7 @@ class Request {
 		map<string, string>	_header;
 		string				_body;
 		int					_statusCode;
-		ServerBlock			_server;
+	//	ServerBlock			_server;
 	public:
 		Request();
 //		Request(const Request& other);
@@ -67,7 +66,7 @@ class Request {
 		void	addHeader(string const key, string const value);
 		void	setHeader(map<string, string> const header);
 		void	setStatusCode(int const statusCode);
-		void	setServer(ServerBlock server);
+	//	void	setServer(ServerBlock server);
 
 		string	getMethod() const;
 		string	getPath() const;
@@ -76,8 +75,8 @@ class Request {
 		int		getStatusCode() const;
 		map<string, string>	getHeaders() const;
 		string	getHeaderValue(const string& key) const;
-		ServerBlock	getServer();
+	//	ServerBlock	getServer();
 };
 
 void	createRequest(vector<char> requestData, Request& request);
-void	handleRequest(const int clientSocket, Request& request);
+void	handleRequest(const int clientSocket, Request& request, ServerBlock serverBlock);
