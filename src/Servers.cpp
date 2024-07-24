@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/16 14:17:40 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/24 10:19:13 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/24 10:31:38 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ void    Servers::handleNewConnection(int i) {
     this->_connections[i].setServer(this->_serverBlocks[i]);
 }
 
-void    Servers::handleExistingConnection(Connection& connection) {
+void    Servers::handleExistingConnection(Connection& connection, int& i) {
     switch (connection.getNextState()) {
         case READ:
             readRequest(connection);
@@ -61,6 +61,7 @@ void    Servers::handleExistingConnection(Connection& connection) {
             break ;
         case CLOSE:
             closeConnection(connection);
+            i--;
             break ;
     }
 }
@@ -133,12 +134,12 @@ void    Servers::start() {
                 else
                 {
                     cout << "handleExistingConnection pollin" << endl;
-                    handleExistingConnection(this->_connections[i - this->_serverBlocks.size()]);
+                    handleExistingConnection(this->_connections[i - this->_serverBlocks.size()], i);
                 }
             }
             else if (this->_fds[i].revents & POLLOUT && i >= this->_serverBlocks.size()) { 
                 //cout << "handleExistingConnection pollout" << endl;
-                handleExistingConnection(this->_connections[i - this->_serverBlocks.size()]);
+                handleExistingConnection(this->_connections[i - this->_serverBlocks.size()], i);
             }
             else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                 cerr << "socket error on fd: " << this->_fds[i].fd << endl;
@@ -146,6 +147,7 @@ void    Servers::start() {
                 this->_fds.erase(this->_fds.begin() + i);
                 if (i >= this->_serverBlocks.size())
                     this->_connections.erase(this->_connections.begin() + (i - this->_serverBlocks.size()));
+                i--;
             }
         }
     }
