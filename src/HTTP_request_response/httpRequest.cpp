@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:55:00 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/23 23:48:59 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/24 13:16:23 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,6 +82,9 @@ void handleRequest(const int clientSocket, Request& request, ServerBlock serverB
     //     request.setPath(path);
     // }
     request_path_handler(path, request, serverBlock);
+    if (request.getMethod() == "POST") {
+        post_method(clientSocket, request);
+    }
   // check paht, run cgi, delete, 
   // after 'execution' of request we end up with: file(which has the body), statusCode, clientSocket.
   // get request.header(connection) = keep alive or close.

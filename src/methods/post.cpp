@@ -132,8 +132,8 @@ void post_method(int clientSocket, Request &request) {
     string content((istreambuf_iterator<char>(ifs)), (istreambuf_iterator<char>()));
     ifs.close();
 
-    Response response(clientSocket, 200);
-    response.setBody(content);
-    response.setHeaders(content, storage, "keep-alive");
-    response.sendResponse();
+    // Response response(clientSocket, 200);
+    // response.setBody(content);
+    // response.setHeaders(content, storage, "keep-alive");
+    // response.sendResponse();
 }
