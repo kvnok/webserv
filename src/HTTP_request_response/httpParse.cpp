@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 09:56:01 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/06/20 11:32:24 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/23 18:11:49 by ibehluli      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,10 +34,22 @@ static bool	parseBody(istringstream &streamBody, string line, Request& request) 
 	// Transfer-encoding and content-length might be present together, 
 	// transfer-endcoding can be set to chunked, in which case there are chunks of body
 	// need a way to parse that
+	
 	if (request.getMethod() == "POST" && request.getBody().empty()) {
 		request.setStatusCode(400);
 		return (false);
 	}
+	// else if (request.getMethod() == "POST" && request.getBody().length() > 10000) {
+	// 	request.setStatusCode(413);
+	// 	return (false);
+	// }
+	// else if (request.getMethod() == "POST" && request.getBody().length() == 0) {
+	// 	request.setStatusCode(411);
+	// 	return (false);
+	// }
+	// else if(request.getMethod() == "POST" && request.getBody().length() > 0) {
+	// 	request.setStatusCode(200);
+	// }
 	return (true);
 }
 

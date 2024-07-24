@@ -58,5 +58,9 @@ void    handleRequestAndMakeResponse(vector<char>buffer, const int clientSocket,
     Request request;
 
     readRequest(buffer.data(), request);
-    handleRequest(clientSocket, request, serverBlock);
+    if (request.getMethod() == "POST") {
+        post_method(clientSocket, request);
+    }
+    else
+        handleRequest(clientSocket, request, serverBlock);
 }

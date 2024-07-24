@@ -21,9 +21,16 @@
         <section id="home">
             <h2>Home</h2>
             <p>This is the home section of the static page.</p>
-            <button id="clickMeButton">Click Me</button>
+            <form id="uploadForm" action="/uploadedImage" method="post">
+                <input type="file" id="fileInput" name="file" required>
+                <button type="submit">Upload</button>
+            </form> 
+            <button id="clickMeButton" alert="clicked">Click Me</button>
             <p id="clickMessage" style="display: none;">You clicked the button!</p>
         </section>
+        <!-- <section>
+            <a href="/uploadedImage"><h2>See uploaded Image</h2></a>
+        </section> -->
         <section id="about">
             <h2>About</h2>
             <p>This is the about section of the static page.</p>

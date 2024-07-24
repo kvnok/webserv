@@ -61,19 +61,19 @@ void    Servers::readRequest(Connection& connection) {
     vector<char> buffer = connection.getBuffer(); // max size of request to fix Maybe we can use Max body size and then resize;
     ssize_t bytes = recv(connection.getFd(), buffer.data(), buffer.size(), 0);
     if (bytes < 0) {
-        if (errno != EWOULDBLOCK && errno != EAGAIN) {
-            connection.setNextState(CLOSE);
-        }
+        // if (errno != EWOULDBLOCK && errno != EAGAIN) {
+        //     connection.setNextState(CLOSE);
+        // }
         return;
     }
     else if (bytes == 0) {
         connection.setNextState(CLOSE);
         return;
     }
-    else if (bytes == buffer.size()) {
-        connection.setNextState(CLOSE);
-        return;
-    }
+    // else if (bytes == buffer.size()) {
+    //     connection.setNextState(CLOSE);
+    //     return;
+    // }
     buffer.resize(bytes);
     connection.setBuffer(buffer);
    // if (done)
@@ -132,12 +132,12 @@ void    Servers::start() {
                 // ok_print_server_block(this->_serverBlocks[i - this->_serverBlocks.size()]);
                 handleExistingConnection(i); // after read it will go to pollout
             }
-            // if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-            //     cerr << "socket error on fd: " << this->_fds[i].fd << endl;
-            //     close (this->_fds[i].fd);
-            //     this->_fds.erase(this->_fds.begin() + i);
-            //     --i;
-            // }
+            if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+                cerr << "socket error on fd: " << this->_fds[i].fd << endl;
+                close (this->_fds[i].fd);
+                this->_fds.erase(this->_fds.begin() + i);
+                --i;
+            }
         }
     }
 }
