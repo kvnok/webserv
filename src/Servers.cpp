@@ -6,12 +6,13 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/16 14:17:40 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/24 11:42:51 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/24 12:59:57 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Servers.hpp"
 #include "Connection.hpp"
+#include <fcntl.h>
 
 Servers::Servers( void ) { }
 
@@ -36,13 +37,16 @@ void    Servers::handleNewConnection(int i) {
         cerr << "accept failed" << endl; // implement error/exception meganism
         return ;
     }
-    if (fcntl(clientSocket, F_SETFL, fcntl(clientSocket, F_GETFL, 0) | O_NONBLOCK) == -1) {
-        cerr << "fcntl failed" << endl;
-        return ;
+    if (fcntl(clientSocket, F_GETFL, 0) != -1) {
+        if (fcntl(clientSocket, F_SETFL, fcntl(clientSocket, F_GETFL, 0) | O_NONBLOCK) == -1) {
+            cerr << "fcntl failed" << endl;
+            return ;
+        }
     }
+    else 
+        cout << "get flags failed" << endl;
     this->_fds.push_back({clientSocket, POLLIN | POLLOUT, 0});
-    this->_connections.emplace_back(clientSocket);
-    this->_connections[i].setServer(this->_serverBlocks[i]);
+    this->_connections.emplace_back(clientSocket, this->_serverBlocks[i]);
 }
 
 void    Servers::handleExistingConnection(Connection& connection, int& i) {
@@ -111,6 +115,7 @@ void    Servers::writeResponse(Connection& connection) {
 }
 
 void    Servers::closeConnection(Connection& connection, int& i) {
+    cout << "here" << endl;
     cout << "closing socket: " << connection.getFd() << endl;
     close(connection.getFd());
     this->_fds.erase(this->_fds.begin() + i);
@@ -126,7 +131,7 @@ void    Servers::start() {
             throw runtime_error("poll failed");
         for (int i = 0; i < this->_fds.size(); i++) {
             if (this->_fds[i].revents & POLLIN) {
-                if (i < this->_serverBlocks.size() && this->_fds[i].fd == this->_serverBlocks[i].getFd())
+                if (i < this->_serverBlocks.size() && this->_fds[i].fd == this->_serverBlocks[i].getFd()) // is this check needed?
                 {
                     cout << "handleNewConnection pollin" << endl;
                     handleNewConnection(i);

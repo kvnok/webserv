@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/27 15:53:03 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/24 11:41:38 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/24 12:57:36 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ class Connection {
 		Connection();
 
 	public:
-		Connection(const int fd);
+		Connection(const int fd, const ServerBlock serverBlock);
 		Connection(const Connection& other);
 		~Connection();
 
