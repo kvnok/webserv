@@ -50,6 +50,10 @@ using namespace std;
 #define WHT "\033[1;37m"
 #define RESET "\033[0m"
 
+#define BOLD "\033[1m"
+#define UNDERLINE "\033[4m"
+#define REVERSED "\033[7m"
+
 // Print colored text
 template<typename... Args>
 void color_print(string color, Args... args) {

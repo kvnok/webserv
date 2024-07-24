@@ -50,18 +50,20 @@ string	Request::getHeaderValue(const string& key) const{
 	auto iterator = this->_header.find(key);
 	
 	if (iterator == this->_header.end())
-	  return ("");
+		return ("");
 	return (iterator->second);
 }
 
 void handleRequest(const int clientSocket, Request& request, ServerBlock serverBlock) {
-    string path = request.getPath();
-
-    request_path_handler(path, request, serverBlock);
-    if (request.getMethod() == "POST") {
-        post_method(clientSocket, request);
-    }
-  // check paht, run cgi, delete, 
-  // after 'execution' of request we end up with: file(which has the body), statusCode, clientSocket.
-  // get request.header(connection) = keep alive or close.
+	string path = request.getPath();
+	
+	if (request.getMethod() == "GET") {
+		request_path_handler(path, request, serverBlock);
+	}
+	else if (request.getMethod() == "POST") {
+			post_method(clientSocket, request);
+	}
+	// check paht, run cgi, delete, 
+	// after 'execution' of request we end up with: file(which has the body), statusCode, clientSocket.
+	// get request.header(connection) = keep alive or close.
 }
