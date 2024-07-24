@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/16 14:17:40 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/24 15:31:09 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/29 15:57:41 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ void    Servers::handleExistingConnection(Connection& connection, int& i) {
             writeResponse(connection);
             break ;
         case CLEANUP:
-            cleanUpConnection(connection);
+            connection.reset();
         case CLOSE:
             closeConnection(connection, i); //still need index, to access _fds, the pollfd array, and access vector<connection>
             break ;
@@ -105,7 +105,10 @@ void    Servers::executeRequest(Connection& connection) {
 }
 
 void    Servers::writeResponse(Connection& connection) {
-    createResponse(connection.getFd(), connection.getRequest().getStatusCode(), connection.getRequest().getPath());
+    connection.getResponse().setClientSocket(connection.getFd());
+    connection.getResponse().setVersion(connection.getRequest().getVersion());
+    connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
+    createResponse(connection.getResponse(), connection.getRequest().getPath());
     // if all bytes have been written, so only set to close when the whole response has been written and send
     if (connection.getRequest().getHeaderValue("Connection") == "close") {
         cout << "close because connection is set to 'close'" << endl;
@@ -113,12 +116,6 @@ void    Servers::writeResponse(Connection& connection) {
     }
     else
         connection.setNextState(CLEANUP);
-}
-
-void    Servers::cleanUpConnection(Connection& connection) {
-    //delete request and maybe other stuff?
-    
-    connection.setNextState(READ);
 }
 
 void    Servers::closeConnection(Connection& connection, int& i) {
