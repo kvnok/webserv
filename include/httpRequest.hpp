@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:54:54 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/24 14:35:34 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/24 16:09:44 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,6 +74,8 @@ class Request {
 		int					getStatusCode() const;
 		map<string, string>	getHeaders() const;
 		string				getHeaderValue(const string& key) const;
+
+		void				reset();
 };
 
 void	createRequest(vector<char> requestData, Request& request);

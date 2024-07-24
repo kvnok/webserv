@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:55:00 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/24 14:35:12 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/24 16:12:10 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,15 @@ string	Request::getHeaderValue(const string& key) const{
 	if (iterator == this->_header.end())
 	  return ("");
 	return (iterator->second);
+}
+
+void  Request::reset() {
+  this->_method = "";
+  this->_path = "";
+  this->_version = "";
+  this->_body = "";
+  this->_statusCode = 200;
+  this->_header.clear();
 }
 
 void handleRequest(const int clientSocket, Request& request, ServerBlock serverBlock) {

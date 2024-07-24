@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/27 17:28:06 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/24 12:58:22 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/24 16:09:48 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,3 +49,12 @@ size_t			Connection::getBytesRead() const { return (this->_bRead); }
 size_t			Connection::getBytesWritten() const { return (this->_bWritten); }
 vector<char>	Connection::getBuffer() const { return (this->_buffer); }
 ServerBlock		Connection::getServer() { return (this->_server); }
+
+void			Connection::reset() {
+	this->_buffer.clear();
+	this->_buffer.resize(0);
+	this->_bRead = 0;
+	this->_bWritten = 0;
+	this->_request.reset();
+	this->_nextState = READ;
+}

@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/27 15:53:03 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/24 15:30:40 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/24 16:03:54 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,6 +57,8 @@ class Connection {
 		size_t			getBytesRead() const;
 		size_t			getBytesWritten() const;
 		vector<char>	getBuffer() const;
+
+		void			reset();
 };
 
 void request_path_handler(string &path, Request &request, ServerBlock serverBlock);
