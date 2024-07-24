@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/16 14:18:12 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/24 11:42:29 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/24 14:36:19 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 #include "ServerBlock.hpp"
 #include "Connection.hpp"
+#include <fcntl.h>
 
 using namespace std;
 

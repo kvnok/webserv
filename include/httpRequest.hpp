@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:54:54 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/24 07:33:28 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/24 14:35:34 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,16 +66,14 @@ class Request {
 		void	addHeader(string const key, string const value);
 		void	setHeader(map<string, string> const header);
 		void	setStatusCode(int const statusCode);
-	//	void	setServer(ServerBlock server);
 
-		string	getMethod() const;
-		string	getPath() const;
-		string	getVersion() const;
-		string	getBody() const;
-		int		getStatusCode() const;
+		string				getMethod() const;
+		string				getPath() const;
+		string				getVersion() const;
+		string				getBody() const;
+		int					getStatusCode() const;
 		map<string, string>	getHeaders() const;
-		string	getHeaderValue(const string& key) const;
-	//	ServerBlock	getServer();
+		string				getHeaderValue(const string& key) const;
 };
 
 void	createRequest(vector<char> requestData, Request& request);

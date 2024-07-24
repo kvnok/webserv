@@ -6,13 +6,12 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/16 14:17:40 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/24 13:16:40 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/24 14:55:21 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Servers.hpp"
 #include "Connection.hpp"
-#include <fcntl.h>
 
 Servers::Servers( void ) { }
 
@@ -37,16 +36,17 @@ void    Servers::handleNewConnection(int i) {
         cerr << "accept failed" << endl; // implement error/exception meganism
         return ;
     }
-    if (fcntl(clientSocket, F_GETFL, 0) != -1) {
-        if (fcntl(clientSocket, F_SETFL, fcntl(clientSocket, F_GETFL, 0) | O_NONBLOCK) == -1) {
-            cerr << "fcntl failed" << endl;
-            return ;
-        }
+    int flag = fcntl(clientSocket, F_GETFL, 0);
+    if (flag == -1) {
+        cerr << "fcntl get flags failed" << endl;
+        return ;
     }
-    else 
-        cout << "get flags failed" << endl;
+    if (fcntl(clientSocket, F_SETFL, flag | O_NONBLOCK) == -1) {
+            cerr << "fcntl set flags failed" << endl;
+            return ;
+    }
     this->_fds.push_back({clientSocket, POLLIN | POLLOUT, 0});
-    this->_connections.emplace_back(clientSocket, this->_serverBlocks[i]);
+    this->_connections.emplace_back(clientSocket, this->_serverBlocks[i]); //i will be the index of _fds[i] and _serverBlocks[i], to connect those two in the connection class. so every connection class has access to the correct serverBlock
 }
 
 void    Servers::handleExistingConnection(Connection& connection, int& i) {
@@ -64,7 +64,7 @@ void    Servers::handleExistingConnection(Connection& connection, int& i) {
             writeResponse(connection);
             break ;
         case CLOSE:
-            closeConnection(connection, i);
+            closeConnection(connection, i); //still need index, to access _fds, the pollfd array, and access vector<connection>
             break ;
     }
 }
@@ -79,7 +79,7 @@ void    Servers::readRequest(Connection& connection) {
         return;
     }
     else if (bytes == 0) {
-        cout << "close because 0 bytes have been read" << endl;
+        cout << "close because 0 bytes have been read" << endl; // need to find out if it is correct to close in this case
         connection.setNextState(CLOSE);
         return;
     }
@@ -87,25 +87,24 @@ void    Servers::readRequest(Connection& connection) {
     buffer.resize(bytes);
     connection.addToBuffer(buffer);
    // if all bytes have been read/received
+   // might need the request headers to check this, need to research
     connection.setNextState(PARSE);
 }
 
 void    Servers::parseRequest(Connection& connection) {
     createRequest(connection.getBuffer(), connection.getRequest());
-    //if status code is still 200/ else execute correct status page
     connection.setNextState(EXECUTE);
 }
 
 void    Servers::executeRequest(Connection& connection) {
     handleRequest(connection.getFd(), connection.getRequest(), connection.getServer());
-    // if status code is updated, change execution to correct status page
+    // connection.getRequest().getPath() should give the path to the file we want to open, so either the result of a cgi, the correct html file or a statusCode page
     connection.setNextState(WRITE);
 }
 
 void    Servers::writeResponse(Connection& connection) {
-//    connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
     createResponse(connection.getFd(), connection.getRequest().getStatusCode(), connection.getRequest().getPath());
-    // if all bytes have been written
+    // if all bytes have been written, so only set to close when the whole response has been written and send
     if (connection.getRequest().getHeaderValue("Connection") == "close") {
         cout << "close because connection is set to 'close'" << endl;
         connection.setNextState(CLOSE);
@@ -115,12 +114,12 @@ void    Servers::writeResponse(Connection& connection) {
 }
 
 void    Servers::closeConnection(Connection& connection, int& i) {
-    cout << "here" << endl;
     cout << "closing socket: " << connection.getFd() << endl;
     close(connection.getFd());
     this->_fds.erase(this->_fds.begin() + i);
     this->_connections.erase(this->_connections.begin() + (i - this->_serverBlocks.size()));
     i--;
+    // what if the server socket needs to be closed, how should we handle deleting all connections and there fd's made by that server
     return;
 }
 
@@ -128,10 +127,10 @@ void    Servers::start() {
     while (true) {
         int ret = poll(this->_fds.data(), this->_fds.size(), 0);
         if (ret == -1)
-            throw runtime_error("poll failed");
+            throw runtime_error("poll failed"); // should not exit when fail occured
         for (int i = 0; i < this->_fds.size(); i++) {
             if (this->_fds[i].revents & POLLIN) {
-                if (i < this->_serverBlocks.size() && this->_fds[i].fd == this->_serverBlocks[i].getFd()) // is this check needed?
+                if (i < this->_serverBlocks.size() && this->_fds[i].fd == this->_serverBlocks[i].getFd()) // is this fd check needed?
                 {
                     cout << "handleNewConnection pollin" << endl;
                     handleNewConnection(i);
@@ -143,7 +142,6 @@ void    Servers::start() {
                 }
             }
             else if (this->_fds[i].revents & POLLOUT && i >= this->_serverBlocks.size()) { 
-                //cout << "handleExistingConnection pollout" << endl;
                 handleExistingConnection(this->_connections[i - this->_serverBlocks.size()], i);
             }
             else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
