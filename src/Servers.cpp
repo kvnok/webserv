@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/16 14:17:40 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/24 10:31:38 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/24 11:42:51 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,8 +60,7 @@ void    Servers::handleExistingConnection(Connection& connection, int& i) {
             writeResponse(connection);
             break ;
         case CLOSE:
-            closeConnection(connection);
-            i--;
+            closeConnection(connection, i);
             break ;
     }
 }
@@ -111,11 +110,12 @@ void    Servers::writeResponse(Connection& connection) {
         connection.setNextState(READ);
 }
 
-void    Servers::closeConnection(Connection& connection) {
+void    Servers::closeConnection(Connection& connection, int& i) {
     cout << "closing socket: " << connection.getFd() << endl;
     close(connection.getFd());
-    this->_fds.erase(this->_fds.begin() + connection.getIndex());
-    this->_connections.erase(this->_connections.begin() + (connection.getIndex() - this->_serverBlocks.size()));
+    this->_fds.erase(this->_fds.begin() + i);
+    this->_connections.erase(this->_connections.begin() + (i - this->_serverBlocks.size()));
+    i--;
     return;
 }
 
@@ -148,7 +148,7 @@ void    Servers::start() {
                 if (i >= this->_serverBlocks.size())
                     this->_connections.erase(this->_connections.begin() + (i - this->_serverBlocks.size()));
                 i--;
-            }
+            } 
         }
     }
 }
