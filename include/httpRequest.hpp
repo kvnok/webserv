@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:54:54 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/23 20:15:18 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/24 07:33:28 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,3 +80,6 @@ class Request {
 
 void	createRequest(vector<char> requestData, Request& request);
 void	handleRequest(const int clientSocket, Request& request, ServerBlock serverBlock);
+
+//https://www.ibm.com/docs/en/app-connect/11.0.0?topic=messages-http-headers
+//resource headers

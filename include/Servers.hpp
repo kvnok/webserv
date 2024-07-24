@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/16 14:18:12 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/23 22:58:10 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/24 10:01:06 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ class Servers
 		void	parseRequest(Connection& connection);
 		void	executeRequest(Connection& connection);
 		void	writeResponse(Connection& connection);
-		void	closeConnection(int i);
+		void	closeConnection(Connection& connection);
 		vector<ServerBlock> &get_serverBlocks();
 		vector<Connection>	&get_connections();
 		vector<pollfd>		&get_fds();
