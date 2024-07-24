@@ -16,20 +16,21 @@ ServerBlock::ServerBlock( void ) {
     this->max_clients = MAX_CLIENTS;
 } // do we need a default constructor? or should we alwasy get the constructor whti pServerBlock?
 
-vector<string> ServerBlock::getServerName(){return this->_server_names;};
-int ServerBlock::getPort(){return this->_port;};
-string ServerBlock::getHost(){return this->_host;};
-string ServerBlock::getListen(){return this->_listen;};
-string ServerBlock::getMaxBody(){return this->_client_max_body_size;};
-string ServerBlock::getIndex(){return this->_index;};
-map<int, string> ServerBlock::getErrorPages(){return this->_error_pages;};
-string ServerBlock::getRoot(){return this->_root;};
-int ServerBlock::getFd(){return this->_serverFd;};
-int ServerBlock::getMaxClients(){return this->max_clients;};
-string ServerBlock::getCurrentPath(){return this->_currentPath;};
-vector<Location> ServerBlock::getLocations(){return this->_locations;};
-smartLocs ServerBlock::getSmartLocs(){return this->_smartLocs;};
-void ServerBlock::setSmartLocs(pServerBlock &block){this->_smartLocs = smartLocs(block);};
+vector<string>      ServerBlock::getServerName() { return this->_server_names; }
+int                 ServerBlock::getPort() { return this->_port; }
+string              ServerBlock::getHost() { return this->_host; }
+string              ServerBlock::getListen() { return this->_listen; }
+string              ServerBlock::getMaxBody() { return this->_client_max_body_size; }
+string              ServerBlock::getIndex() { return this->_index; }
+map<int, string>    ServerBlock::getErrorPages() { return this->_error_pages; }
+string              ServerBlock::getRoot() { return this->_root; }
+int                 ServerBlock::getFd() { return this->_serverFd; }
+int                 ServerBlock::getMaxClients() { return this->max_clients; }
+string              ServerBlock::getCurrentPath() { return this->_currentPath; }
+vector<Location>    ServerBlock::getLocations() { return this->_locations; }
+smartLocs           ServerBlock::getSmartLocs() { return this->_smartLocs; }
+
+void                ServerBlock::setSmartLocs(pServerBlock &block) { this->_smartLocs = smartLocs(block); }
 
 ServerBlock::ServerBlock(pServerBlock& block) {
     this->_listen = block.get_listen();
@@ -84,20 +85,24 @@ void ServerBlock::setSocket() {
 
 ServerBlock::~ServerBlock( void ) {}
 
+ServerBlock::ServerBlock(const ServerBlock& other) { *this = other; }
+
 ServerBlock& ServerBlock::operator=(const ServerBlock& other) {
-    this->_port = other._port;
-    this->_listen = other._listen;
-    this->_host = other._host;
-    this->_server_names = other._server_names;
-    this->_client_max_body_size = other._client_max_body_size;
-    this->_index = other._index;
-    this->_error_pages = other._error_pages;
-    this->_root = other._root;
-    this->_locations = other._locations;
-    this->_serverFd = other._serverFd;
-    this->_opt = other._opt;
-    this->max_clients = other.max_clients;
-    this->_currentPath = other._currentPath;
-    this->_smartLocs = other._smartLocs;
+    if (this != &other) {
+        this->_port = other._port;
+        this->_listen = other._listen;
+        this->_host = other._host;
+        this->_server_names = other._server_names;
+        this->_client_max_body_size = other._client_max_body_size;
+        this->_index = other._index;
+        this->_error_pages = other._error_pages;
+        this->_root = other._root;
+        this->_locations = other._locations;
+        this->_serverFd = other._serverFd;
+        this->_opt = other._opt;
+        this->max_clients = other.max_clients;
+        this->_currentPath = other._currentPath;
+        this->_smartLocs = other._smartLocs;
+    }
     return *this;
 }

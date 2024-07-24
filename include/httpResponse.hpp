@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 08:54:10 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/23 18:20:03 by ibehluli      ########   odam.nl         */
+/*   Updated: 2024/07/24 13:08:27 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,14 +29,25 @@ class Response {
 		const int			_clientSocket;
 		Response();
 	public:
-		Response(int const clientSocket, int const statusCode);
+		Response(int const clientSocket);
+//		Response(const Response& other);
 		~Response();
 
-		void	setBody(string const body);
-		void	addHeader(string const key, string const value);
-		void	setHeaders(string const content, string const path, string const connection);
-		ssize_t	sendResponse() const;
+//		Response& operator=(const Response& other);
+
+		void				setBody(string const body);
+		void				setStatusCode(int const statusCode);
+		void				addHeader(string const key, string const value);
+		void				setHeaders(string const content, string const path, string const connection);
+		int					getStatusCode() const;
+		map<string, string>	getHeaders() const;
+		string				getBody() const;
+		int					getClientSocket() const;
+
+		ssize_t				sendResponse() const;
 };
+
+void	createResponse(int const clientSocket, int statusCode, string path);
 
 void post_method(int clientSocket, Request& request);
 

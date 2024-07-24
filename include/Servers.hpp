@@ -1,33 +1,45 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   Servers.hpp                                        :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2024/07/16 14:18:12 by jvorstma      #+#    #+#                 */
+/*   Updated: 2024/07/24 11:42:29 by jvorstma      ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #pragma once
 
 #include "ServerBlock.hpp"
 #include "Connection.hpp"
 
+using namespace std;
+
 class Servers
 {
 	private:
-		vector<ServerBlock> _serverBlocks;
-		vector<Connection> _connections;
-		vector<pollfd> _fds;
-	public:
+		vector<ServerBlock>	_serverBlocks;
+		vector<Connection>	_connections;
+		vector<pollfd>		_fds;
 		Servers();
+	public:
 		Servers(vector<ServerBlock> &serverBlocks);
 		~Servers();
 		void	start();
 		void	setFds();
 		void	handleNewConnection(int i);
-		void	handleExistingConnection(int& i);
+		void	handleExistingConnection(Connection& connection, int& i);
 		void	readRequest(Connection& connection);
-		void	parseRequest(Connection& connection, ServerBlock& serverBlock);
+		void	parseRequest(Connection& connection);
 		void	executeRequest(Connection& connection);
 		void	writeResponse(Connection& connection);
-		void	closeConnection(int &i);
+		void	closeConnection(Connection& connection, int& i);
 		vector<ServerBlock> &get_serverBlocks();
-		vector<Connection> &get_connections();
-		vector<pollfd> &get_fds();
+		vector<Connection>	&get_connections();
+		vector<pollfd>		&get_fds();
 		void	set_serverBlocks(vector<ServerBlock> &serverBlocks);
 		void	set_connections(vector<Connection> &connections);
 		void	set_fds(vector<pollfd> &fds);
 };
-
-void handleRequestAndMakeResponse(vector<char>buffer, const int clientSocket, ServerBlock &serverBlock);

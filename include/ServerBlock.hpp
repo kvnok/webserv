@@ -42,6 +42,7 @@ class ServerBlock
 	public:
 		ServerBlock( void );
 		ServerBlock(pServerBlock& blocks);
+		ServerBlock(const ServerBlock& other);
 		~ServerBlock( void );
 
 		ServerBlock& operator=(const ServerBlock& other);

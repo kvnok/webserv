@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 09:56:01 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/23 18:11:49 by ibehluli      ########   odam.nl         */
+/*   Updated: 2024/07/24 13:07:35 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -155,10 +155,11 @@ static bool	parseRequestLine(string line, Request& request) {
 	return (true);
 }
 
-void	readRequest(string const& requestData, Request& request) {
-	istringstream	requestStream(requestData);
+void	createRequest(vector<char> requestData, Request& request) {
+	string			buffer(requestData.begin(), requestData.end());
+	istringstream	requestStream(buffer);
 	string			line;
-	
+
 	if (!getline(requestStream, line)) {
 		request.setStatusCode(400);
 		return ;
