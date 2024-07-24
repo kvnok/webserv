@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/16 14:17:40 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/24 14:55:21 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/24 15:31:09 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,6 +63,8 @@ void    Servers::handleExistingConnection(Connection& connection, int& i) {
         case WRITE:
             writeResponse(connection);
             break ;
+        case CLEANUP:
+            cleanUpConnection(connection);
         case CLOSE:
             closeConnection(connection, i); //still need index, to access _fds, the pollfd array, and access vector<connection>
             break ;
@@ -110,7 +112,13 @@ void    Servers::writeResponse(Connection& connection) {
         connection.setNextState(CLOSE);
     }
     else
-        connection.setNextState(READ);
+        connection.setNextState(CLEANUP);
+}
+
+void    Servers::cleanUpConnection(Connection& connection) {
+    //delete request and maybe other stuff?
+    
+    connection.setNextState(READ);
 }
 
 void    Servers::closeConnection(Connection& connection, int& i) {

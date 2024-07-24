@@ -139,15 +139,13 @@ void request_path_handler(string &path, Request &request, ServerBlock serverBloc
 	cout << YEL << "folder: " << folder << RESET << endl;
 	cout << YEL << "file: " << file << RESET << endl;
 
-	ServerBlock server = serverBlock;
-
-	map<int, string> err_pages = server.getErrorPages();
+	map<int, string> err_pages = serverBlock.getErrorPages();
 	smartLocs sLocs;
-	sLocs.set_locs(server.getSmartLocs().get_locs());
+	sLocs.set_locs(serverBlock.getSmartLocs().get_locs());
 
 	if (folder == "/") {
 		cout << YEL << "baseline" << RESET << endl;
-		check_baseline(request, file, path, server, err_pages);
+		check_baseline(request, file, path, serverBlock, err_pages);
 	}
 	else {
 		cout << YEL << "locs" << RESET << endl;
