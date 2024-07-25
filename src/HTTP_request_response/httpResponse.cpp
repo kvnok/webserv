@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 08:58:38 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/18 12:02:34 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/25 14:25:16 by ibehluli      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,7 @@ void	Response::setHeaders(string const content, string const path, string const 
 	string extension;
 
 	extension = path.substr(path.find_last_of(".") + 1);
+    // cout << "extension: " << extension << endl;
 	if (extension == "html")
         this->addHeader("Content-Type", "text/html");
     else if (extension == "css")

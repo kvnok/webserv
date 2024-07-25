@@ -37,7 +37,6 @@ void create_body_for_image(const string &path, ofstream &MyFile) {
     response += "<h1>Image uploaded successfully</h1>";
     response += "<h2>You can find it in " + path + "</h2>";
     response += "<br>";
-    response += "<a href=\"/\">Go back</a>";
     response += "<br>";
     response += "<button type=\"submit\" method=\"delete\">delete</button>";
     response += test_cgi("var/cgi-bin/page.cgi");
@@ -57,7 +56,6 @@ void fileExist(const string &path, ofstream &MyFile) {
     response += "<h1>File NOT uploaded successfully</h1>";
     response += "<h2>A file named " + path + " already exists</h2>";
     response += "<br>";
-    response += "<a href=\"/\">Go back</a>";
     response += "</body>";
     response += "</html>";
     MyFile << response;
@@ -93,10 +91,11 @@ void post_method(int clientSocket, Request &request) {
             uploadedFile = pair.second;
         }
     }
-    cout << "Uploaded file: " << uploadedFile << endl;
-    string postResponses = "uploadedFile.html";
-    relativePath = storage + uploadedFile;
+    // cout << "Uploaded file: " << uploadedFile << endl;
+    string postResponses = "base.html";
 
+    relativePath = storage + uploadedFile;
+    // add cgi here
     ofstream MyFile(postResponses, ios::out | ios::trunc);
     if (!MyFile) {
         cout << "Failed to open file for writing: " << postResponses << endl;
@@ -132,6 +131,10 @@ void post_method(int clientSocket, Request &request) {
     string content((istreambuf_iterator<char>(ifs)), (istreambuf_iterator<char>()));
     ifs.close();
 
+    // <h1>File Uploaded Successfully!</h1>
+    // <h1>File Not uploaded!</h1>
+    // <h2>Please try again with another file name</h2>
+    createResponse(clientSocket, 200, "base.html");
     // Response response(clientSocket, 200);
     // response.setBody(content);
     // response.setHeaders(content, storage, "keep-alive");

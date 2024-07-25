@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/16 14:17:40 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/24 14:55:21 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/25 14:42:48 by ibehluli      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,8 @@ void    Servers::setFds() {
 		fd.events = POLLIN;
 		this->_fds.push_back(fd);
 	}
+    // cout << "setFds" << endl;
+    
 }
 
 void    Servers::handleNewConnection(int i) {
@@ -46,10 +48,12 @@ void    Servers::handleNewConnection(int i) {
             return ;
     }
     this->_fds.push_back({clientSocket, POLLIN | POLLOUT, 0});
-    this->_connections.emplace_back(clientSocket, this->_serverBlocks[i]); //i will be the index of _fds[i] and _serverBlocks[i], to connect those two in the connection class. so every connection class has access to the correct serverBlock
+    this->_connections.emplace_back(clientSocket, this->_serverBlocks[i]); //i will be the index of _fds[i] and _serverBlocks[i], to connect those two in the connection class. so every connection class has access to the correct serverBlock and pollfd
 }
 
 void    Servers::handleExistingConnection(Connection& connection, int& i) {
+    // cout << "handleExistingConnection" << endl;
+    // cout << i << endl;
     switch (connection.getNextState()) {
         case READ:
             readRequest(connection);
@@ -129,7 +133,7 @@ void    Servers::start() {
         if (ret == -1)
             throw runtime_error("poll failed"); // should not exit when fail occured
         for (int i = 0; i < this->_fds.size(); i++) {
-            if (this->_fds[i].revents & POLLIN) {
+            if (i < this->_serverBlocks.size() && this->_fds[i].revents & POLLIN) {
                 if (i < this->_serverBlocks.size() && this->_fds[i].fd == this->_serverBlocks[i].getFd()) // is this fd check needed?
                 {
                     cout << "handleNewConnection pollin" << endl;

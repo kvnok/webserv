@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 09:56:01 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/24 13:07:35 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/25 15:44:50 by ibehluli      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,7 +134,12 @@ static bool	parseRequestLine(string line, Request& request) {
 	string			requestLine[4];
 	istringstream	lineStream(line);
 
+	// cout << "line: " << line << endl;
+	// cout << "requestLine[1]: " << requestLine[1] << endl;
 	lineStream >> requestLine[0] >> requestLine[1] >> requestLine[2] >> requestLine[3];
+	// for (int i = 0; i < 4; i++) {
+	// 	cout << "requestLine[" << i << "]: " << requestLine[i] << endl;
+	// }
 	if (requestLine[0].empty() || requestLine[1].empty() || requestLine[2].empty() \
 		|| !requestLine[3].empty()) {
 		request.setStatusCode(400);
@@ -160,10 +165,15 @@ void	createRequest(vector<char> requestData, Request& request) {
 	istringstream	requestStream(buffer);
 	string			line;
 
+	cout << GREEN << "buffer: " << buffer << RESET << endl;
+	cout << "---------------------" << endl;
+	// cout << "requestStream: " << requestStream.str() << endl;
+	
 	if (!getline(requestStream, line)) {
 		request.setStatusCode(400);
 		return ;
 	}
+	// cout << "line: " << line << endl;
 	if (!parseRequestLine(line, request))
 		return ;
 	if (!parseHeaders(requestStream, line, request))
