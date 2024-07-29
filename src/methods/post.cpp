@@ -8,6 +8,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <filesystem>
 #include "CGI.hpp"
 
 unordered_map<string, string> parse_form_data(const string &body) {
@@ -73,16 +74,24 @@ void printRequestHeaders(const map<string, string> &headers) {
     }
 }
 
+bool storageExist(const string& path) {
+    return filesystem::exists(path);
+}
+
+bool createDirectories(const string& path) {
+    return filesystem::create_directories(path);
+}
+
 void post_method(int clientSocket, Request &request) {
-    // cout << "------------------------------" << endl;
-    // cout << request.getMethod() << " " << request.getPath() << " " << request.getVersion() << endl;
-    // printRequestHeaders(request.getHeaders());
-    // cout << "------------------------------" << endl;
 
     cout << "POST method" << endl;
     string uploadedFile;
     string relativePath;
-    const char *storage = "www/storage/";
+    string storage = "www/storage/";
+    if (!storageExist(storage)) {
+        cout << "Storage does not exist... Creating it now" << endl;
+        createDirectories(storage);
+    }
     auto form_data = parse_form_data(request.getBody());
     
     for (const auto &pair : form_data) {
