@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:55:00 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/31 12:55:37 by ibehluli      ########   odam.nl         */
+/*   Updated: 2024/08/01 20:25:51 by ibehluli      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 #include "httpResponse.hpp"
 #include "Servers.hpp"
 
-Request::Request() : _method(""), _path(""), _version(""), _body(""), _statusCode(200) { }
+Request::Request() : _method(""), _path(""), _version(""), _body(""), _statusCode(200), _boundary(""), _contentUploadFile(""), _maxLengthUploadContent(0), _bytesCopied(0) { }
 //Request::Request(const Request& other) { *this = other; }
 Request::~Request() { }
 
@@ -45,7 +45,18 @@ string	            Request::getVersion() const { return (this->_version); }
 string	            Request::getBody() const { return (this->_body); }
 int                 Request::getStatusCode() const { return (this->_statusCode); }
 map<string, string> Request::getHeaders() const { return (this->_header); }
-
+// ---------------------------
+void	Request::setUploadeFile(string uploadedFile) { this->_uploadedFile = uploadedFile; }
+void	Request::setBytesCopied(int bytesCopied) { this->_bytesCopied = bytesCopied; }
+void	Request::setMaxLengthUploadContent(int maxLengthUploadContent) { this->_maxLengthUploadContent = maxLengthUploadContent; }
+void	Request::setBoundary(string const boundary) { this->_boundary = boundary; }
+void	Request::setContentUploadFile(string const contentUploadFile) { this->_contentUploadFile = contentUploadFile; };
+string	Request::getBoundary() const { return (this->_boundary); }
+string	Request::getContentUploadFile() const { return (this->_contentUploadFile); }
+int		Request::getMaxLengthUploadContent() { return (this->_maxLengthUploadContent); }
+int		Request::getBytesCopied() { return (this->_bytesCopied); }
+string	Request::getUploadedFile() const { return (this->_uploadedFile); }
+// ---------------------------
 string	Request::getHeaderValue(const string& key) const{
 	auto iterator = this->_header.find(key);
 	

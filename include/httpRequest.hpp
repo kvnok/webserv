@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:54:54 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/24 14:35:34 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/08/01 20:25:24 by ibehluli      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,11 @@ class Request {
 		map<string, string>	_header;
 		string				_body;
 		int					_statusCode;
+		string				_boundary;
+		string				_contentUploadFile;
+		int 				_maxLengthUploadContent;
+		int					_bytesCopied;
+		string				_uploadedFile;
 	//	ServerBlock			_server;
 	public:
 		Request();
@@ -74,6 +79,18 @@ class Request {
 		int					getStatusCode() const;
 		map<string, string>	getHeaders() const;
 		string				getHeaderValue(const string& key) const;
+		// -----------------------
+		void				setUploadeFile(string uploadedFile);
+		void				setBytesCopied(int bytesCopied);
+		void				setMaxLengthUploadContent(int maxLengthUploadContent);
+		void				setBoundary(string const boundary);
+		void				setContentUploadFile(string const contentUploadFile);
+		string 				getBoundary() const;
+		string 				getContentUploadFile() const;
+		int 				getMaxLengthUploadContent();
+		int 				getBytesCopied();
+		string				getUploadedFile() const;
+		// ------------------------
 };
 
 void	createRequest(vector<char> requestData, Request& request);

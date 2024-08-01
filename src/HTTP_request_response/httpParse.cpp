@@ -6,11 +6,26 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 09:56:01 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/25 15:44:50 by ibehluli      ########   odam.nl         */
+/*   Updated: 2024/08/01 20:29:19 by ibehluli      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "httpRequest.hpp"
+
+bool find_string(const std::string& str, const std::string& boundary) {
+	if (str.find(boundary) != std::string::npos) {
+		return true;
+	}
+	return false;
+}
+
+string findBoundary(const string& contentType) {
+	size_t pos = contentType.find("boundary=");
+	if (pos == string::npos) {
+		return "";
+	}
+	return contentType.substr(pos + 9);
+}
 
 static bool	parseBody(istringstream &streamBody, string line, Request& request) {
 	if (!request.getHeaderValue("Content-Length").empty()) {
@@ -30,15 +45,11 @@ static bool	parseBody(istringstream &streamBody, string line, Request& request) 
 			bodyStream << line << '\n';
 		request.setBody(bodyStream.str());
 	}
+	// cout << "request.getBody(): " << request.getBody() << endl;
 	// if there is a body but not the correct header:  error? or not possible?
 	// Transfer-encoding and content-length might be present together, 
 	// transfer-endcoding can be set to chunked, in which case there are chunks of body
 	// need a way to parse that
-	
-	if (request.getMethod() == "POST" && request.getBody().empty()) {
-		request.setStatusCode(400);
-		return (false);
-	}
 	// else if (request.getMethod() == "POST" && request.getBody().length() > 10000) {
 	// 	request.setStatusCode(413);
 	// 	return (false);
@@ -160,15 +171,49 @@ static bool	parseRequestLine(string line, Request& request) {
 	return (true);
 }
 
+string findFileName(const string& contentType)
+{
+    size_t startPos = contentType.find("filename=\"");
+    if (startPos == string::npos)
+        return "";
+    startPos += 10;
+    size_t endPos = contentType.find("\"", startPos);
+    if (endPos == string::npos)
+        return "";
+    return (contentType.substr(startPos, endPos - startPos));
+}
+
 void	createRequest(vector<char> requestData, Request& request) {
 	string			buffer(requestData.begin(), requestData.end());
 	istringstream	requestStream(buffer);
 	string			line;
 
-	cout << GREEN << "buffer: " << buffer << RESET << endl;
-	cout << "---------------------" << endl;
+	// if (buffer.data() && request.getMethod() == "POST") {
+	// 	request.setBody(buffer);
+	// }
+	// cout << "---------------------" << endl;
 	// cout << "requestStream: " << requestStream.str() << endl;
 	
+	// cout << GREEN << "buffer & request: " << request.getMethod() << "\n" << buffer.data() << RESET << endl;
+	// cout << "---------------------" << endl;
+	// 	if (request.getMethod() == "POST" && request.getBody().size() > 0) {
+	// 	// cout << RED << "request.getBody(): " << buffer << RESET << endl;
+	// 	request.setBody(buffer);
+	// 	return ;
+	// }
+	if (find_string(request.getHeaderValue("Content-Type"), "multipart/form-data")) {
+		// parse form data
+		// cout << RED << "HERE:  " << request.getHeaderValue("Content-Type") << RESET << request.getBody() << endl;
+		
+		cout << "SIZE" << request.getHeaderValue("Content-Length") << endl;
+		request.setBoundary(findBoundary(request.getHeaderValue("Content-Type")));
+		request.setContentUploadFile(buffer);
+		request.setMaxLengthUploadContent(buffer.size());
+		if (request.getUploadedFile().empty())
+            request.setUploadeFile(findFileName(request.getContentUploadFile()));
+		cout << "content size: " << buffer.size() << endl;
+	}
+	// cout << "request.getBoundary(): " << request.getContentUploadFile() << "BUFFER: " << buffer << endl;
 	if (!getline(requestStream, line)) {
 		request.setStatusCode(400);
 		return ;
@@ -176,6 +221,8 @@ void	createRequest(vector<char> requestData, Request& request) {
 	// cout << "line: " << line << endl;
 	if (!parseRequestLine(line, request))
 		return ;
+	if (!request.getBoundary().empty())
+		request.setContentUploadFile(buffer);
 	if (!parseHeaders(requestStream, line, request))
 		return ;
 	if (!parseBody(requestStream, line, request))

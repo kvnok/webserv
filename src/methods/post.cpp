@@ -28,41 +28,6 @@ unordered_map<string, string> parse_form_data(const string &body) {
     return form_data;
 }
 
-void create_body_for_image(const string &path, ofstream &MyFile) {
-    string response;
-    response += "<!DOCTYPE html>";
-    response += "<html lang=\"en\">";
-    response += "<head>";
-    response += "</head>";
-    response += "<body>";
-    response += "<h1>Image uploaded successfully</h1>";
-    response += "<h2>You can find it in " + path + "</h2>";
-    response += "<br>";
-    response += "<br>";
-    response += "<button type=\"submit\" method=\"delete\">delete</button>";
-    response += test_cgi("var/cgi-bin/page.cgi");
-    response += "</body>";
-    response += "</html>";
-    MyFile << response;
-    MyFile.close();
-}
-
-void fileExist(const string &path, ofstream &MyFile) {
-    string response;
-    response += "<!DOCTYPE html>";
-    response += "<html lang=\"en\">";
-    response += "<head>";
-    response += "</head>";
-    response += "<body>";
-    response += "<h1>File NOT uploaded successfully</h1>";
-    response += "<h2>A file named " + path + " already exists</h2>";
-    response += "<br>";
-    response += "</body>";
-    response += "</html>";
-    MyFile << response;
-    MyFile.close();
-}
-
 bool fileExists(const string &path) {
     struct stat buffer;
     return (stat(path.c_str(), &buffer) == 0);
@@ -82,70 +47,96 @@ bool createDirectories(const string& path) {
     return filesystem::create_directories(path);
 }
 
+void writeFile(const std::string& storagePath, const std::string& fileName, const std::string& content) {
+    string fullPath = storagePath + fileName;
+    cout << "Full path: " << fullPath << endl;
+    
+    if (!filesystem::exists(storagePath))
+        filesystem::create_directories(storagePath);
+    if (filesystem::exists(fullPath))
+    {
+        cout << YEL << content << RESET << endl;
+        std::ofstream outFile(fullPath, std::ios::binary | std::ios::app);
+        if (!outFile) {
+            std::cerr << "Failed to open file for writing: " << fullPath << std::endl;
+            return;
+        }
+        outFile << content;
+        std::cout << BLU << "Appending to: " << fullPath << RESET << std::endl;
+    }
+    else
+    {
+        std::ofstream outFile(fullPath, std::ios::binary);
+        if (!outFile) {
+            std::cerr << "Failed to open file for writing: " << fullPath << std::endl;
+            return;
+        }
+
+        outFile << content;
+        std::cout << "From scratch: " << fullPath << std::endl;
+    }
+}
+
+// string findFileName(const string& contentType)
+// {
+//     size_t startPos = contentType.find("filename=\"");
+//     if (startPos == string::npos)
+//         return "";
+//     startPos += 10;
+//     size_t endPos = contentType.find("\"", startPos);
+//     if (endPos == string::npos)
+//         return "";
+//     return (contentType.substr(startPos, endPos - startPos));
+// }
+
+bool findLastBoundary(const string& contentType, const string& boundary) {
+	size_t pos = contentType.find(boundary);
+	if (pos == string::npos) {
+		return false;
+	}
+	return true;
+}
+
+
 void post_method(int clientSocket, Request &request) {
 
     cout << "POST method" << endl;
     string uploadedFile;
-    string relativePath;
     string storage = "www/storage/";
-    if (!storageExist(storage)) {
-        cout << "Storage does not exist... Creating it now" << endl;
-        createDirectories(storage);
-    }
-    auto form_data = parse_form_data(request.getBody());
-    
-    for (const auto &pair : form_data) {
-        cout << pair.first << ": " << pair.second << endl;
-        if (pair.first == "file") {
-            uploadedFile = pair.second;
+    // string content;
+
+    if (!request.getBoundary().empty() && request.getBytesCopied() <= stoi(request.getHeaderValue("Content-Length"))){
+        // cout << "Boundary: " << request.getContentUploadFile() << endl;
+        cout << RED << "copied: " << request.getBytesCopied() << RESET << endl;
+        // cout << GREEN << request.getContentUploadFile() << RESET << endl;
+        writeFile(storage, request.getUploadedFile(), request.getContentUploadFile());
+        request.setBytesCopied(request.getBytesCopied() + request.getMaxLengthUploadContent());
+        cout << RED << "copied AFTER: " << request.getBytesCopied() << RESET << endl;
+        if (request.getBytesCopied() == stoi(request.getHeaderValue("Content-Length")))
+        {
+            cout << "Last boundary found" << endl;
+            // writeFile(storage, uploadedFile, request.getContentUploadFile());
+
+            // cout << RED << request.getContentUploadFile() << RESET << endl;
+            request.setMaxLengthUploadContent(0);
+            request.setContentUploadFile("");
+            request.setBytesCopied(0);
+            request.setUploadeFile("");
+            request.setBoundary("");
+            createResponse(clientSocket, 200, "base.html");
         }
+        else
+            cout << "Last boundary not found" << endl;
     }
-    // cout << "Uploaded file: " << uploadedFile << endl;
-    string postResponses = "base.html";
-
-    relativePath = storage + uploadedFile;
-    // add cgi here
-    ofstream MyFile(postResponses, ios::out | ios::trunc);
-    if (!MyFile) {
-        cout << "Failed to open file for writing: " << postResponses << endl;
-        return;
-    }
-
-    if (fileExists(relativePath)) {
-        fileExist(uploadedFile, MyFile);
-    } else {
-        ifstream ifs(uploadedFile, ios::binary);
-        if (!ifs) {
-            cout << "Failed to open file for reading: " << uploadedFile << endl;
-            return;
+    else
+    {
+        cout << "HERE!!!" << endl;
+        auto form_data = parse_form_data(request.getBody());
+        for (const auto &pair : form_data) {
+            if (pair.first == "filename") {
+                uploadedFile = pair.second;
+            }
         }
-
-        string content((istreambuf_iterator<char>(ifs)), (istreambuf_iterator<char>()));
-
-        ofstream outFile(relativePath, ios::binary);
-        if (!outFile) {
-            cout << "Failed to open file for writing: " << relativePath << endl;
-            return;
-        }
-        outFile << content;
-        ifs.close();
-        outFile.close();
-
-        create_body_for_image(uploadedFile, MyFile);
+        writeFile(storage, uploadedFile, "hello world");
     }
-
-    MyFile.close();
-
-    ifstream ifs(postResponses, ios::binary);
-    string content((istreambuf_iterator<char>(ifs)), (istreambuf_iterator<char>()));
-    ifs.close();
-
-    // <h1>File Uploaded Successfully!</h1>
-    // <h1>File Not uploaded!</h1>
-    // <h2>Please try again with another file name</h2>
-    createResponse(clientSocket, 200, "base.html");
-    // Response response(clientSocket, 200);
-    // response.setBody(content);
-    // response.setHeaders(content, storage, "keep-alive");
-    // response.sendResponse();
 }
