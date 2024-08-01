@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/16 14:17:40 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/25 14:42:48 by ibehluli      ########   odam.nl         */
+/*   Updated: 2024/07/31 17:39:32 by ibehluli      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -155,7 +155,7 @@ void    Servers::start() {
                 if (i >= this->_serverBlocks.size())
                     this->_connections.erase(this->_connections.begin() + (i - this->_serverBlocks.size()));
                 i--;
-            } 
+            }
         }
     }
 }
