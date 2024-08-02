@@ -47,7 +47,20 @@ bool createDirectories(const string& path) {
     return filesystem::create_directories(path);
 }
 
-void writeFile(const std::string& storagePath, const std::string& fileName, const std::string& content) {
+// remove boundaries from content in progress
+
+string removeBoundaries(const string& content, const string& boundary) {
+    string newContent;
+
+    size_t file_start = content.find("\r\n\r\n", content.find("filename=")) + 4;
+    size_t file_end = content.size() - boundary.size() - 6;
+
+    newContent = content.substr(file_start, file_end - file_start);
+    // cout << RED << "Boundary: " << boundary << "at pos " << pos << RESET << endl;
+    return newContent;
+}
+
+void writeFile(const string& storagePath, const string& fileName, const string& content, Request &request) {
     string fullPath = storagePath + fileName;
     cout << "Full path: " << fullPath << endl;
     
@@ -55,39 +68,28 @@ void writeFile(const std::string& storagePath, const std::string& fileName, cons
         filesystem::create_directories(storagePath);
     if (filesystem::exists(fullPath))
     {
-        cout << YEL << content << RESET << endl;
-        std::ofstream outFile(fullPath, std::ios::binary | std::ios::app);
+        // cout << YEL << content << RESET << endl;
+        ofstream outFile(fullPath, ios::binary | ios::app);
         if (!outFile) {
-            std::cerr << "Failed to open file for writing: " << fullPath << std::endl;
+            cerr << "Failed to open file for writing: " << fullPath << endl;
             return;
         }
+        // outFile << removeBoundaries(content, request.getBoundary());
         outFile << content;
-        std::cout << BLU << "Appending to: " << fullPath << RESET << std::endl;
+        cout << BLU << "Appending to: " << fullPath << RESET << endl;
     }
     else
     {
-        std::ofstream outFile(fullPath, std::ios::binary);
+        ofstream outFile(fullPath, ios::binary);
         if (!outFile) {
-            std::cerr << "Failed to open file for writing: " << fullPath << std::endl;
+            cerr << "Failed to open file for writing: " << fullPath << endl;
             return;
         }
-
-        outFile << content;
-        std::cout << "From scratch: " << fullPath << std::endl;
+        outFile << removeBoundaries(content, request.getBoundary());
+        // outFile << content;
+        cout << "From scratch: " << fullPath << endl;
     }
 }
-
-// string findFileName(const string& contentType)
-// {
-//     size_t startPos = contentType.find("filename=\"");
-//     if (startPos == string::npos)
-//         return "";
-//     startPos += 10;
-//     size_t endPos = contentType.find("\"", startPos);
-//     if (endPos == string::npos)
-//         return "";
-//     return (contentType.substr(startPos, endPos - startPos));
-// }
 
 bool findLastBoundary(const string& contentType, const string& boundary) {
 	size_t pos = contentType.find(boundary);
@@ -105,16 +107,34 @@ void post_method(int clientSocket, Request &request) {
     string storage = "www/storage/";
     // string content;
 
-    if (!request.getBoundary().empty() && request.getBytesCopied() <= stoi(request.getHeaderValue("Content-Length"))){
+    if (!request.getBoundary().empty() && request.getBytesCopied() <= stol(request.getHeaderValue("Content-Length"))){
         // cout << "Boundary: " << request.getContentUploadFile() << endl;
         cout << RED << "copied: " << request.getBytesCopied() << RESET << endl;
-        // cout << GREEN << request.getContentUploadFile() << RESET << endl;
-        writeFile(storage, request.getUploadedFile(), request.getContentUploadFile());
+        cout << GREEN << request.getContentUploadFile() << RESET << endl;
+        writeFile(storage, request.getUploadedFile(), request.getContentUploadFile(), request);
         request.setBytesCopied(request.getBytesCopied() + request.getMaxLengthUploadContent());
         cout << RED << "copied AFTER: " << request.getBytesCopied() << RESET << endl;
-        if (request.getBytesCopied() == stoi(request.getHeaderValue("Content-Length")))
+        if (request.getBytesCopied() == stol(request.getHeaderValue("Content-Length")))
         {
             cout << "Last boundary found" << endl;
+            // -----------------------------
+            // run cgi to store the file in the right place
+            // vector<string> args = {
+            //     "python3",
+            //     "upload_file_in_a_folder.cgi", // script_to_execute
+            //     "root/index.html", // use smartKevinFindLocation file_path where we want to store the file
+            //     "www/storage/filename" // file_name
+            // };
+    
+            // // Convert the vector of strings to an array of char* for execve
+            // vector<char*> c_args;
+            // for (auto& arg : args) {
+            //     c_args.push_back(const_cast<char*>(arg.c_str()));
+            // }
+            // c_args.push_back(nullptr); // Null-terminate the array
+
+            // // Execute the new script
+            // execve("/usr/bin/python3", c_args.data(), nullptr);
             // writeFile(storage, uploadedFile, request.getContentUploadFile());
 
             // cout << RED << request.getContentUploadFile() << RESET << endl;
@@ -123,20 +143,13 @@ void post_method(int clientSocket, Request &request) {
             request.setBytesCopied(0);
             request.setUploadeFile("");
             request.setBoundary("");
-            createResponse(clientSocket, 200, "base.html");
+            // createResponse(clientSocket, 200, "base.html");
         }
         else
             cout << "Last boundary not found" << endl;
     }
     else
     {
-        cout << "HERE!!!" << endl;
-        auto form_data = parse_form_data(request.getBody());
-        for (const auto &pair : form_data) {
-            if (pair.first == "filename") {
-                uploadedFile = pair.second;
-            }
-        }
-        writeFile(storage, uploadedFile, "hello world");
+        createResponse(clientSocket, 200, "base.html");
     }
 }

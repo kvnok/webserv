@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/16 14:17:40 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/31 17:39:32 by ibehluli      ########   odam.nl         */
+/*   Updated: 2024/08/02 15:37:35 by ibehluli      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,7 @@ void    Servers::handleExistingConnection(Connection& connection, int& i) {
 }
 
 void    Servers::readRequest(Connection& connection) {
-    vector<char> buffer(1024);
+    vector<char> buffer(5000); // bodysize
     ssize_t bytes = recv(connection.getFd(), buffer.data(), buffer.size(), 0);
     if (bytes < 0) {
         if (errno != EWOULDBLOCK && errno != EAGAIN) {

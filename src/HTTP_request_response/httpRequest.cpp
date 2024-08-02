@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:55:00 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/01 20:25:51 by ibehluli      ########   odam.nl         */
+/*   Updated: 2024/08/02 17:45:49 by ibehluli      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,14 +47,14 @@ int                 Request::getStatusCode() const { return (this->_statusCode);
 map<string, string> Request::getHeaders() const { return (this->_header); }
 // ---------------------------
 void	Request::setUploadeFile(string uploadedFile) { this->_uploadedFile = uploadedFile; }
-void	Request::setBytesCopied(int bytesCopied) { this->_bytesCopied = bytesCopied; }
-void	Request::setMaxLengthUploadContent(int maxLengthUploadContent) { this->_maxLengthUploadContent = maxLengthUploadContent; }
+void	Request::setBytesCopied(long bytesCopied) { this->_bytesCopied = bytesCopied; }
+void	Request::setMaxLengthUploadContent(long maxLengthUploadContent) { this->_maxLengthUploadContent = maxLengthUploadContent; }
 void	Request::setBoundary(string const boundary) { this->_boundary = boundary; }
 void	Request::setContentUploadFile(string const contentUploadFile) { this->_contentUploadFile = contentUploadFile; };
 string	Request::getBoundary() const { return (this->_boundary); }
 string	Request::getContentUploadFile() const { return (this->_contentUploadFile); }
-int		Request::getMaxLengthUploadContent() { return (this->_maxLengthUploadContent); }
-int		Request::getBytesCopied() { return (this->_bytesCopied); }
+long		Request::getMaxLengthUploadContent() { return (this->_maxLengthUploadContent); }
+long		Request::getBytesCopied() { return (this->_bytesCopied); }
 string	Request::getUploadedFile() const { return (this->_uploadedFile); }
 // ---------------------------
 string	Request::getHeaderValue(const string& key) const{
