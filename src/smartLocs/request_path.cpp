@@ -131,7 +131,9 @@ void ok_print_server_block(ServerBlock &serverBlock) {
 }
 
 void request_path_handler(string &path, Request &request, ServerBlock serverBlock) {
-	cout << RED << "start path: " << path << RESET << endl;
+	cout << BOLD << "REQUEST PATH HANDLER" << RESET << endl;
+	cout << BOLD << request.getPath() << RESET << endl;
+	ok_print_server_block(serverBlock);
 	// first check if its just / or /file or /folder/
 	string folder;
 	string file;
@@ -140,17 +142,19 @@ void request_path_handler(string &path, Request &request, ServerBlock serverBloc
 	cout << YEL << "file: " << file << RESET << endl;
 
 	map<int, string> err_pages = serverBlock.getErrorPages();
+	map<int, string> err_pages = serverBlock.getErrorPages();
 	smartLocs sLocs;
+	sLocs.set_locs(serverBlock.getSmartLocs().get_locs());
 	sLocs.set_locs(serverBlock.getSmartLocs().get_locs());
 
 	if (folder == "/") {
-		cout << YEL << "baseline" << RESET << endl;
+		cout << BOLD << "CHECKING IN BASELINE" << RESET << endl;
 		check_baseline(request, file, path, serverBlock, err_pages);
 	}
 	else {
-		cout << YEL << "locs" << RESET << endl;
+		cout << BOLD << "CHECKING IN BASELINE" << RESET << endl;
 		check_locs(request, folder, file, path, err_pages, sLocs);
 	}
-	cout << RED << "end path: " << path << RESET << endl;
 	request.setPath(path);
+	cout << BOLD << "END OF REQUEST PATH HANDLER: " << request.getPath() << RESET << endl;
 }
