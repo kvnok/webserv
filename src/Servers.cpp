@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/16 14:17:40 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/02 13:37:12 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/08/02 14:35:36 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,6 +75,7 @@ void    Servers::readRequest(Connection& connection) {
     vector<char> buffer(1024);
     ssize_t bytes = recv(connection.getFd(), buffer.data(), buffer.size(), 0);
     if (bytes < 0) {
+        connection.getRequest().setStatusCode(404);
         if (errno != EWOULDBLOCK && errno != EAGAIN) {
             cout << "THIS SHOULD NOT BE HAPPENING, WE CHECK THIS IN POLL()" << endl;
         }
