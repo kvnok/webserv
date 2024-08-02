@@ -144,6 +144,7 @@ void request_path_handler(string &path, Request &request, ServerBlock serverBloc
 	map<int, string> err_pages = serverBlock.getErrorPages();
 	smartLocs sLocs;
 	sLocs.set_locs(serverBlock.getSmartLocs().get_locs());
+	sLocs.set_locs(serverBlock.getSmartLocs().get_locs());
 
 	if (folder == "/") {
 		cout << BOLD << "CHECKING IN BASELINE" << RESET << endl;

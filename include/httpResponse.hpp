@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 08:54:10 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/24 13:08:27 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/07/29 15:46:36 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,32 +22,37 @@ using namespace std;
 
 class Response {
 	private:
-		const string		_version = "HTTP/1.1";
+		string				_version;
 		int					_statusCode;
 		map<string, string>	_header;
 		string				_body;
-		const int			_clientSocket;
-		Response();
+		int					_clientSocket;
 	public:
-		Response(int const clientSocket);
-//		Response(const Response& other);
+		Response();
+		Response(int const clientSocket, int const statusCode, string const version);
+		Response(const Response& other);
 		~Response();
 
-//		Response& operator=(const Response& other);
+		Response& operator=(const Response& other);
 
+		void				setVersion(string const version);
 		void				setBody(string const body);
 		void				setStatusCode(int const statusCode);
+		void				setClientSocket(int const clientSocket);
 		void				addHeader(string const key, string const value);
 		void				setHeaders(string const content, string const path, string const connection);
+
+		string				getVersion() const;
 		int					getStatusCode() const;
 		map<string, string>	getHeaders() const;
 		string				getBody() const;
 		int					getClientSocket() const;
 
 		ssize_t				sendResponse() const;
+		void				reset();
 };
 
-void	createResponse(int const clientSocket, int statusCode, string path);
+void	createResponse(Response& response, string path);
 
 void post_method(int clientSocket, Request& request);
 

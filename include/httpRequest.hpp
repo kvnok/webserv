@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:54:54 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/01 20:25:24 by ibehluli      ########   odam.nl         */
+/*   Updated: 2024/08/02 15:41:58 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,6 +79,8 @@ class Request {
 		int					getStatusCode() const;
 		map<string, string>	getHeaders() const;
 		string				getHeaderValue(const string& key) const;
+
+		void				reset();
 		// -----------------------
 		void				setUploadeFile(string uploadedFile);
 		void				setBytesCopied(int bytesCopied);

@@ -6,28 +6,33 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 08:58:38 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/31 14:16:46 by ibehluli      ########   odam.nl         */
+/*   Updated: 2024/08/02 15:45:38 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "httpResponse.hpp"
 #include "httpStatus.hpp"
 
-Response::Response(int const clientSocket) : _clientSocket(clientSocket) { }
-//Response::Response(const Response& other) : _clientSocket(other._clientSocket) { *this = other; }
+Response::Response() : _version(""), _statusCode(-1), _body(""), _clientSocket(-1) {};
+Response::Response(int const clientSocket, int const statusCode, string const version) : _clientSocket(clientSocket), _version(version), _statusCode(statusCode), _body("") { }
+Response::Response(const Response& other) : _clientSocket(other._clientSocket) { *this = other; }
 Response::~Response() { }
 
-// Response&	Response::operator=(const Response& other) {
-// 	if (this != &other) {
-//         this->_statusCode = other._statusCode;
-//         this->_header = other._header;
-//         this->_body = other._body;
-// 	}
-// 	return (*this);
-// }
+Response&	Response::operator=(const Response& other) {
+	if (this != &other) {
+        this->_statusCode = other._statusCode;
+        this->_version = other._version;
+        this->_clientSocket = other._clientSocket;
+        this->_header = other._header;
+        this->_body = other._body;
+	}
+	return (*this);
+}
 
+void    Response::setVersion(string const version) { this->_version = version; }
 void	Response::setBody(string const body) { this->_body = body; }
 void	Response::setStatusCode(int const statusCode) { this->_statusCode = statusCode; }
+void    Response::setClientSocket(int const clientSocket) { this->_clientSocket = clientSocket; }
 void	Response::addHeader(string const key, string const value) { this->_header[key] = value; }
 
 void	Response::setHeaders(string const content, string const path, string const connection) {
@@ -46,6 +51,7 @@ void	Response::setHeaders(string const content, string const path, string const 
     //bare minimum of headers, can add more, but not needed. maybe whith more complex requests and the corresponding responsed.
 }
 
+string              Response::getVersion() const { return (this->_version); }
 int					Response::getStatusCode() const { return (this->_statusCode); }
 map<string, string> Response::getHeaders() const { return (this->_header); } //not using right now
 string				Response::getBody() const { return (this->_body); } //not using right now
@@ -63,21 +69,27 @@ ssize_t	Response::sendResponse() const {
 	return (send(this->_clientSocket, response.c_str(), response.size(), 0));
 }
 
-void createResponse(int const clientSocket, int statusCode, string path) {
-    Response response(clientSocket);
+void    Response::reset() {
+    this->_body = "";
+    this->_header.clear();
+    this->_statusCode = -1;
+    this->_version = "";
+}
+
+void createResponse(Response& response, string path) {
     string content;
     ifstream file(path);
 
+
     if (!file.is_open())
-        statusCode = 404;
-    if (statusCode == 404 && !file.is_open()) {
+        response.setStatusCode(404);
+    if (response.getStatusCode() == 404 && !file.is_open()) {
         content = fourZeroFourBody();
         path = "404.html";
-        statusCode = 404;
+        response.setStatusCode(404);
     }
     else
         content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-    response.setStatusCode(statusCode);
     response.setBody(content);
     response.setHeaders(content, path, "keep-alive");
     response.sendResponse();
