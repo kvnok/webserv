@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/16 14:17:40 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/02 15:37:35 by ibehluli      ########   odam.nl         */
+/*   Updated: 2024/08/02 18:08:43 by ibehluli      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,6 +67,8 @@ void    Servers::handleExistingConnection(Connection& connection, int& i) {
         case WRITE:
             writeResponse(connection);
             break ;
+        case CLEANUP:
+            connection.reset();
         case CLOSE:
             closeConnection(connection, i); //still need index, to access _fds, the pollfd array, and access vector<connection>
             break ;
@@ -77,6 +79,7 @@ void    Servers::readRequest(Connection& connection) {
     vector<char> buffer(5000); // bodysize
     ssize_t bytes = recv(connection.getFd(), buffer.data(), buffer.size(), 0);
     if (bytes < 0) {
+        connection.getRequest().setStatusCode(404);
         if (errno != EWOULDBLOCK && errno != EAGAIN) {
             cout << "THIS SHOULD NOT BE HAPPENING, WE CHECK THIS IN POLL()" << endl;
         }
@@ -107,14 +110,17 @@ void    Servers::executeRequest(Connection& connection) {
 }
 
 void    Servers::writeResponse(Connection& connection) {
-    createResponse(connection.getFd(), connection.getRequest().getStatusCode(), connection.getRequest().getPath());
+    connection.getResponse().setClientSocket(connection.getFd());
+    connection.getResponse().setVersion(connection.getRequest().getVersion());
+    connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
+    createResponse(connection.getResponse(), connection.getRequest().getPath());
     // if all bytes have been written, so only set to close when the whole response has been written and send
     if (connection.getRequest().getHeaderValue("Connection") == "close") {
         cout << "close because connection is set to 'close'" << endl;
         connection.setNextState(CLOSE);
     }
     else
-        connection.setNextState(READ);
+        connection.setNextState(CLEANUP);
 }
 
 void    Servers::closeConnection(Connection& connection, int& i) {
