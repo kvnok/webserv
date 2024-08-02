@@ -149,7 +149,5 @@ void post_method(int clientSocket, Request &request) {
             cout << "Last boundary not found" << endl;
     }
     else
-    {
-        createResponse(clientSocket, 200, "base.html");
-    }
+        request.setPath("Base.html");
 }
