@@ -142,7 +142,6 @@ void request_path_handler(string &path, Request &request, ServerBlock serverBloc
 	cout << YEL << "file: " << file << RESET << endl;
 
 	map<int, string> err_pages = serverBlock.getErrorPages();
-	map<int, string> err_pages = serverBlock.getErrorPages();
 	smartLocs sLocs;
 	sLocs.set_locs(serverBlock.getSmartLocs().get_locs());
 	sLocs.set_locs(serverBlock.getSmartLocs().get_locs());
