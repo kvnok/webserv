@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 09:56:01 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/01 20:29:19 by ibehluli      ########   odam.nl         */
+/*   Updated: 2024/08/05 11:08:09 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ static bool	parseBody(istringstream &streamBody, string line, Request& request) 
 			bodyStream << line << '\n';
 		request.setBody(bodyStream.str());
 	}
-	// cout << "request.getBody(): " << request.getBody() << endl;
+	cout << RED << "request.getBody(): " << request.getBody() << RESET << endl;
 	// if there is a body but not the correct header:  error? or not possible?
 	// Transfer-encoding and content-length might be present together, 
 	// transfer-endcoding can be set to chunked, in which case there are chunks of body
@@ -201,6 +201,16 @@ void	createRequest(vector<char> requestData, Request& request) {
 	// 	request.setBody(buffer);
 	// 	return ;
 	// }
+	// cout << "request.getBoundary(): " << request.getContentUploadFile() << "BUFFER: " << buffer << endl;
+	if (!getline(requestStream, line)) {
+		request.setStatusCode(400);
+		return ;
+	}
+	// cout << "line: " << line << endl;
+	if (!parseRequestLine(line, request))
+		return ;
+	if (!parseHeaders(requestStream, line, request))
+		return ;
 	if (find_string(request.getHeaderValue("Content-Type"), "multipart/form-data")) {
 		// parse form data
 		// cout << RED << "HERE:  " << request.getHeaderValue("Content-Type") << RESET << request.getBody() << endl;
@@ -213,18 +223,8 @@ void	createRequest(vector<char> requestData, Request& request) {
             request.setUploadeFile(findFileName(request.getContentUploadFile()));
 		cout << "content size: " << buffer.size() << endl;
 	}
-	// cout << "request.getBoundary(): " << request.getContentUploadFile() << "BUFFER: " << buffer << endl;
-	if (!getline(requestStream, line)) {
-		request.setStatusCode(400);
-		return ;
-	}
-	// cout << "line: " << line << endl;
-	if (!parseRequestLine(line, request))
-		return ;
 	if (!request.getBoundary().empty())
 		request.setContentUploadFile(buffer);
-	if (!parseHeaders(requestStream, line, request))
-		return ;
 	if (!parseBody(requestStream, line, request))
 		return ;
 	return ;

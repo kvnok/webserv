@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/27 17:28:06 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/02 18:08:19 by ibehluli      ########   odam.nl         */
+/*   Updated: 2024/08/03 12:52:00 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,11 @@ void	Connection::setNextState(const State nextState) { this->_nextState = nextSt
 void	Connection::setBuffer(const vector<char> buffer) { this->_buffer = buffer; }
 void	Connection::setServer(const ServerBlock server) { this->_server = server; }
 
-void	Connection::addToBuffer(const vector<char> buffer) {this->_buffer = buffer; }
+void	Connection::addToBuffer(const vector<char> buffer) {
+	this->_buffer.reserve(this->_buffer.size() + buffer.size());
+	this->_buffer.insert(this->_buffer.end(), buffer.begin(), buffer.end()); 
+}
+//maybe not use a vector, but a list or a simple string
 void	Connection::addBytesRead(const size_t bRead) { this->_bRead += bRead; }
 void	Connection::addBytesWritten(const size_t bWritten) { this->_bWritten += bWritten; }
 

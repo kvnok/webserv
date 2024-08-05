@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:55:00 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/02 18:08:57 by ibehluli      ########   odam.nl         */
+/*   Updated: 2024/08/02 19:14:44 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,6 +71,10 @@ void  Request::reset() {
   this->_version = "";
   this->_body = "";
   this->_statusCode = 200;
+  this->_boundary = "";
+  this->_contentUploadFile = "";
+  this->_maxLengthUploadContent = 0;
+  this->_bytesCopied = 0;
   this->_header.clear();
 }
 
