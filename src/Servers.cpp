@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/16 14:17:40 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/02 19:25:03 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/08/05 19:03:16 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,8 +27,6 @@ void    Servers::setFds() {
 		fd.events = POLLIN;
 		this->_fds.push_back(fd);
 	}
-    // cout << "setFds" << endl;
-    
 }
 
 void    Servers::handleNewConnection(int i) {
@@ -52,14 +50,18 @@ void    Servers::handleNewConnection(int i) {
 }
 
 void    Servers::handleExistingConnection(Connection& connection, int& i) {
-    // cout << "handleExistingConnection" << endl;
-    // cout << i << endl;
     switch (connection.getNextState()) {
         case READ:
             readRequest(connection);
             break ;
         case PARSE:
             parseRequest(connection);
+            break ;
+        case READ_BODY:
+            readBody(connection);
+            break ;
+        case PARSE_BODY:
+            parseBody(connection);
             break ;
         case EXECUTE:
             executeRequest(connection);
@@ -69,6 +71,7 @@ void    Servers::handleExistingConnection(Connection& connection, int& i) {
             break ;
         case CLEANUP:
             connection.reset();
+            break;
         case CLOSE:
             closeConnection(connection, i); //still need index, to access _fds, the pollfd array, and access vector<connection>
             break ;
@@ -76,36 +79,56 @@ void    Servers::handleExistingConnection(Connection& connection, int& i) {
 }
 
 void    Servers::readRequest(Connection& connection) {
-    vector<char> buffer(5000); // bodysize
+    vector<char> buffer(1024); // bodysize
     ssize_t bytes = recv(connection.getFd(), buffer.data(), buffer.size(), 0);
     if (bytes < 0) {
-        //connection.getRequest().setStatusCode(404);
-        if (errno != EWOULDBLOCK && errno != EAGAIN) {
-            cout << "THIS SHOULD NOT BE HAPPENING, WE CHECK THIS IN POLL()" << endl;
-        }
-        return;
+        return ;
     }
     else if (bytes == 0) {
         cout << "close because 0 bytes have been read" << endl; // need to find out if it is correct to close in this case
         connection.setNextState(CLOSE);
-        return;
+        return ;
     }
-    connection.addBytesRead(bytes);
     buffer.resize(bytes);
     connection.addToBuffer(buffer);
-   // if all bytes have been read/received
-   // might need the request headers to check this, need to research
     connection.setNextState(PARSE);
 }
 
 void    Servers::parseRequest(Connection& connection) {
     createRequest(connection.getBuffer(), connection.getRequest());
+    if (connection.getRequest().getMethod() == "POST") {
+        connection.setNextState(READ_BODY);
+        connection.clearBuffer();
+    }
+    else
+        connection.setNextState(EXECUTE);
+}
+
+void    Servers::readBody(Connection& connection) {
+    vector<char> buffer(1024); // bodysize
+    ssize_t bytes = recv(connection.getFd(), buffer.data(), buffer.size(), 0);
+    if (bytes < 0) {
+        return ;
+    }
+    else if (bytes == 0) {
+        cout << "close because 0 bytes have been read" << endl; // need to find out if it is correct to close in this case
+        connection.setNextState(CLOSE);
+        return ;
+    }
+    connection.addBytesRead(bytes);
+    buffer.resize(bytes);
+    connection.addToBuffer(buffer);
+    if (connection.getBytesRead() == stoll(connection.getRequest().getHeaderValue("Content-Length")))
+        connection.setNextState(PARSE_BODY);
+}
+
+void    Servers::parseBody(Connection& connection) {
+    checkBody(connection.getBuffer(), connection.getRequest());
     connection.setNextState(EXECUTE);
 }
 
 void    Servers::executeRequest(Connection& connection) {
     handleRequest(connection.getFd(), connection.getRequest(), connection.getServer());
-    // connection.getRequest().getPath() should give the path to the file we want to open, so either the result of a cgi, the correct html file or a statusCode page
     connection.setNextState(WRITE);
 }
 
@@ -137,9 +160,9 @@ void    Servers::start() {
     while (true) {
         int ret = poll(this->_fds.data(), this->_fds.size(), 0);
         if (ret == -1)
-            throw runtime_error("poll failed"); // should not exit when fail occured
+            throw runtime_error("poll failed"); // should not exit when fail occures
         for (int i = 0; i < this->_fds.size(); i++) {
-            if (i < this->_serverBlocks.size() && this->_fds[i].revents & POLLIN) {
+            if (i < this->_serverBlocks.size() && (this->_fds[i].revents & POLLIN)) {
                 if (i < this->_serverBlocks.size() && this->_fds[i].fd == this->_serverBlocks[i].getFd()) // is this fd check needed?
                 {
                     cout << "handleNewConnection pollin" << endl;
@@ -151,9 +174,8 @@ void    Servers::start() {
                     handleExistingConnection(this->_connections[i - this->_serverBlocks.size()], i);
                 }
             }
-            else if (this->_fds[i].revents & POLLOUT && i >= this->_serverBlocks.size()) { 
+            else if ((this->_fds[i].revents & POLLOUT) && i >= this->_serverBlocks.size())
                 handleExistingConnection(this->_connections[i - this->_serverBlocks.size()], i);
-            }
             else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                 cerr << "socket error on fd: " << this->_fds[i].fd << endl;
                 close(this->_fds[i].fd);

@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:55:00 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/02 19:14:44 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/08/05 16:23:38 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,6 +85,7 @@ void handleRequest(const int clientSocket, Request& request, ServerBlock serverB
 		request_path_handler(path, request, serverBlock);
 	}
 	else if (request.getMethod() == "POST") {
+			cout << RED << "body from post request:\n" << request.getBody() << RESET << endl;
 			post_method(clientSocket, request);
 	}
 	// check paht, run cgi, delete, 
