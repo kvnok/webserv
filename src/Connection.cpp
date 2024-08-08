@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/27 17:28:06 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/06 12:31:17 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/08/08 14:50:55 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ Connection::~Connection() {}
 
 void	Connection::setRequest(Request request) { this->_request = request; }
 void	Connection::setResponse(Response response) { this->_response = response; }
-void	Connection::setNextState(const State nextState) { this->_nextState = nextState; }
+void	Connection::setNextState(const cState nextState) { this->_nextState = nextState; }
 void	Connection::setBuffer(const vector<char> buffer) { this->_buffer = buffer; }
 void	Connection::setServer(const ServerBlock server) { this->_server = server; }
 
@@ -49,13 +49,28 @@ void	Connection::addBytesWritten(const size_t bWritten) { this->_bWritten += bWr
 int				Connection::getFd() const { return (this->_fd); }
 Request&		Connection::getRequest() { return (this->_request); }
 Response&		Connection::getResponse() { return (this->_response); }
-State			Connection::getNextState() const { return (this->_nextState); }
+cState			Connection::getNextState() const { return (this->_nextState); }
 size_t			Connection::getBytesRead() const { return (this->_bRead); }
 size_t			Connection::getBytesWritten() const { return (this->_bWritten); }
 vector<char>	Connection::getBuffer() const { return (this->_buffer); }
 ServerBlock		Connection::getServer() { return (this->_server); }
 
-void			Connection::clearBuffer() { this->_buffer.clear(); this->_buffer.resize(0); }
+void			Connection::clearBuffer() { 
+	string toFind = "\r\n\r\n";
+	auto i = search(this->_buffer.begin(), this->_buffer.end(), toFind.begin(), toFind.end());
+	if (i != this->_buffer.end()) {
+		vector<char> newBuffer(i + toFind.size(), this->_buffer.end());
+		this->_buffer.clear();
+		this->_buffer.resize(newBuffer.size());
+		this->_buffer = newBuffer;
+	}
+	else {
+		this->_buffer.clear(); 
+		this->_buffer.resize(0);
+	}
+	string buf(this->_buffer.begin(), this->_buffer.end());
+	cout << RED << buf << RESET << endl;
+}
 
 void			Connection::reset() {
 	this->_buffer.clear();

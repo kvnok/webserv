@@ -92,8 +92,6 @@ bool findLastBoundary(const string& contentType, const string& boundary) {
 
 
 void post_method(int clientSocket, Request &request) {
-
-    cout << "POST method" << endl;
     string uploadedFile;
     string storage = "www/storage/";
     // string content;
@@ -126,5 +124,5 @@ void post_method(int clientSocket, Request &request) {
         }
     }
     else
-        request.setPath("base.html");
+        request.setPath("wrongSizePost.html");
 }

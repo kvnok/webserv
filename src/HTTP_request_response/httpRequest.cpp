@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:55:00 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/08 10:19:24 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/08/08 15:04:29 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 #include "httpResponse.hpp"
 #include "Servers.hpp"
 
-Request::Request() : _method(""), _path(""), _version(""), _body(""), _statusCode(200), _boundary(""), _contentUploadFile(""), _maxLengthUploadContent(0), _bytesCopied(0), _parseFlag(false) { }
+Request::Request() : _method(""), _path(""), _version(""), _body(""), _statusCode(200), _boundary(""), _contentUploadFile(""), _maxLengthUploadContent(0), _bytesCopied(0),_state(START) { }
 //Request::Request(const Request& other) { *this = other; }
 Request::~Request() { }
 
@@ -38,7 +38,7 @@ void	Request::setBody(string body) { this->_body = body; }
 void	Request::addHeader(string const key, string const value) { this->_header[key] = value; }
 void	Request::setHeader(map<string, string> const header) { this->_header = header; }
 void	Request::setStatusCode(int const statusCode) { this->_statusCode = statusCode; }
-void	Request::setParseFlag(bool const parseFlag) { this->_parseFlag = parseFlag; }
+void	Request::setState(rState const state) { this->_state = state; }
 
 string	            Request::getMethod() const { return (this->_method); }
 string	            Request::getPath() const { return (this->_path); }
@@ -46,7 +46,7 @@ string	            Request::getVersion() const { return (this->_version); }
 string	            Request::getBody() const { return (this->_body); }
 int                 Request::getStatusCode() const { return (this->_statusCode); }
 map<string, string> Request::getHeaders() const { return (this->_header); }
-bool				Request::getParseFlag() const { return (this->_parseFlag); }
+rState				Request::getState() const { return (this->_state); }
 // ---------------------------
 void	Request::setUploadeFile(string uploadedFile) { this->_uploadedFile = uploadedFile; }
 void	Request::setBytesCopied(long bytesCopied) { this->_bytesCopied = bytesCopied; }
@@ -78,7 +78,7 @@ void  Request::reset() {
   this->_maxLengthUploadContent = 0;
   this->_bytesCopied = 0;
   this->_header.clear();
-  this->_parseFlag = false;
+  this->_state = START;
 }
 
 void handleRequest(const int clientSocket, Request& request, ServerBlock serverBlock) {
@@ -88,7 +88,6 @@ void handleRequest(const int clientSocket, Request& request, ServerBlock serverB
 		request_path_handler(path, request, serverBlock);
 	}
 	else if (request.getMethod() == "POST") {
-			cout << RED << "body from post request:\n" << request.getBody() << RESET << endl;
 			post_method(clientSocket, request);
 	}
 	// check paht, run cgi, delete, 

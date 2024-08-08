@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/08/06 11:09:51 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/08 10:42:19 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/08/08 14:51:11 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,9 +38,6 @@ void    Servers::handleExistingConnection(Connection& connection, int& i) {
         case READ:
             readRequest(connection);
             break ;
-        case PARSE:
-            parseRequest(connection);
-            break ;
         case EXECUTE:
             executeRequest(connection);
             break ;
@@ -57,7 +54,7 @@ void    Servers::handleExistingConnection(Connection& connection, int& i) {
 }
 
 void    Servers::readRequest(Connection& connection) {
-    vector<char> buffer(1024); // bodysize
+    vector<char> buffer(1024);
     ssize_t bytes = recv(connection.getFd(), buffer.data(), buffer.size(), 0);
     if (bytes < 0) {
         return ;
@@ -69,14 +66,20 @@ void    Servers::readRequest(Connection& connection) {
     }
     buffer.resize(bytes);
     connection.addToBuffer(buffer);
-	
-	if (connection.getRequest().getParseFlag())
-    	connection.setNextState(PARSE);
-}
-
-void	Servers::parseRequest(Connection& connection) {
-	createRequest(connection.getBuffer(), connection.getRequest());
-	connection.setNextState(EXECUTE);
+    if (connection.getRequest().getState() == START) {
+	    if (findHeadersEnd(connection.getBuffer())) {
+            checkHeaders(connection.getBuffer(), connection.getRequest());
+            connection.clearBuffer();
+        }
+    }
+    else if (connection.getRequest().getState() == CBODY) {
+        checkCBody(connection.getBuffer(), connection.getRequest());
+    }
+    else if (connection.getRequest().getState() == NBODY) {
+        checkNBody(connection.getBuffer(), connection.getRequest());        
+    }
+    if (connection.getRequest().getState() == DONE)
+        connection.setNextState(EXECUTE);
 }
 
 void    Servers::executeRequest(Connection& connection) {
