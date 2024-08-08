@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/27 15:53:03 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/24 12:57:36 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/08/08 14:08:19 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,18 +18,18 @@
 
 using namespace std;
 
-enum State {READ, PARSE, EXECUTE, WRITE, CLOSE};
+enum cState {READ, EXECUTE, WRITE, CLEANUP, CLOSE};
 
 class Connection {
 	private:
 		int				_fd;
-		State			_nextState;
+		cState			_nextState;
 		vector<char>	_buffer;
 		size_t			_bRead;
 		size_t			_bWritten;
 		Request			_request;
 		ServerBlock		_server;
-//		Response		_response;
+		Response		_response;
 		Connection();
 
 	public:
@@ -40,23 +40,27 @@ class Connection {
 		Connection& operator=(const Connection& other);
 
 		void	setRequest(Request request);
-//		void	setResponse(Response response);
-		void	setNextState(const State nextState);
+		void	setResponse(Response response);
+		void	setNextState(const cState nextState);
 		void	setBuffer(const vector<char> buffer);
 		void	setServer(const ServerBlock server);
-
+	
 		void	addToBuffer(const vector<char> buffer);
 		void	addBytesRead(const size_t bRead);
 		void	addBytesWritten(const size_t bWritten);
 
+		void	clearBuffer();
+
 		int				getFd() const;
 		Request&		getRequest();
 		ServerBlock		getServer();
-//		Response&		getResponse();
-		State			getNextState() const;
+		Response&		getResponse();
+		cState			getNextState() const;
 		size_t			getBytesRead() const;
 		size_t			getBytesWritten() const;
 		vector<char>	getBuffer() const;
+
+		void			reset();
 };
 
 void request_path_handler(string &path, Request &request, ServerBlock serverBlock);

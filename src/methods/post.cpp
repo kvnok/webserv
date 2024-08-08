@@ -8,6 +8,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <filesystem>
 #include "CGI.hpp"
 
 unordered_map<string, string> parse_form_data(const string &body) {
@@ -16,7 +17,6 @@ unordered_map<string, string> parse_form_data(const string &body) {
     string token;
 
     while (getline(ss, token, '&')) {
-        // cout << "Token: " << token << endl;
         size_t equal_pos = token.find('=');
         if (equal_pos != string::npos) {
             string key = token.substr(0, equal_pos);
@@ -25,43 +25,6 @@ unordered_map<string, string> parse_form_data(const string &body) {
         }
     }
     return form_data;
-}
-
-void create_body_for_image(const string &path, ofstream &MyFile) {
-    string response;
-    response += "<!DOCTYPE html>";
-    response += "<html lang=\"en\">";
-    response += "<head>";
-    response += "</head>";
-    response += "<body>";
-    response += "<h1>Image uploaded successfully</h1>";
-    response += "<h2>You can find it in " + path + "</h2>";
-    response += "<br>";
-    response += "<a href=\"/\">Go back</a>";
-    response += "<br>";
-    response += "<button type=\"submit\" method=\"delete\">delete</button>";
-    response += test_cgi("var/cgi-bin/page.cgi");
-    response += "</body>";
-    response += "</html>";
-    MyFile << response;
-    MyFile.close();
-}
-
-void fileExist(const string &path, ofstream &MyFile) {
-    string response;
-    response += "<!DOCTYPE html>";
-    response += "<html lang=\"en\">";
-    response += "<head>";
-    response += "</head>";
-    response += "<body>";
-    response += "<h1>File NOT uploaded successfully</h1>";
-    response += "<h2>A file named " + path + " already exists</h2>";
-    response += "<br>";
-    response += "<a href=\"/\">Go back</a>";
-    response += "</body>";
-    response += "</html>";
-    MyFile << response;
-    MyFile.close();
 }
 
 bool fileExists(const string &path) {
@@ -75,65 +38,91 @@ void printRequestHeaders(const map<string, string> &headers) {
     }
 }
 
-void post_method(int clientSocket, Request &request) {
-    // cout << "------------------------------" << endl;
-    // cout << request.getMethod() << " " << request.getPath() << " " << request.getVersion() << endl;
-    // printRequestHeaders(request.getHeaders());
-    // cout << "------------------------------" << endl;
+bool storageExist(const string& path) {
+    return filesystem::exists(path);
+}
 
-    cout << "POST method" << endl;
-    string uploadedFile;
-    string relativePath;
-    const char *storage = "www/storage/";
-    auto form_data = parse_form_data(request.getBody());
+bool createDirectories(const string& path) {
+    return filesystem::create_directories(path);
+}
+
+// remove boundaries from content in progress
+
+string removeBoundaries(const string& content, const string& boundary) {
+    string newContent;
+
+    size_t file_start = content.find("\r\n\r\n", content.find("filename=")) + 4;
+    size_t file_end = content.size() - boundary.size() - 6;
+
+    newContent = content.substr(file_start, file_end - file_start);
+    return newContent;
+}
+
+void writeFile(const string& storagePath, const string& fileName, const string& content, Request &request) {
+    string fullPath = storagePath + fileName;
     
-    for (const auto &pair : form_data) {
-        cout << pair.first << ": " << pair.second << endl;
-        if (pair.first == "file") {
-            uploadedFile = pair.second;
-        }
-    }
-    cout << "Uploaded file: " << uploadedFile << endl;
-    string postResponses = "uploadedFile.html";
-    relativePath = storage + uploadedFile;
-
-    ofstream MyFile(postResponses, ios::out | ios::trunc);
-    if (!MyFile) {
-        cout << "Failed to open file for writing: " << postResponses << endl;
-        return;
-    }
-
-    if (fileExists(relativePath)) {
-        fileExist(uploadedFile, MyFile);
-    } else {
-        ifstream ifs(uploadedFile, ios::binary);
-        if (!ifs) {
-            cout << "Failed to open file for reading: " << uploadedFile << endl;
-            return;
-        }
-
-        string content((istreambuf_iterator<char>(ifs)), (istreambuf_iterator<char>()));
-
-        ofstream outFile(relativePath, ios::binary);
+    if (!filesystem::exists(storagePath))
+        filesystem::create_directories(storagePath);
+    if (filesystem::exists(fullPath)) {
+        ofstream outFile(fullPath, ios::binary | ios::app);
         if (!outFile) {
-            cout << "Failed to open file for writing: " << relativePath << endl;
+            cerr << "Failed to open file for writing: " << fullPath << endl;
             return;
         }
+        // outFile << removeBoundaries(content, request.getBoundary());
         outFile << content;
-        ifs.close();
-        outFile.close();
-
-        create_body_for_image(uploadedFile, MyFile);
     }
+    else {
+        ofstream outFile(fullPath, ios::binary);
+        if (!outFile) {
+            cerr << "Failed to open file for writing: " << fullPath << endl;
+            return;
+        }
+        outFile << removeBoundaries(content, request.getBoundary());
+        // outFile << content;
+    }
+}
 
-    MyFile.close();
+bool findLastBoundary(const string& contentType, const string& boundary) {
+	size_t pos = contentType.find(boundary);
+	if (pos == string::npos)
+		return (false);
+	return (true);
+}
 
-    ifstream ifs(postResponses, ios::binary);
-    string content((istreambuf_iterator<char>(ifs)), (istreambuf_iterator<char>()));
-    ifs.close();
 
-    // Response response(clientSocket, 200);
-    // response.setBody(content);
-    // response.setHeaders(content, storage, "keep-alive");
-    // response.sendResponse();
+void post_method(int clientSocket, Request &request) {
+    string uploadedFile;
+    string storage = "www/storage/";
+    // string content;
+
+    if (!request.getBoundary().empty() && request.getBytesCopied() <= stol(request.getHeaderValue("Content-Length"))){
+        writeFile(storage, request.getUploadedFile(), request.getContentUploadFile(), request);
+        request.setBytesCopied(request.getBytesCopied() + request.getMaxLengthUploadContent());
+        if (request.getBytesCopied() == stol(request.getHeaderValue("Content-Length"))) {
+            // -----------------------------
+            // run cgi to store the file in the right place
+            // vector<string> args = {
+            //     "python3",
+            //     "upload_file_in_a_folder.cgi", // script_to_execute
+            //     "root/index.html", // use smartKevinFindLocation file_path where we want to store the file
+            //     "www/storage/filename" // file_name
+            // };
+    
+            // // Convert the vector of strings to an array of char* for execve
+            // vector<char*> c_args;
+            // for (auto& arg : args) {
+            //     c_args.push_back(const_cast<char*>(arg.c_str()));
+            // }
+            // c_args.push_back(nullptr); // Null-terminate the array
+
+            // // Execute the new script
+            // execve("/usr/bin/python3", c_args.data(), nullptr);
+            // writeFile(storage, uploadedFile, request.getContentUploadFile());
+
+            request.setPath("base.html");
+        }
+    }
+    else
+        request.setPath("wrongSizePost.html");
 }

@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:54:54 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/24 14:35:34 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/08/08 13:26:31 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,8 @@
 using namespace std;
 
 #define MAX_URI_LENGTH 4096
+
+enum rState {START, CBODY, NBODY, DONE};
 
 const set<string> validHttpMethods = {
 	"GET", "POST", "DELETE",
@@ -51,7 +53,12 @@ class Request {
 		map<string, string>	_header;
 		string				_body;
 		int					_statusCode;
-	//	ServerBlock			_server;
+		rState				_state;
+		string				_boundary;
+		string				_contentUploadFile;
+		int 				_maxLengthUploadContent;
+		int					_bytesCopied;
+		string				_uploadedFile;
 	public:
 		Request();
 //		Request(const Request& other);
@@ -66,6 +73,7 @@ class Request {
 		void	addHeader(string const key, string const value);
 		void	setHeader(map<string, string> const header);
 		void	setStatusCode(int const statusCode);
+		void	setState(const rState state);
 
 		string				getMethod() const;
 		string				getPath() const;
@@ -74,9 +82,28 @@ class Request {
 		int					getStatusCode() const;
 		map<string, string>	getHeaders() const;
 		string				getHeaderValue(const string& key) const;
+		rState				getState() const;
+		// -----------------------
+		void				setUploadeFile(string uploadedFile);
+		void				setBytesCopied(long bytesCopied);
+		void				setMaxLengthUploadContent(long maxLengthUploadContent);
+		void				setBoundary(string const boundary);
+		void				setContentUploadFile(string const contentUploadFile);
+		string 				getBoundary() const;
+		string 				getContentUploadFile() const;
+		long 				getMaxLengthUploadContent();
+		long 				getBytesCopied();
+		string				getUploadedFile() const;
+		// ------------------------
+
+		void				reset();
 };
 
-void	createRequest(vector<char> requestData, Request& request);
+void	checkHeaders(vector<char> requestData, Request& request);
+void	checkCBody(vector<char> requestData, Request& request);
+void	checkNBody(vector<char> requestData, Request& request);
+bool	findHeadersEnd(const vector<char> data);
+
 void	handleRequest(const int clientSocket, Request& request, ServerBlock serverBlock);
 
 //https://www.ibm.com/docs/en/app-connect/11.0.0?topic=messages-http-headers

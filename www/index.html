@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Request Rangers</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -11,37 +12,45 @@
         <h1>Welcome to the House of Request Rangers</h1>
         <nav>
             <ul>
-                <li><a href="./random.html">Home</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#contact">Contact</a></li>
+                <li><a href="https://cdn.intra.42.fr/pdf/pdf/128390/en.subject.pdf">Subject</a></li>
             </ul>
         </nav>
     </header>
     <main>
-        <section id="home">
-            <h2>Home</h2>
-            <p>This is the home section of the static page.</p>
-            <form id="uploadForm" action="/uploadedImage" method="post">
-                <input type="file" id="fileInput" name="file" required>
-                <button type="submit">Upload</button>
-            </form> 
-            <button id="clickMeButton" alert="clicked">Click Me</button>
-            <p id="clickMessage" style="display: none;">You clicked the button!</p>
+        <section>
+            <h2>Test POST method</h2>
+            <a href="./postMethod.html">Get to Post method</a>
         </section>
-        <!-- <section>
-            <a href="/uploadedImage"><h2>See uploaded Image</h2></a>
-        </section> -->
-        <section id="about">
-            <h2>About</h2>
-            <p>This is the about section of the static page.</p>
+        <section>
+            <h2>Test DELETE method</h2>
+            <a href="./deleteFile.html">Get To Delete method</a>
         </section>
-        <section id="contact">
+        <section>
+            <h2>Test CGI execution</h2>
+            <a href="./execCGI.html">Get to CGI file</a>
+        </section>
+        <section>
+            <h2>Test autoindex ON</h2>
+            <a href="./autoIndexON.html">Get To result page</a>
+        </section>
+        <section>
+            <h2>Test autoindex OFF</h2>
+            <a href="./autoIndexOFF.html">Get To result page</a>
+        </section>
+        <section>
+            <h2>Test Default Error Page</h2>
+            <a href="./iDon'tExist.html">Get To Error Page</a>
+        </section>
+        <section>
             <h2>Contact</h2>
-            <p>This is the contact section of the static page.</p>
+            <p>Please address every question to <a href="https://profile.intra.42.fr/users/kkroon">Phd Kevin</a></p>
         </section>
     </main>
     <footer>
-        <p>&copy; 2024 My Static Page</p>
+        <p>Made by </p>
+        <a href="https://profile.intra.42.fr/users/kkroon">Phd Kevin</a>
+        <a href="https://profile.intra.42.fr/users/ibehluli">Phd Isly</a>
+        <a href="https://profile.intra.42.fr/users/jvorstma">Phd Jan Gijs</a>
     </footer>
 </body>
 </html>
