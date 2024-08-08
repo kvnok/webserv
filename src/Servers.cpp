@@ -6,12 +6,11 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/16 14:17:40 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/05 19:03:16 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/08/06 11:16:47 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Servers.hpp"
-#include "Connection.hpp"
 
 Servers::Servers( void ) { }
 
@@ -20,6 +19,16 @@ Servers::Servers( vector<ServerBlock> &serverBlocks) {
 	this->setFds();
 }
 
+Servers::~Servers( void ) { }
+
+vector<ServerBlock> &Servers::get_serverBlocks() { return this->_serverBlocks; }
+vector<Connection>  &Servers::get_connections() { return this->_connections; }
+vector<pollfd>      &Servers::get_fds() { return this->_fds; }
+
+void    Servers::set_serverBlocks(vector<ServerBlock> &serverBlocks) { this->_serverBlocks = serverBlocks; }
+void    Servers::set_connections(vector<Connection> &connections) { this->_connections = connections; }
+void    Servers::set_fds(vector<pollfd> &fds) { this->_fds = fds; }
+
 void    Servers::setFds() {
 	for (int i = 0; i < this->_serverBlocks.size(); i++) {
 		pollfd fd;
@@ -27,189 +36,4 @@ void    Servers::setFds() {
 		fd.events = POLLIN;
 		this->_fds.push_back(fd);
 	}
-}
-
-void    Servers::handleNewConnection(int i) {
-    int clientSocket = accept(this->_serverBlocks[i].getFd(), NULL, NULL);
-    cout <<  "new Clientsocket: " << clientSocket << endl;
-    if (clientSocket == -1) {
-        cerr << "accept failed" << endl; // implement error/exception meganism
-        return ;
-    }
-    int flag = fcntl(clientSocket, F_GETFL, 0);
-    if (flag == -1) {
-        cerr << "fcntl get flags failed" << endl;
-        return ;
-    }
-    if (fcntl(clientSocket, F_SETFL, flag | O_NONBLOCK) == -1) {
-            cerr << "fcntl set flags failed" << endl;
-            return ;
-    }
-    this->_fds.push_back({clientSocket, POLLIN | POLLOUT, 0});
-    this->_connections.emplace_back(clientSocket, this->_serverBlocks[i]); //i will be the index of _fds[i] and _serverBlocks[i], to connect those two in the connection class. so every connection class has access to the correct serverBlock and pollfd
-}
-
-void    Servers::handleExistingConnection(Connection& connection, int& i) {
-    switch (connection.getNextState()) {
-        case READ:
-            readRequest(connection);
-            break ;
-        case PARSE:
-            parseRequest(connection);
-            break ;
-        case READ_BODY:
-            readBody(connection);
-            break ;
-        case PARSE_BODY:
-            parseBody(connection);
-            break ;
-        case EXECUTE:
-            executeRequest(connection);
-            break ;
-        case WRITE:
-            writeResponse(connection);
-            break ;
-        case CLEANUP:
-            connection.reset();
-            break;
-        case CLOSE:
-            closeConnection(connection, i); //still need index, to access _fds, the pollfd array, and access vector<connection>
-            break ;
-    }
-}
-
-void    Servers::readRequest(Connection& connection) {
-    vector<char> buffer(1024); // bodysize
-    ssize_t bytes = recv(connection.getFd(), buffer.data(), buffer.size(), 0);
-    if (bytes < 0) {
-        return ;
-    }
-    else if (bytes == 0) {
-        cout << "close because 0 bytes have been read" << endl; // need to find out if it is correct to close in this case
-        connection.setNextState(CLOSE);
-        return ;
-    }
-    buffer.resize(bytes);
-    connection.addToBuffer(buffer);
-    connection.setNextState(PARSE);
-}
-
-void    Servers::parseRequest(Connection& connection) {
-    createRequest(connection.getBuffer(), connection.getRequest());
-    if (connection.getRequest().getMethod() == "POST") {
-        connection.setNextState(READ_BODY);
-        connection.clearBuffer();
-    }
-    else
-        connection.setNextState(EXECUTE);
-}
-
-void    Servers::readBody(Connection& connection) {
-    vector<char> buffer(1024); // bodysize
-    ssize_t bytes = recv(connection.getFd(), buffer.data(), buffer.size(), 0);
-    if (bytes < 0) {
-        return ;
-    }
-    else if (bytes == 0) {
-        cout << "close because 0 bytes have been read" << endl; // need to find out if it is correct to close in this case
-        connection.setNextState(CLOSE);
-        return ;
-    }
-    connection.addBytesRead(bytes);
-    buffer.resize(bytes);
-    connection.addToBuffer(buffer);
-    if (connection.getBytesRead() == stoll(connection.getRequest().getHeaderValue("Content-Length")))
-        connection.setNextState(PARSE_BODY);
-}
-
-void    Servers::parseBody(Connection& connection) {
-    checkBody(connection.getBuffer(), connection.getRequest());
-    connection.setNextState(EXECUTE);
-}
-
-void    Servers::executeRequest(Connection& connection) {
-    handleRequest(connection.getFd(), connection.getRequest(), connection.getServer());
-    connection.setNextState(WRITE);
-}
-
-void    Servers::writeResponse(Connection& connection) {
-    connection.getResponse().setClientSocket(connection.getFd());
-    connection.getResponse().setVersion(connection.getRequest().getVersion());
-    connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
-    createResponse(connection.getResponse(), connection.getRequest().getPath());
-    // if all bytes have been written, so only set to close when the whole response has been written and send
-    if (connection.getRequest().getHeaderValue("Connection") == "close") {
-        cout << "close because connection is set to 'close'" << endl;
-        connection.setNextState(CLOSE);
-    }
-    else
-        connection.setNextState(CLEANUP);
-}
-
-void    Servers::closeConnection(Connection& connection, int& i) {
-    cout << "closing socket: " << connection.getFd() << endl;
-    close(connection.getFd());
-    this->_fds.erase(this->_fds.begin() + i);
-    this->_connections.erase(this->_connections.begin() + (i - this->_serverBlocks.size()));
-    i--;
-    // what if the server socket needs to be closed, how should we handle deleting all connections and there fd's made by that server
-    return;
-}
-
-void    Servers::start() {
-    while (true) {
-        int ret = poll(this->_fds.data(), this->_fds.size(), 0);
-        if (ret == -1)
-            throw runtime_error("poll failed"); // should not exit when fail occures
-        for (int i = 0; i < this->_fds.size(); i++) {
-            if (i < this->_serverBlocks.size() && (this->_fds[i].revents & POLLIN)) {
-                if (i < this->_serverBlocks.size() && this->_fds[i].fd == this->_serverBlocks[i].getFd()) // is this fd check needed?
-                {
-                    cout << "handleNewConnection pollin" << endl;
-                    handleNewConnection(i);
-                }
-                else
-                {
-                    cout << "handleExistingConnection pollin" << endl;
-                    handleExistingConnection(this->_connections[i - this->_serverBlocks.size()], i);
-                }
-            }
-            else if ((this->_fds[i].revents & POLLOUT) && i >= this->_serverBlocks.size())
-                handleExistingConnection(this->_connections[i - this->_serverBlocks.size()], i);
-            else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-                cerr << "socket error on fd: " << this->_fds[i].fd << endl;
-                close(this->_fds[i].fd);
-                this->_fds.erase(this->_fds.begin() + i);
-                if (i >= this->_serverBlocks.size())
-                    this->_connections.erase(this->_connections.begin() + (i - this->_serverBlocks.size()));
-                i--;
-            }
-        }
-    }
-}
-
-Servers::~Servers( void ) { }
-
-vector<ServerBlock> &Servers::get_serverBlocks() {
-    return this->_serverBlocks;
-}
-
-vector<Connection> &Servers::get_connections() {
-    return this->_connections;
-}
-
-vector<pollfd> &Servers::get_fds() {
-    return this->_fds;
-}
-
-void    Servers::set_serverBlocks(vector<ServerBlock> &serverBlocks) {
-    this->_serverBlocks = serverBlocks;
-}
-
-void    Servers::set_connections(vector<Connection> &connections) {
-    this->_connections = connections;
-}
-
-void    Servers::set_fds(vector<pollfd> &fds) {
-    this->_fds = fds;
 }

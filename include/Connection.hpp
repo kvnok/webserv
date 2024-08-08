@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/27 15:53:03 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/05 18:19:34 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/08/06 14:21:01 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 
 using namespace std;
 
-enum State {READ, PARSE, READ_BODY, PARSE_BODY, EXECUTE, WRITE, CLEANUP, CLOSE};
+enum State {READ, PARSE, EXECUTE, WRITE, CLEANUP, CLOSE};
 
 class Connection {
 	private:
@@ -44,7 +44,7 @@ class Connection {
 		void	setNextState(const State nextState);
 		void	setBuffer(const vector<char> buffer);
 		void	setServer(const ServerBlock server);
-
+	
 		void	addToBuffer(const vector<char> buffer);
 		void	addBytesRead(const size_t bRead);
 		void	addBytesWritten(const size_t bWritten);

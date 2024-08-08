@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/27 17:28:06 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/05 18:20:38 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/08/06 12:31:17 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ void	Connection::addToBuffer(const vector<char> buffer) {
 	this->_buffer.insert(this->_buffer.end(), buffer.begin(), buffer.end()); 
 }
 //maybe not use a vector, but a list or a simple string
+
 void	Connection::addBytesRead(const size_t bRead) { this->_bRead += bRead; }
 void	Connection::addBytesWritten(const size_t bWritten) { this->_bWritten += bWritten; }
 

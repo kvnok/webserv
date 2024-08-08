@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 09:56:01 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/05 19:04:15 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/08/08 10:42:15 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,6 +132,15 @@ string findFileName(const string& contentType)
     return (contentType.substr(startPos, endPos - startPos));
 }
 
+void	checkBody(vector<char> requestData, Request& request) {
+	string buffer(requestData.begin(), requestData.end());
+	request.setBody(buffer);
+	if (request.getBody().length() != stoll(request.getHeaderValue("Content-Length")))
+		request.setStatusCode(400);
+	cout << RED << buffer << RESET << endl;
+	cout << GREEN << request.getBody() << RESET << endl;
+}
+
 void	createRequest(vector<char> requestData, Request& request) {
 	string			buffer(requestData.begin(), requestData.end());
 	istringstream	requestStream(buffer);
@@ -145,29 +154,21 @@ void	createRequest(vector<char> requestData, Request& request) {
 		return ;
 	if (!parseHeaders(requestStream, line, request))
 		return ;
+	checkBody(requestData, request); // not correct yet
+	cout << buffer << endl;
 	return ;
 }
 
-// void	readAndParseBody(Request& request, int clientSocket) {
-// 	if (!parseBody(requestStream, line, request))
-// 		return ;
-// 	if (find_string(request.getHeaderValue("Content-Type"), "multipart/form-data")) {
-// 		request.setBoundary(findBoundary(request.getHeaderValue("Content-Type")));
-// 		request.setContentUploadFile(buffer);
-// 		request.setMaxLengthUploadContent(buffer.size());
-// 		if (request.getUploadedFile().empty())
-//             request.setUploadeFile(findFileName(request.getContentUploadFile()));
-// 	}
-// 	if (!request.getBoundary().empty())
-// 		request.setContentUploadFile(buffer);
-// }
-
-void	checkBody(vector<char> requestData, Request& request) {
-	string buffer(requestData.begin(), requestData.end());
-	request.setBody(buffer);
-	if (request.getBody().length() != stoll(request.getHeaderValue("Content-Length")))
-		request.setStatusCode(400);
-
+//*****************************************************************************************/
+	// if (find_string(request.getHeaderValue("Content-Type"), "multipart/form-data")) {
+	// 	request.setBoundary(findBoundary(request.getHeaderValue("Content-Type")));
+	// 	request.setContentUploadFile(buffer);
+	// 	request.setMaxLengthUploadContent(buffer.size());
+	// 	if (request.getUploadedFile().empty())
+    // 	    request.setUploadeFile(findFileName(request.getContentUploadFile()));
+	// }
+	// if (!request.getBoundary().empty())
+	// 	request.setContentUploadFile(buffer);
 	// else if (!request.getHeaderValue("Transfer-Encoding").empty()) {
 	// 	stringstream bodyStream;
 	// 	while (getline(streamBody, line))
@@ -190,5 +191,7 @@ void	checkBody(vector<char> requestData, Request& request) {
 	// else if(request.getMethod() == "POST" && request.getBody().length() > 0) {
 	// 	request.setStatusCode(200);
 	// }
-}
 
+void	checkParseReady(vector<char> requestData, Request& request) {
+	
+}

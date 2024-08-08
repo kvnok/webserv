@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/07/16 14:18:12 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/05 18:16:18 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/08/06 14:22:13 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,8 +34,6 @@ class Servers
 		void	handleExistingConnection(Connection& connection, int& i);
 		void	readRequest(Connection& connection);
 		void	parseRequest(Connection& connection);
-		void	readBody(Connection& connection);
-		void	parseBody(Connection& connection);
 		void	executeRequest(Connection& connection);
 		void	writeResponse(Connection& connection);
 		void	closeConnection(Connection& connection, int& i);

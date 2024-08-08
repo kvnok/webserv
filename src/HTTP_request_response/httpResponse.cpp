@@ -6,14 +6,14 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 08:58:38 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/02 18:09:08 by ibehluli      ########   odam.nl         */
+/*   Updated: 2024/08/06 11:40:57 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "httpResponse.hpp"
 #include "httpStatus.hpp"
 
-Response::Response() : _version(""), _statusCode(-1), _body(""), _clientSocket(-1) {};
+Response::Response() : _version(""), _statusCode(-1), _body(""), _clientSocket(-1) {}; // maybe not set statuscode and clientsocket to -1?
 Response::Response(int const clientSocket, int const statusCode, string const version) : _clientSocket(clientSocket), _version(version), _statusCode(statusCode), _body("") { }
 Response::Response(const Response& other) : _clientSocket(other._clientSocket) { *this = other; }
 Response::~Response() { }
@@ -72,7 +72,7 @@ ssize_t	Response::sendResponse() const {
 void    Response::reset() {
     this->_body = "";
     this->_header.clear();
-    this->_statusCode = -1;
+    this->_statusCode = -1; //maybe not set statuscode to -1
     this->_version = "";
 }
 
