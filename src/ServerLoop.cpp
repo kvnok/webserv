@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/08/06 11:09:51 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/22 12:08:51 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/08/22 13:02:11 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,13 +18,7 @@ void    Servers::handleNewConnection(int i) {
         cerr << "accept failed" << endl; // implement error/exception meganism
         return ;
     }
-    int flag = fcntl(clientSocket, F_GETFL, 0);
-    if (flag == -1) {
-        cerr << "fcntl get flags failed" << endl;
-        return ;
-    }
-  //  fcntl() can only use F_SETFL, O_NONBLOCK and FD_CLOEXEC flags
-    if (fcntl(clientSocket, F_SETFL, flag | O_NONBLOCK) == -1) {
+    if (fcntl(clientSocket, F_SETFL, O_NONBLOCK) == -1) {
             cerr << "fcntl set flags failed" << endl;
             return ;
     }
