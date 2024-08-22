@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/08/06 11:09:51 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/08 14:51:11 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/08/22 12:08:51 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ void    Servers::handleNewConnection(int i) {
         cerr << "fcntl get flags failed" << endl;
         return ;
     }
+  //  fcntl() can only use F_SETFL, O_NONBLOCK and FD_CLOEXEC flags
     if (fcntl(clientSocket, F_SETFL, flag | O_NONBLOCK) == -1) {
             cerr << "fcntl set flags failed" << endl;
             return ;
