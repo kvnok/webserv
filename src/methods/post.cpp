@@ -106,6 +106,7 @@ void post_method(int clientSocket, Request &request) {
     string uploadedFile;
     string storage = "www/storage/";
     // string content;
+    cout << "Path: " << request.getPath() << endl;
 
     if (!request.getBoundary().empty() && request.getBytesCopied() <= stol(request.getHeaderValue("Content-Length"))){
         // cout << "Boundary: " << request.getContentUploadFile() << endl;
