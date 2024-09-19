@@ -1,14 +1,14 @@
 #include "httpResponse.hpp"
-#include <iostream>
-#include <string>
-#include <unordered_map>
-#include <sstream>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <filesystem>
+// #include <iostream>
+// #include <string>
+// #include <unordered_map>
+// #include <sstream>
+// #include <sys/types.h>
+// #include <sys/socket.h>
+// #include <netinet/in.h>
+// #include <unistd.h>
+// #include <arpa/inet.h>
+// #include <filesystem>
 #include "CGI.hpp"
 
 unordered_map<string, string> parse_form_data(const string &body) {
@@ -106,7 +106,6 @@ void post_method(int clientSocket, Request &request) {
     string uploadedFile;
     string storage = "www/storage/";
     // string content;
-    cout << "Path: " << request.getPath() << endl;
 
     if (!request.getBoundary().empty() && request.getBytesCopied() <= stol(request.getHeaderValue("Content-Length"))){
         // cout << "Boundary: " << request.getContentUploadFile() << endl;
@@ -148,6 +147,10 @@ void post_method(int clientSocket, Request &request) {
         }
         else
             cout << "Last boundary not found" << endl;
+    }
+    else if (request.getPath() == "/var/www/deleteFile.html") {
+        cout << "Delete method" << endl;
+        delete_method(clientSocket, request);
     }
     else
     {
