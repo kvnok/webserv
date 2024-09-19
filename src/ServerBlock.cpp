@@ -77,7 +77,7 @@ void ServerBlock::setSocket() {
         throw runtime_error("socket failed");
 	if (setsockopt(this->_serverFd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &this->_opt, sizeof(this->_opt)) == -1)
         throw runtime_error("setsockopt failed");
-    if (fcntl(this->_serverFd, F_SETFL, fcntl(this->_serverFd, F_GETFL, 0) | O_NONBLOCK) == -1) //set it to non-blocking mode
+    if (fcntl(this->_serverFd, F_SETFL, O_NONBLOCK) == -1) //set it to non-blocking mode
         throw runtime_error("fcntl failed");
     this->setBind();
     this->setListen();
