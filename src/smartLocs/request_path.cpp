@@ -151,7 +151,7 @@ void request_path_handler(string &path, Request &request, ServerBlock serverBloc
 		check_baseline(request, file, path, serverBlock, err_pages);
 	}
 	else {
-		cout << BOLD << "CHECKING IN BASELINE" << RESET << endl;
+		cout << BOLD << "CHECKING IN LOC BLOCKS" << RESET << endl;
 		check_locs(request, folder, file, path, err_pages, sLocs);
 	}
 	request.setPath(path);
