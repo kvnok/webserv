@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:55:00 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/08 15:04:29 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/09/19 15:44:59 by ibehluli      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,11 +84,19 @@ void  Request::reset() {
 void handleRequest(const int clientSocket, Request& request, ServerBlock serverBlock) {
 	string path = request.getPath();
 	
+	cout << RED << "in handleRequest:" << path << "     "  << request.getMethod() << RESET << endl;
+	
 	if (request.getMethod() == "GET") {
 		request_path_handler(path, request, serverBlock);
 	}
-	else if (request.getMethod() == "POST") {
-			post_method(clientSocket, request);
+	else if (request.getMethod() == "POST" && request.getPath() == "/var/www/deleteFile.html") {
+        cout << "Delete method" << endl;
+        delete_method(clientSocket, request);
+	}
+	else if (request.getMethod() == "POST")
+	{
+		cout << "Post method" << endl;
+		post_method(clientSocket, request);
 	}
 	// check paht, run cgi, delete, 
 	// after 'execution' of request we end up with: file(which has the body), statusCode, clientSocket.
