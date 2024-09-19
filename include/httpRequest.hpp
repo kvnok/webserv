@@ -20,6 +20,8 @@
 #include <filesystem>
 #include <regex>
 #include "ServerBlock.hpp"
+// #include "Connection.hpp"
+class Connection;
 
 using namespace std;
 

@@ -14,6 +14,7 @@
 #include "httpStatus.hpp"
 #include "httpResponse.hpp"
 #include "Servers.hpp"
+#include "Connection.hpp"
 
 Request::Request() : _method(""), _path(""), _version(""), _body(""), _statusCode(200), _boundary(""), _contentUploadFile(""), _maxLengthUploadContent(0), _bytesCopied(0),_state(START) { }
 //Request::Request(const Request& other) { *this = other; }

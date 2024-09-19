@@ -11,6 +11,8 @@
 /* ************************************************************************** */
 
 #include "Connection.hpp"
+#include "httpRequest.hpp"
+#include "httpResponse.hpp"
 
 Connection::Connection(const int fd, const ServerBlock serverBlock) : _fd(fd), _buffer(0), _nextState(READ), _bRead(0), _bWritten(0), _server(serverBlock) {}
 Connection::Connection(const Connection& other) { *this = other; }
