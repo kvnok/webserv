@@ -110,11 +110,13 @@ void    Servers::closeConnection(Connection& connection, int& i) {
 void    Servers::start() {
     while (true) {
         int ret = poll(this->_fds.data(), this->_fds.size(), 0);
-        if (ret == -1)
-            throw runtime_error("poll failed"); // should not exit when fail occures
+        if (ret == -1) {
+            cerr << "poll failed" << endl;
+            continue ;
+        }
         for (int i = 0; i < this->_fds.size(); i++) {
             if (i < this->_serverBlocks.size() && (this->_fds[i].revents & POLLIN)) {
-                if (i < this->_serverBlocks.size() && this->_fds[i].fd == this->_serverBlocks[i].getFd()) // is this fd check needed?
+                if (this->_fds[i].fd == this->_serverBlocks[i].getFd())
                 {
                     cout << "handleNewConnection pollin" << endl;
                     handleNewConnection(i);
