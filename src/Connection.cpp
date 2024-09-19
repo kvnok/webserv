@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/27 17:28:06 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/08 14:50:55 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/09/19 15:52:58 by ibehluli      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,7 +69,7 @@ void			Connection::clearBuffer() {
 		this->_buffer.resize(0);
 	}
 	string buf(this->_buffer.begin(), this->_buffer.end());
-	cout << RED << buf << RESET << endl;
+	cout << BLU << buf << RESET << endl;
 }
 
 void			Connection::reset() {

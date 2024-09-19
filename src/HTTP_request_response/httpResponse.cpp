@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 08:58:38 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/06 11:40:57 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/09/19 15:33:23 by ibehluli      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,7 +79,6 @@ void    Response::reset() {
 void createResponse(Response& response, string path) {
     string content;
     ifstream file(path);
-
 
     if (!file.is_open())
         response.setStatusCode(404);

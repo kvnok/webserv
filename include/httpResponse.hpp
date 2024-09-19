@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 08:54:10 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/07/29 15:46:36 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/09/19 15:12:58 by ibehluli      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,6 +55,7 @@ class Response {
 void	createResponse(Response& response, string path);
 
 void post_method(int clientSocket, Request& request);
+void delete_method(int clientSocket, Request& request);
 
 // add fucntions outside class
 //	  - get file with body, open and read, create headers, fill response class
