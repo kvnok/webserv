@@ -104,7 +104,7 @@ void	checkCBody(vector<char> requestData, Request& request);
 void	checkNBody(vector<char> requestData, Request& request);
 bool	findHeadersEnd(const vector<char> data);
 
-void	handleRequest(const int clientSocket, Request& request, ServerBlock serverBlock);
+void	handleRequest(Connection& connection);
 
 //https://www.ibm.com/docs/en/app-connect/11.0.0?topic=messages-http-headers
 //resource headers
