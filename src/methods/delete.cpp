@@ -35,7 +35,9 @@ void delete_method(int clientSocket, Request& request) {
 	file = "www/storage/" + file;
 	if (!pathExist(file)) {
 		cout << BOLD << "File: " << file << " not found." << RESET << endl;
-		createResponse(clientSocket, 200, "www/fileNotDeleted.html"); // Not Found
+		// createResponse(connection.getResponse(), connection.getRequest().getPath());
+		// createResponse(clientSocket, 200, "www/fileNotDeleted.html"); // Not Found
+		request.setPath("www/fileNotDeleted.html");
 		return ;
 	}
 	else
@@ -43,7 +45,7 @@ void delete_method(int clientSocket, Request& request) {
 		// File successfully deleted
 		cout << RED << "File: " << file << " deleted successfully." << RESET << endl;
 		removeFileFromStorage(file); // Function to delete the file
-		createResponse(clientSocket, 200, "www/fileDeleted.html"); // OK
+		request.setPath("www/fileDeleted.html");
 		return ;
 	}
 }

@@ -17,7 +17,6 @@ unordered_map<string, string> parse_form_data(const string &body) {
     string token;
 
     while (getline(ss, token, '&')) {
-        // cout << "Token: " << token << endl;
         size_t equal_pos = token.find('=');
         if (equal_pos != string::npos) {
             string key = token.substr(0, equal_pos);
@@ -56,19 +55,15 @@ string removeBoundaries(const string& content, const string& boundary) {
     size_t file_end = content.size() - boundary.size() - 6;
 
     newContent = content.substr(file_start, file_end - file_start);
-    // cout << RED << "Boundary: " << boundary << "at pos " << pos << RESET << endl;
     return newContent;
 }
 
 void writeFile(const string& storagePath, const string& fileName, const string& content, Request &request) {
     string fullPath = storagePath + fileName;
-    cout << "Full path: " << fullPath << endl;
     
     if (!filesystem::exists(storagePath))
         filesystem::create_directories(storagePath);
-    if (filesystem::exists(fullPath))
-    {
-        // cout << YEL << content << RESET << endl;
+    if (filesystem::exists(fullPath)) {
         ofstream outFile(fullPath, ios::binary | ios::app);
         if (!outFile) {
             cerr << "Failed to open file for writing: " << fullPath << endl;
@@ -76,10 +71,8 @@ void writeFile(const string& storagePath, const string& fileName, const string& 
         }
         // outFile << removeBoundaries(content, request.getBoundary());
         outFile << content;
-        cout << BLU << "Appending to: " << fullPath << RESET << endl;
     }
-    else
-    {
+    else {
         ofstream outFile(fullPath, ios::binary);
         if (!outFile) {
             cerr << "Failed to open file for writing: " << fullPath << endl;
@@ -87,36 +80,26 @@ void writeFile(const string& storagePath, const string& fileName, const string& 
         }
         outFile << removeBoundaries(content, request.getBoundary());
         // outFile << content;
-        cout << "From scratch: " << fullPath << endl;
     }
 }
 
 bool findLastBoundary(const string& contentType, const string& boundary) {
 	size_t pos = contentType.find(boundary);
-	if (pos == string::npos) {
-		return false;
-	}
-	return true;
+	if (pos == string::npos)
+		return (false);
+	return (true);
 }
 
 
 void post_method(int clientSocket, Request &request) {
-
-    cout << "POST method" << endl;
     string uploadedFile;
     string storage = "www/storage/";
     // string content;
 
     if (!request.getBoundary().empty() && request.getBytesCopied() <= stol(request.getHeaderValue("Content-Length"))){
-        // cout << "Boundary: " << request.getContentUploadFile() << endl;
-        cout << RED << "copied: " << request.getBytesCopied() << RESET << endl;
-        cout << GREEN << request.getContentUploadFile() << RESET << endl;
         writeFile(storage, request.getUploadedFile(), request.getContentUploadFile(), request);
         request.setBytesCopied(request.getBytesCopied() + request.getMaxLengthUploadContent());
-        cout << RED << "copied AFTER: " << request.getBytesCopied() << RESET << endl;
-        if (request.getBytesCopied() == stol(request.getHeaderValue("Content-Length")))
-        {
-            cout << "Last boundary found" << endl;
+        if (request.getBytesCopied() == stol(request.getHeaderValue("Content-Length"))) {
             // -----------------------------
             // run cgi to store the file in the right place
             // vector<string> args = {
@@ -137,23 +120,9 @@ void post_method(int clientSocket, Request &request) {
             // execve("/usr/bin/python3", c_args.data(), nullptr);
             // writeFile(storage, uploadedFile, request.getContentUploadFile());
 
-            // cout << RED << request.getContentUploadFile() << RESET << endl;
-            request.setMaxLengthUploadContent(0);
-            request.setContentUploadFile("");
-            request.setBytesCopied(0);
-            request.setUploadeFile("");
-            request.setBoundary("");
-            // createResponse(clientSocket, 200, "base.html");
+            request.setPath("base.html");
         }
-        else
-            cout << "Last boundary not found" << endl;
-    }
-    else if (request.getPath() == "/var/www/deleteFile.html") {
-        cout << "Delete method" << endl;
-        delete_method(clientSocket, request);
     }
     else
-    {
-        createResponse(clientSocket, 200, "base.html");
-    }
+        request.setPath("wrongSizePost.html");
 }
