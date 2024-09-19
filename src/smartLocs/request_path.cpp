@@ -129,9 +129,10 @@ void ok_print_server_block(ServerBlock &serverBlock) {
 	cout << "index: " << serverBlock.getIndex() << endl;
 }
 
-void request_path_handler(Connection& connection, string &path) {
+void request_path_handler(Connection& connection) {
 	Request& request = connection.getRequest();
 	ServerBlock serverBlock = connection.getServer();
+	string path = request.getPath();
 	// cout << BOLD << "REQUEST PATH HANDLER" << RESET << endl;
 	// cout << BOLD << request.getPath() << RESET << endl;
 	// ok_print_server_block(serverBlock);
