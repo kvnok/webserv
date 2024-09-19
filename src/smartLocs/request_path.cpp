@@ -26,6 +26,7 @@ void check_baseline(Request &request, string &file, string &path, ServerBlock se
 	request.setStatusCode(200);
 
 	if (file.empty()) { // no file, check for index
+		cout << YEL << "no file, check for index" << RESET << endl;
 		string root_and_index = root + "/" + server.getIndex();
 		cout << YEL << "index: " << server.getIndex() << RESET << endl; // "index.html
 		cout << YEL << "root_and_index: " << root_and_index << RESET << endl;
@@ -39,12 +40,15 @@ void check_baseline(Request &request, string &file, string &path, ServerBlock se
 		}
 	}
 	else if (!file.empty()) { // check for file
+		cout << YEL << "check for file" << RESET << endl;
 		ifstream stream(root_and_file);
 		if (stream.is_open()) {
+			cout << YEL << "file found" << RESET << endl;
 			path = root_and_file;
 			stream.close();
 		}
 		else { // can't open file part of the path
+			cout << YEL << "file not found" << RESET << endl;
 			request.setStatusCode(404);
 		}
 	}
@@ -148,7 +152,7 @@ void request_path_handler(string &path, Request &request, ServerBlock serverBloc
 	string folder;
 	string file;
 	parse_path(path, folder, file);
-	cout << YEL << "folder: " << folder << RESET << endl;
+	cout << YEL << "folder: |" << folder << "|" << RESET << endl;
 	cout << YEL << "file: " << file << RESET << endl;
 
 	map<int, string> err_pages = serverBlock.getErrorPages();
@@ -156,7 +160,7 @@ void request_path_handler(string &path, Request &request, ServerBlock serverBloc
 	sLocs.set_locs(serverBlock.getSmartLocs().get_locs());
 	sLocs.set_locs(serverBlock.getSmartLocs().get_locs());
 
-	if (folder == "/") {
+	if (folder == "/" || folder == "") {
 		cout << BOLD << "CHECKING IN BASELINE" << RESET << endl;
 		check_baseline(request, file, path, serverBlock, err_pages);
 	}
