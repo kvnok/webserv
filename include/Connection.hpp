@@ -63,4 +63,4 @@ class Connection {
 		void			reset();
 };
 
-void request_path_handler(string &path, Request &request, ServerBlock serverBlock);
+void request_path_handler(Connection& connection, string &path);

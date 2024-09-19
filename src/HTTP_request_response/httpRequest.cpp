@@ -87,13 +87,12 @@ void  Request::reset() {
 void handleRequest(Connection& connection) {
 	const int clientSocket = connection.getFd();
 	Request& request = connection.getRequest();
-	ServerBlock serverBlock = connection.getServer();
 	string path = request.getPath();
 	
 	cout << RED << "in handleRequest:" << path << "     "  << request.getMethod() << RESET << endl;
 	
 	if (request.getMethod() == "GET") {
-		request_path_handler(path, request, serverBlock);
+		request_path_handler(connection, path);
 	}
 	else if (request.getMethod() == "POST" && request.getPath() == "/var/www/deleteFile.html") {
         cout << "Delete method" << endl;
