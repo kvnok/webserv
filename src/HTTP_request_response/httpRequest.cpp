@@ -40,6 +40,7 @@ void	Request::addHeader(string const key, string const value) { this->_header[ke
 void	Request::setHeader(map<string, string> const header) { this->_header = header; }
 void	Request::setStatusCode(int const statusCode) { this->_statusCode = statusCode; }
 void	Request::setState(rState const state) { this->_state = state; }
+void	Request::setIsAutoindex(bool isAutoindex) { this->_isAutoindex = isAutoindex; }
 
 string	            Request::getMethod() const { return (this->_method); }
 string	            Request::getPath() const { return (this->_path); }
@@ -59,6 +60,7 @@ string	Request::getContentUploadFile() const { return (this->_contentUploadFile)
 long		Request::getMaxLengthUploadContent() { return (this->_maxLengthUploadContent); }
 long		Request::getBytesCopied() { return (this->_bytesCopied); }
 string	Request::getUploadedFile() const { return (this->_uploadedFile); }
+bool	Request::getIsAutoindex() const { return (this->_isAutoindex); }
 // ---------------------------
 string	Request::getHeaderValue(const string& key) const{
 	auto iterator = this->_header.find(key);

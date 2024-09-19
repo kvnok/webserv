@@ -61,6 +61,7 @@ class Request {
 		int 				_maxLengthUploadContent;
 		int					_bytesCopied;
 		string				_uploadedFile;
+		bool 				_isAutoindex;
 	public:
 		Request();
 //		Request(const Request& other);
@@ -76,6 +77,7 @@ class Request {
 		void	setHeader(map<string, string> const header);
 		void	setStatusCode(int const statusCode);
 		void	setState(const rState state);
+		void 	setIsAutoindex(bool isAutoindex);
 
 		string				getMethod() const;
 		string				getPath() const;
@@ -96,6 +98,7 @@ class Request {
 		long 				getMaxLengthUploadContent();
 		long 				getBytesCopied();
 		string				getUploadedFile() const;
+		bool				getIsAutoindex() const;
 		// ------------------------
 
 		void				reset();
