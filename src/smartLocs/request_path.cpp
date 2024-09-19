@@ -61,6 +61,7 @@ void check_locs(Request &request, string &folder, string &file, string &path, ma
 		loc = sLocs.get_loc(folder);
 	}
 	catch (invalid_argument &e) {
+		cout << RED << "loc not found" << RESET << endl;
 		request.setStatusCode(404);
 		path = folder + "/" + err_pages[404];
 		return;
@@ -71,8 +72,10 @@ void check_locs(Request &request, string &folder, string &file, string &path, ma
 	request.setStatusCode(200);
 
 	if (file.empty()) { // no file, check for index
+		cout << YEL << "no file, check for index" << RESET << endl;
 		if (loc.get_index() != "")
 		{
+			cout << YEL << "index: " << loc.get_index() << RESET << endl;
 			string root_and_index = root + "/" + loc.get_index();
 			ifstream stream(root_and_index);
 			if (stream.is_open()) {
@@ -84,21 +87,26 @@ void check_locs(Request &request, string &folder, string &file, string &path, ma
 			}
 		}
 		else if (loc.get_autoindex() == true) {
+			cout << YEL << "autoindex" << RESET << endl;
 			// do autoindex
 			// for now just 404 because autoindex is not implemented yet
 			request.setStatusCode(404);
 		}
 		else { // no index, no autoindex
+			cout << YEL << "no index, no autoindex" << RESET << endl;
 			request.setStatusCode(404);
 		}
 	}
 	else if (!file.empty()) { // check for file
+		cout << YEL << "check for file" << RESET << endl;
 		ifstream stream(root_and_file);
 		if (stream.is_open()) {
+			cout << YEL << "file found" << RESET << endl;
 			path = root_and_file;
 			stream.close();
 		}
 		else { // can't open file part of the path
+			cout << YEL << "file not found" << RESET << endl;
 			request.setStatusCode(404);
 		}
 	}
