@@ -116,7 +116,7 @@ void    Servers::start() {
         }
         for (int i = 0; i < this->_fds.size(); i++) {
             if (i < this->_serverBlocks.size() && (this->_fds[i].revents & POLLIN)) {
-                if (i < this->_serverBlocks.size() && this->_fds[i].fd == this->_serverBlocks[i].getFd()) // is this fd check needed?
+                if (this->_fds[i].fd == this->_serverBlocks[i].getFd())
                 {
                     cout << "handleNewConnection pollin" << endl;
                     handleNewConnection(i);
