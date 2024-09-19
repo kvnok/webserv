@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:54:54 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/08 13:26:31 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/09/19 19:06:11 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,7 +102,7 @@ class Request {
 void	checkHeaders(vector<char> requestData, Request& request);
 void	checkCBody(vector<char> requestData, Request& request);
 void	checkNBody(vector<char> requestData, Request& request);
-bool	findHeadersEnd(const vector<char> data);
+bool	hasAllHeaders(const vector<char> data);
 
 void	handleRequest(const int clientSocket, Request& request, ServerBlock serverBlock);
 

@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/08/06 11:09:51 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/09/19 16:23:10 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/09/19 19:25:25 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,19 +62,21 @@ void    Servers::readRequest(Connection& connection) {
     buffer.resize(bytes);
     connection.addToBuffer(buffer);
     if (connection.getRequest().getState() == START) {
-	    if (findHeadersEnd(connection.getBuffer())) {
+	    if (hasAllHeaders(connection.getBuffer())) {
             checkHeaders(connection.getBuffer(), connection.getRequest());
-            connection.clearBuffer();
+            //connection.clearBuffer();
         }
     }
-    else if (connection.getRequest().getState() == CBODY) {
+    if (connection.getRequest().getState() == CBODY) {;
         checkCBody(connection.getBuffer(), connection.getRequest());
     }
-    else if (connection.getRequest().getState() == NBODY) {
+    if (connection.getRequest().getState() == NBODY) {
         checkNBody(connection.getBuffer(), connection.getRequest());        
     }
-    if (connection.getRequest().getState() == DONE)
+    if (connection.getRequest().getState() == DONE) {
+        connection.clearBuffer();
         connection.setNextState(EXECUTE);
+    }
 }
 
 void    Servers::executeRequest(Connection& connection) {

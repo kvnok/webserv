@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 09:56:01 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/08 15:04:18 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/09/19 19:05:41 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -185,7 +185,7 @@ void	checkHeaders(vector<char> requestData, Request& request) {
 	return ;
 }
 
-bool	findHeadersEnd(const vector<char> data) {
+bool	hasAllHeaders(const vector<char> data) {
 	string toFind = "\r\n\r\n";
 	auto i = search(data.begin(), data.end(), toFind.begin(), toFind.end());
 	return (i != data.end());
