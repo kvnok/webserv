@@ -102,6 +102,8 @@ void check_locs(Request &request, string &folder, string &file, string &path, ma
 		ifstream stream(root_and_file);
 		if (stream.is_open()) {
 			cout << YEL << "file found" << RESET << endl;
+			cout << GRN << "loc root: " << root << RESET << endl;
+			cout << GRN << "file: " << file << RESET << endl;
 			path = root_and_file;
 			stream.close();
 		}
@@ -162,6 +164,8 @@ void request_path_handler(string &path, Request &request, ServerBlock serverBloc
 		cout << BOLD << "CHECKING IN LOC BLOCKS" << RESET << endl;
 		check_locs(request, folder, file, path, err_pages, sLocs);
 	}
+	// replace // with /
+	path = regex_replace(path, regex("//+"), "/");
 	request.setPath(path);
 	cout << BOLD << "END OF REQUEST PATH HANDLER: " << request.getPath() << RESET << endl;
 }
