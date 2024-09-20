@@ -1,9 +1,10 @@
 #include "Connection.hpp"
 #include "ServerBlock.hpp"
+#include "autoindex.hpp"
 
 static void parse_path(string &path, string &folder, string &file) {
 	if (path == "/") {
-		// cout << YEL << "path is /" << RESET << endl;
+		cout << YEL << "path is /" << RESET << endl;
 		folder = "/";
 		file = "";
 		return;
@@ -21,17 +22,19 @@ static void parse_path(string &path, string &folder, string &file) {
 
 void check_baseline(Request &request, string &file, string &path, ServerBlock server, map<int, string> err_pages) {
 	string root = server.getRoot();
-	// cout << YEL << "root: " << root << RESET << endl;
+	cout << YEL << "root: " << root << RESET << endl;
 	string root_and_file = root + "/" + file;
+	root_and_file = regex_replace(root_and_file, regex("//+"), "/");
 	request.setStatusCode(200);
 
 	if (file.empty()) { // no file, check for index
-		// cout << YEL << "no file, check for index" << RESET << endl;
+		cout << YEL << "no file, check for index" << RESET << endl;
 		string root_and_index = root + "/" + server.getIndex();
-		// cout << YEL << "index: " << server.getIndex() << RESET << endl; // "index.html
-		// cout << YEL << "root_and_index: " << root_and_index << RESET << endl;
+		root_and_index = regex_replace(root_and_index, regex("//+"), "/");
+		cout << YEL << "index: " << server.getIndex() << RESET << endl; // "index.html
+		cout << YEL << "root_and_index: " << root_and_index << RESET << endl;
 		ifstream stream(root_and_index);
-		if (stream.is_open()) {
+		if (stream.is_open() && is_directory(root_and_index) == false) {
 			path = root_and_index;
 			stream.close();
 		}
@@ -40,15 +43,17 @@ void check_baseline(Request &request, string &file, string &path, ServerBlock se
 		}
 	}
 	else if (!file.empty()) { // check for file
-		// cout << YEL << "check for file" << RESET << endl;
+		cout << YEL << "check for file" << RESET << endl;
 		ifstream stream(root_and_file);
-		if (stream.is_open()) {
-			// cout << YEL << "file found" << RESET << endl;
+		// check if file is a folder
+
+		if (stream.is_open() && is_directory(root_and_file) == false) {
+			cout << YEL << "file found" << RESET << endl;
 			path = root_and_file;
 			stream.close();
 		}
 		else { // can't open file part of the path
-			// cout << YEL << "file not found" << RESET << endl;
+			cout << YEL << "file not found" << RESET << endl;
 			request.setStatusCode(404);
 		}
 	}
@@ -65,7 +70,7 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 		loc = sLocs.get_loc(folder);
 	}
 	catch (invalid_argument &e) {
-		// cout << RED << "loc not found" << RESET << endl;
+		cout << RED << "loc not found" << RESET << endl;
 		request.setStatusCode(404);
 		path = folder + "/" + err_pages[404];
 		return;
@@ -73,16 +78,18 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 
 	string root = loc.get_root();
 	string root_and_file = root + "/" + file;
+	root_and_file = regex_replace(root_and_file, regex("//+"), "/");
 	request.setStatusCode(200);
 
 	if (file.empty()) { // no file, check for index
-		// cout << YEL << "no file, check for index" << RESET << endl;
+		cout << YEL << "no file, check for index" << RESET << endl;
 		if (loc.get_index() != "")
 		{
-			// cout << YEL << "index: " << loc.get_index() << RESET << endl;
+			cout << YEL << "index: " << loc.get_index() << RESET << endl;
 			string root_and_index = root + "/" + loc.get_index();
+			root_and_index = regex_replace(root_and_index, regex("//+"), "/");
 			ifstream stream(root_and_index);
-			if (stream.is_open()) {
+			if (stream.is_open() && is_directory(root_and_index) == false) {
 				path = root_and_index;
 				stream.close();
 			}
@@ -92,27 +99,28 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 			}
 		}
 		else if (loc.get_autoindex() == true) {
-			// cout << YEL << "autoindex" << RESET << endl;
-			// request.setStatusCode(404);
-			
+			cout << YEL << "autoindex" << RESET << endl;
+			// do autoindex
+			// for now just 404 because autoindex is not implemented yet
+			request.setStatusCode(404);
 		}
 		else { // no index, no autoindex
-			// cout << YEL << "no index, no autoindex" << RESET << endl;
+			cout << YEL << "no index, no autoindex" << RESET << endl;
 			request.setStatusCode(404);
 		}
 	}
 	else if (!file.empty()) { // check for file
-		// cout << YEL << "check for file" << RESET << endl;
+		cout << YEL << "check for file" << RESET << endl;
 		ifstream stream(root_and_file);
-		if (stream.is_open()) {
-			// cout << YEL << "file found" << RESET << endl;
-			// cout << GRN << "loc root: " << root << RESET << endl;
-			// cout << GRN << "file: " << file << RESET << endl;
+		if (stream.is_open() && is_directory(root_and_file) == false) {
+			cout << YEL << "file found" << RESET << endl;
+			cout << GRN << "loc root: " << root << RESET << endl;
+			cout << GRN << "file: " << file << RESET << endl;
 			path = root_and_file;
 			stream.close();
 		}
 		else { // can't open file part of the path
-			// cout << YEL << "file not found" << RESET << endl;
+			cout << YEL << "file not found" << RESET << endl;
 			request.setStatusCode(404);
 		}
 	}
@@ -142,8 +150,8 @@ void request_path_handler(Connection& connection) {
 	string folder;
 	string file;
 	parse_path(path, folder, file);
-	// cout << YEL << "folder: |" << folder << "|" << RESET << endl;
-	// cout << YEL << "file: " << file << RESET << endl;
+	cout << YEL << "folder: |" << folder << "|" << RESET << endl;
+	cout << YEL << "file: " << file << RESET << endl;
 
 	map<int, string> err_pages = serverBlock.getErrorPages();
 	smartLocs sLocs;
@@ -151,7 +159,7 @@ void request_path_handler(Connection& connection) {
 	sLocs.set_locs(serverBlock.getSmartLocs().get_locs());
 
 	if (folder == "/" || folder == "") {
-		// cout << BOLD << "CHECKING IN BASELINE" << RESET << endl;
+		cout << BOLD << "CHECKING IN BASELINE" << RESET << endl;
 		check_baseline(request, file, path, serverBlock, err_pages);
 	}
 	else {
@@ -159,7 +167,6 @@ void request_path_handler(Connection& connection) {
 		check_locs(connection, request, folder, file, path, err_pages, sLocs);
 	}
 	// replace // with /
-	path = regex_replace(path, regex("//+"), "/");
 	request.setPath(path);
-	cout << BOLD << "END OF REQUEST PATH HANDLER: " << request.getPath() << RESET << endl;
+	// cout << BOLD << "END OF REQUEST PATH HANDLER: " << request.getPath() << RESET << endl;
 }
