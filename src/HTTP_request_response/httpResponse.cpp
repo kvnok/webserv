@@ -6,25 +6,25 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 08:58:38 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/09/19 15:33:23 by ibehluli      ########   odam.nl         */
+/*   Updated: 2024/09/20 16:22:56 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "httpResponse.hpp"
 #include "httpStatus.hpp"
 
-Response::Response() : _version(""), _statusCode(-1), _body(""), _clientSocket(-1) {}; // maybe not set statuscode and clientsocket to -1?
-Response::Response(int const clientSocket, int const statusCode, string const version) : _clientSocket(clientSocket), _version(version), _statusCode(statusCode), _body("") { }
-Response::Response(const Response& other) : _clientSocket(other._clientSocket) { *this = other; }
+Response::Response() : _version(""), _statusCode(0), _body(""), _clientSocket(0) {}; // maybe not set statuscode and clientsocket to -1?
+Response::Response(int const clientSocket, int const statusCode, string const version) : _version(version), _statusCode(statusCode), _body(""), _clientSocket(clientSocket) { }
+Response::Response(const Response& other) { *this = other; }
 Response::~Response() { }
 
 Response&	Response::operator=(const Response& other) {
 	if (this != &other) {
-        this->_statusCode = other._statusCode;
         this->_version = other._version;
-        this->_clientSocket = other._clientSocket;
+        this->_statusCode = other._statusCode;
         this->_header = other._header;
         this->_body = other._body;
+        this->_clientSocket = other._clientSocket;
 	}
 	return (*this);
 }
@@ -39,14 +39,13 @@ void	Response::setHeaders(string const content, string const path, string const 
 	string extension;
 
 	extension = path.substr(path.find_last_of(".") + 1);
-    // cout << "extension: " << extension << endl;
 	if (extension == "html")
         this->addHeader("Content-Type", "text/html");
     else if (extension == "css")
         this->addHeader("Content-Type", "text/css");
     else if (extension == "ico")
         this->addHeader("Content-Type", "image/x-icon");
-	this->addHeader("Content-Length", to_string(content.size()));
+    this->addHeader("Content-Length", to_string(content.size()));
     this->addHeader("Connection", connection); //need to find out when we need to use "close" to close connection
     //bare minimum of headers, can add more, but not needed. maybe whith more complex requests and the corresponding responsed.
 }
@@ -70,10 +69,10 @@ ssize_t	Response::sendResponse() const {
 }
 
 void    Response::reset() {
-    this->_body = "";
-    this->_header.clear();
-    this->_statusCode = -1; //maybe not set statuscode to -1
     this->_version = "";
+    this->_statusCode = 0;
+    this->_header.clear();
+    this->_body = "";
 }
 
 void createResponse(Response& response, string path) {

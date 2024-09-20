@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:55:00 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/09/19 15:44:59 by ibehluli      ########   odam.nl         */
+/*   Updated: 2024/09/20 16:17:25 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,21 +16,28 @@
 #include "Servers.hpp"
 #include "Connection.hpp"
 
-Request::Request() : _method(""), _path(""), _version(""), _body(""), _statusCode(200), _boundary(""), _contentUploadFile(""), _maxLengthUploadContent(0), _bytesCopied(0),_state(START) { }
-//Request::Request(const Request& other) { *this = other; }
+Request::Request() : _method(""), _path(""), _version(""), _body(""), _statusCode(200),_state(START), _boundary(""), _contentUploadFile(""), _maxLengthUploadContent(0), _bytesCopied(0), _uploadedFile(""), _isAutoindex(false) { }
+Request::Request(const Request& other) { *this = other; }
 Request::~Request() { }
 
-// Request&	Request::operator=(const Request& other) {
-// 	if (this != &other) {
-// 		this->_method = other._method;
-// 		this->_path = other._path;
-// 		this->_version = other._version;
-// 		this->_header = other._header;
-// 		this->_body = other._body;
-// 		this->_statusCode = other._statusCode;
-// 	}
-// 	return (*this);
-// }
+Request&	Request::operator=(const Request& other) {
+	if (this != &other) {
+		this->_method = other._method;
+		this->_path = other._path;
+		this->_version = other._version;
+		this->_header = other._header;
+		this->_body = other._body;
+		this->_statusCode = other._statusCode;
+		this->_state = other._state;
+		this->_boundary = other._boundary;
+		this->_contentUploadFile = other._contentUploadFile;
+		this->_maxLengthUploadContent = other._maxLengthUploadContent;
+		this->_bytesCopied = other._bytesCopied;
+		this->_uploadedFile = other._uploadedFile;
+		this->_isAutoindex = other._isAutoindex;
+	}
+	return (*this);
+}
 
 void	Request::setMethod(string const method) { this->_method = method; }
 void	Request::setPath(string const path) { this->_path = path; }
@@ -74,14 +81,16 @@ void  Request::reset() {
   this->_method = "";
   this->_path = "";
   this->_version = "";
+  this->_header.clear();
   this->_body = "";
   this->_statusCode = 200;
+  this->_state = START;
   this->_boundary = "";
   this->_contentUploadFile = "";
   this->_maxLengthUploadContent = 0;
   this->_bytesCopied = 0;
-  this->_header.clear();
-  this->_state = START;
+  this->_uploadedFile = "";
+  this->_isAutoindex = false;
 }
 
 // connection.getFd(), connection.getRequest(), connection.getServer()

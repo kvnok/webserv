@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/03 09:56:01 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/08 15:04:18 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/09/20 16:24:00 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -141,7 +141,7 @@ void	checkCBody(vector<char> requestData, Request& request) {
 }
 
 void	checkNBody(vector<char> requestData, Request& request) {
-	if (requestData.size() != stoll(request.getHeaderValue("Content-Length")))
+	if (requestData.size() != stoul(request.getHeaderValue("Content-Length")))
 		return ;
 	string buffer(requestData.begin(), requestData.end());
 	request.setBody(buffer);

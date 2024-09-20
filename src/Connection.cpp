@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/27 17:28:06 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/09/19 15:52:58 by ibehluli      ########   odam.nl         */
+/*   Updated: 2024/09/20 16:14:30 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 #include "httpRequest.hpp"
 #include "httpResponse.hpp"
 
-Connection::Connection(const int fd, const ServerBlock serverBlock) : _fd(fd), _buffer(0), _nextState(READ), _bRead(0), _bWritten(0), _server(serverBlock) {}
+Connection::Connection(const int fd, const ServerBlock serverBlock) : _fd(fd), _buffer(0), _nextState(READ), _bRead(0), _bWritten(0), _server(serverBlock) { }
 Connection::Connection(const Connection& other) { *this = other; }
 
 Connection& Connection::operator=(const Connection& other) {
