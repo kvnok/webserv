@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/08/06 11:09:51 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/09/19 19:25:25 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/09/20 18:09:18 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,12 @@ void    Servers::handleExistingConnection(Connection& connection, int& i) {
     }
 }
 
+//if not all headers present, use recv to fill connection._buffer.
+//when alle headers present in buffer, parse headers from connection._buffer.
+//if headers are parsed, get the limit of reading
+//if nbody, recv n chars and set them to buffer, parse body
+//if cbody, read every chunk and fill buffer (this means only reading the headers ones, delete them form the new chunks)
+//everything read or error -> DONE and move on.
 void    Servers::readRequest(Connection& connection) {
     vector<char> buffer(1024);
     ssize_t bytes = recv(connection.getFd(), buffer.data(), buffer.size(), 0);
@@ -60,22 +66,19 @@ void    Servers::readRequest(Connection& connection) {
         return ;
     }
     buffer.resize(bytes);
+    // if (!hasAllHeaders(connection.getBuffer()))
+    //     connection.addToBuffer(buffer);
     connection.addToBuffer(buffer);
-    if (connection.getRequest().getState() == START) {
-	    if (hasAllHeaders(connection.getBuffer())) {
+    switch (connection.getRequest().getState()) {
+        case START:
             checkHeaders(connection.getBuffer(), connection.getRequest());
-            //connection.clearBuffer();
-        }
-    }
-    if (connection.getRequest().getState() == CBODY) {;
-        checkCBody(connection.getBuffer(), connection.getRequest());
-    }
-    if (connection.getRequest().getState() == NBODY) {
-        checkNBody(connection.getBuffer(), connection.getRequest());        
-    }
-    if (connection.getRequest().getState() == DONE) {
-        connection.clearBuffer();
-        connection.setNextState(EXECUTE);
+        case CBODY:
+            checkCBody(connection.getBuffer(), connection.getRequest());
+        case NBODY:
+            checkNBody(connection.getBuffer(), connection.getRequest());  
+        case DONE:
+            connection.clearBuffer();
+            connection.setNextState(EXECUTE);
     }
 }
 
