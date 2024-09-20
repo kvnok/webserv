@@ -34,7 +34,7 @@ void check_baseline(Request &request, string &file, string &path, ServerBlock se
 		cout << YEL << "index: " << server.getIndex() << RESET << endl; // "index.html
 		cout << YEL << "root_and_index: " << root_and_index << RESET << endl;
 		ifstream stream(root_and_index);
-		if (stream.is_open()) {
+		if (stream.is_open() && is_directory(root_and_index) == false) {
 			path = root_and_index;
 			stream.close();
 		}
@@ -47,7 +47,7 @@ void check_baseline(Request &request, string &file, string &path, ServerBlock se
 		ifstream stream(root_and_file);
 		// check if file is a folder
 
-		if (stream.is_open()) {
+		if (stream.is_open() && is_directory(root_and_file) == false) {
 			cout << YEL << "file found" << RESET << endl;
 			path = root_and_file;
 			stream.close();
@@ -111,7 +111,7 @@ void check_locs(Request &request, string &folder, string &file, string &path, ma
 	else if (!file.empty()) { // check for file
 		cout << YEL << "check for file" << RESET << endl;
 		ifstream stream(root_and_file);
-		if (stream.is_open() && is_directory(root_and_index) == false) {
+		if (stream.is_open() && is_directory(root_and_file) == false) {
 			cout << YEL << "file found" << RESET << endl;
 			cout << GRN << "loc root: " << root << RESET << endl;
 			cout << GRN << "file: " << file << RESET << endl;
