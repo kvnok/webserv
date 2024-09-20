@@ -1,5 +1,6 @@
 #include "Connection.hpp"
 #include "ServerBlock.hpp"
+#include "autoindex.hpp"
 
 static void parse_path(string &path, string &folder, string &file) {
 	if (path == "/") {
@@ -23,14 +24,17 @@ void check_baseline(Request &request, string &file, string &path, ServerBlock se
 	string root = server.getRoot();
 	cout << YEL << "root: " << root << RESET << endl;
 	string root_and_file = root + "/" + file;
+	root_and_file = regex_replace(root_and_file, regex("//+"), "/");
 	request.setStatusCode(200);
 
 	if (file.empty()) { // no file, check for index
+		cout << YEL << "no file, check for index" << RESET << endl;
 		string root_and_index = root + "/" + server.getIndex();
+		root_and_index = regex_replace(root_and_index, regex("//+"), "/");
 		cout << YEL << "index: " << server.getIndex() << RESET << endl; // "index.html
 		cout << YEL << "root_and_index: " << root_and_index << RESET << endl;
 		ifstream stream(root_and_index);
-		if (stream.is_open()) {
+		if (stream.is_open() && is_directory(root_and_index) == false) {
 			path = root_and_index;
 			stream.close();
 		}
@@ -39,12 +43,17 @@ void check_baseline(Request &request, string &file, string &path, ServerBlock se
 		}
 	}
 	else if (!file.empty()) { // check for file
+		cout << YEL << "check for file" << RESET << endl;
 		ifstream stream(root_and_file);
-		if (stream.is_open()) {
+		// check if file is a folder
+
+		if (stream.is_open() && is_directory(root_and_file) == false) {
+			cout << YEL << "file found" << RESET << endl;
 			path = root_and_file;
 			stream.close();
 		}
 		else { // can't open file part of the path
+			cout << YEL << "file not found" << RESET << endl;
 			request.setStatusCode(404);
 		}
 	}
@@ -55,12 +64,13 @@ void check_baseline(Request &request, string &file, string &path, ServerBlock se
 	}
 }
 
-void check_locs(Request &request, string &folder, string &file, string &path, map<int, string> err_pages, smartLocs sLocs) {
+void check_locs(Connection& connection, Request &request, string &folder, string &file, string &path, map<int, string> err_pages, smartLocs sLocs) {
 	Loc loc;
 	try {
 		loc = sLocs.get_loc(folder);
 	}
 	catch (invalid_argument &e) {
+		cout << RED << "loc not found" << RESET << endl;
 		request.setStatusCode(404);
 		path = folder + "/" + err_pages[404];
 		return;
@@ -68,37 +78,49 @@ void check_locs(Request &request, string &folder, string &file, string &path, ma
 
 	string root = loc.get_root();
 	string root_and_file = root + "/" + file;
+	root_and_file = regex_replace(root_and_file, regex("//+"), "/");
 	request.setStatusCode(200);
 
 	if (file.empty()) { // no file, check for index
+		cout << YEL << "no file, check for index" << RESET << endl;
 		if (loc.get_index() != "")
 		{
+			cout << YEL << "index: " << loc.get_index() << RESET << endl;
 			string root_and_index = root + "/" + loc.get_index();
+			root_and_index = regex_replace(root_and_index, regex("//+"), "/");
 			ifstream stream(root_and_index);
-			if (stream.is_open()) {
+			if (stream.is_open() && is_directory(root_and_index) == false) {
 				path = root_and_index;
 				stream.close();
 			}
-			else { // can't open index	
+			else { // can't open index
+				connection.getRequest().setIsAutoindex(true);
 				request.setStatusCode(404);
 			}
 		}
 		else if (loc.get_autoindex() == true) {
+			cout << YEL << "autoindex" << RESET << endl;
 			// do autoindex
 			// for now just 404 because autoindex is not implemented yet
 			request.setStatusCode(404);
 		}
 		else { // no index, no autoindex
+			cout << YEL << "no index, no autoindex" << RESET << endl;
 			request.setStatusCode(404);
 		}
 	}
 	else if (!file.empty()) { // check for file
+		cout << YEL << "check for file" << RESET << endl;
 		ifstream stream(root_and_file);
-		if (stream.is_open()) {
+		if (stream.is_open() && is_directory(root_and_file) == false) {
+			cout << YEL << "file found" << RESET << endl;
+			cout << GRN << "loc root: " << root << RESET << endl;
+			cout << GRN << "file: " << file << RESET << endl;
 			path = root_and_file;
 			stream.close();
 		}
 		else { // can't open file part of the path
+			cout << YEL << "file not found" << RESET << endl;
 			request.setStatusCode(404);
 		}
 	}
@@ -114,31 +136,21 @@ void ok_print_server_block(ServerBlock &serverBlock) {
 	cout << "port: " << serverBlock.getPort() << endl;
 	cout << "root: " << serverBlock.getRoot() << endl;
 	cout << "index: " << serverBlock.getIndex() << endl;
-	// cout << "error pages: " << endl;
-	// map<int, string> err_pages = serverBlock.getErrorPages();
-	// for (map<int, string>::iterator it = err_pages.begin(); it != err_pages.end(); it++) {
-	// 	cout << it->first << ": " << it->second << endl;
-	// }
-	// cout << "smart locations: " << endl;
-	// smartLocs sLocs = serverBlock.getSmartLocs();
-	// map<string, Loc> locs = sLocs.get_locs();
-	// for (map<string, Loc>::iterator it = locs.begin(); it != locs.end(); it++) {
-	// 	cout << "loc: " << it->first << endl;
-	// 	cout << "root: " << it->second.get_root() << endl;
-	// 	cout << "index: " << it->second.get_index() << endl;
-	// 	cout << "autoindex: " << it->second.get_autoindex() << endl;
-	// }
 }
 
-void request_path_handler(string &path, Request &request, ServerBlock serverBlock) {
-	cout << BOLD << "REQUEST PATH HANDLER" << RESET << endl;
-	cout << BOLD << request.getPath() << RESET << endl;
-	ok_print_server_block(serverBlock);
+void request_path_handler(Connection& connection) {
+	Request& request = connection.getRequest();
+	ServerBlock serverBlock = connection.getServer();
+	string path = request.getPath();
+	connection.getRequest().setIsAutoindex(false);
+	// cout << BOLD << "REQUEST PATH HANDLER" << RESET << endl;
+	// cout << BOLD << request.getPath() << RESET << endl;
+	// ok_print_server_block(serverBlock);
 	// first check if its just / or /file or /folder/
 	string folder;
 	string file;
 	parse_path(path, folder, file);
-	cout << YEL << "folder: " << folder << RESET << endl;
+	cout << YEL << "folder: |" << folder << "|" << RESET << endl;
 	cout << YEL << "file: " << file << RESET << endl;
 
 	map<int, string> err_pages = serverBlock.getErrorPages();
@@ -146,14 +158,15 @@ void request_path_handler(string &path, Request &request, ServerBlock serverBloc
 	sLocs.set_locs(serverBlock.getSmartLocs().get_locs());
 	sLocs.set_locs(serverBlock.getSmartLocs().get_locs());
 
-	if (folder == "/") {
+	if (folder == "/" || folder == "") {
 		cout << BOLD << "CHECKING IN BASELINE" << RESET << endl;
 		check_baseline(request, file, path, serverBlock, err_pages);
 	}
 	else {
-		cout << BOLD << "CHECKING IN BASELINE" << RESET << endl;
-		check_locs(request, folder, file, path, err_pages, sLocs);
+		// cout << BOLD << "CHECKING IN LOC BLOCKS" << RESET << endl;
+		check_locs(connection, request, folder, file, path, err_pages, sLocs);
 	}
+	// replace // with /
 	request.setPath(path);
-	cout << BOLD << "END OF REQUEST PATH HANDLER: " << request.getPath() << RESET << endl;
+	// cout << BOLD << "END OF REQUEST PATH HANDLER: " << request.getPath() << RESET << endl;
 }

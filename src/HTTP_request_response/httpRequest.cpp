@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:55:00 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/09/19 15:44:59 by ibehluli      ########   odam.nl         */
+/*   Updated: 2024/09/20 16:17:25 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,22 +14,30 @@
 #include "httpStatus.hpp"
 #include "httpResponse.hpp"
 #include "Servers.hpp"
+#include "Connection.hpp"
 
-Request::Request() : _method(""), _path(""), _version(""), _body(""), _statusCode(200), _boundary(""), _contentUploadFile(""), _maxLengthUploadContent(0), _bytesCopied(0),_state(START) { }
-//Request::Request(const Request& other) { *this = other; }
+Request::Request() : _method(""), _path(""), _version(""), _body(""), _statusCode(200),_state(START), _boundary(""), _contentUploadFile(""), _maxLengthUploadContent(0), _bytesCopied(0), _uploadedFile(""), _isAutoindex(false) { }
+Request::Request(const Request& other) { *this = other; }
 Request::~Request() { }
 
-// Request&	Request::operator=(const Request& other) {
-// 	if (this != &other) {
-// 		this->_method = other._method;
-// 		this->_path = other._path;
-// 		this->_version = other._version;
-// 		this->_header = other._header;
-// 		this->_body = other._body;
-// 		this->_statusCode = other._statusCode;
-// 	}
-// 	return (*this);
-// }
+Request&	Request::operator=(const Request& other) {
+	if (this != &other) {
+		this->_method = other._method;
+		this->_path = other._path;
+		this->_version = other._version;
+		this->_header = other._header;
+		this->_body = other._body;
+		this->_statusCode = other._statusCode;
+		this->_state = other._state;
+		this->_boundary = other._boundary;
+		this->_contentUploadFile = other._contentUploadFile;
+		this->_maxLengthUploadContent = other._maxLengthUploadContent;
+		this->_bytesCopied = other._bytesCopied;
+		this->_uploadedFile = other._uploadedFile;
+		this->_isAutoindex = other._isAutoindex;
+	}
+	return (*this);
+}
 
 void	Request::setMethod(string const method) { this->_method = method; }
 void	Request::setPath(string const path) { this->_path = path; }
@@ -39,6 +47,7 @@ void	Request::addHeader(string const key, string const value) { this->_header[ke
 void	Request::setHeader(map<string, string> const header) { this->_header = header; }
 void	Request::setStatusCode(int const statusCode) { this->_statusCode = statusCode; }
 void	Request::setState(rState const state) { this->_state = state; }
+void	Request::setIsAutoindex(bool isAutoindex) { this->_isAutoindex = isAutoindex; }
 
 string	            Request::getMethod() const { return (this->_method); }
 string	            Request::getPath() const { return (this->_path); }
@@ -58,6 +67,7 @@ string	Request::getContentUploadFile() const { return (this->_contentUploadFile)
 long		Request::getMaxLengthUploadContent() { return (this->_maxLengthUploadContent); }
 long		Request::getBytesCopied() { return (this->_bytesCopied); }
 string	Request::getUploadedFile() const { return (this->_uploadedFile); }
+bool	Request::getIsAutoindex() const { return (this->_isAutoindex); }
 // ---------------------------
 string	Request::getHeaderValue(const string& key) const{
 	auto iterator = this->_header.find(key);
@@ -71,23 +81,28 @@ void  Request::reset() {
   this->_method = "";
   this->_path = "";
   this->_version = "";
+  this->_header.clear();
   this->_body = "";
   this->_statusCode = 200;
+  this->_state = START;
   this->_boundary = "";
   this->_contentUploadFile = "";
   this->_maxLengthUploadContent = 0;
   this->_bytesCopied = 0;
-  this->_header.clear();
-  this->_state = START;
+  this->_uploadedFile = "";
+  this->_isAutoindex = false;
 }
 
-void handleRequest(const int clientSocket, Request& request, ServerBlock serverBlock) {
-	string path = request.getPath();
+// connection.getFd(), connection.getRequest(), connection.getServer()
+// const int clientSocket, Request& request, ServerBlock serverBlock
+void handleRequest(Connection& connection) {
+	const int clientSocket = connection.getFd();
+	Request& request = connection.getRequest();
 	
-	cout << RED << "in handleRequest:" << path << "     "  << request.getMethod() << RESET << endl;
+	cout << RED << "in handleRequest:" << request.getPath() << "     "  << request.getMethod() << RESET << endl;
 	
 	if (request.getMethod() == "GET") {
-		request_path_handler(path, request, serverBlock);
+		request_path_handler(connection);
 	}
 	else if (request.getMethod() == "POST" && request.getPath() == "/var/www/deleteFile.html") {
         cout << "Delete method" << endl;

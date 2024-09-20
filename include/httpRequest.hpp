@@ -6,7 +6,7 @@
 /*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2024/06/01 17:54:54 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/09/19 19:06:11 by jvorstma      ########   odam.nl         */
+/*   Updated: 2024/09/20 17:07:05 by jvorstma      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,8 @@
 #include <filesystem>
 #include <regex>
 #include "ServerBlock.hpp"
+// #include "Connection.hpp"
+class Connection;
 
 using namespace std;
 
@@ -59,12 +61,12 @@ class Request {
 		int 				_maxLengthUploadContent;
 		int					_bytesCopied;
 		string				_uploadedFile;
+		bool 				_isAutoindex;
 	public:
 		Request();
-//		Request(const Request& other);
+		Request(const Request& other);
 		~Request();
-
-//		Request& operator=(const Request& other);
+		Request& operator=(const Request& other);
 
 		void	setMethod(string const method);
 		void	setPath(string const path);
@@ -74,6 +76,7 @@ class Request {
 		void	setHeader(map<string, string> const header);
 		void	setStatusCode(int const statusCode);
 		void	setState(const rState state);
+		void 	setIsAutoindex(bool isAutoindex);
 
 		string				getMethod() const;
 		string				getPath() const;
@@ -94,6 +97,7 @@ class Request {
 		long 				getMaxLengthUploadContent();
 		long 				getBytesCopied();
 		string				getUploadedFile() const;
+		bool				getIsAutoindex() const;
 		// ------------------------
 
 		void				reset();
@@ -104,7 +108,7 @@ void	checkCBody(vector<char> requestData, Request& request);
 void	checkNBody(vector<char> requestData, Request& request);
 bool	hasAllHeaders(const vector<char> data);
 
-void	handleRequest(const int clientSocket, Request& request, ServerBlock serverBlock);
+void	handleRequest(Connection& connection);
 
 //https://www.ibm.com/docs/en/app-connect/11.0.0?topic=messages-http-headers
 //resource headers

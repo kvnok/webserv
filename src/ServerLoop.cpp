@@ -80,15 +80,17 @@ void    Servers::readRequest(Connection& connection) {
 }
 
 void    Servers::executeRequest(Connection& connection) {
-    handleRequest(connection.getFd(), connection.getRequest(), connection.getServer());
+    handleRequest(connection);
     connection.setNextState(WRITE);
 }
 
 void    Servers::writeResponse(Connection& connection) {
+    cout << "writing response" << endl;
+    cout << (connection.getRequest().getIsAutoindex() ? "autoindex" : "not autoindex") << endl;
+    
     connection.getResponse().setClientSocket(connection.getFd());
     connection.getResponse().setVersion(connection.getRequest().getVersion());
     connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
-    // cout << RED << "writing response" << RESET << endl;
     createResponse(connection.getResponse(), connection.getRequest().getPath());
     // if all bytes have been written, so only set to close when the whole response has been written and send
     if (connection.getRequest().getHeaderValue("Connection") == "close") {
