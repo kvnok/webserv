@@ -14,6 +14,7 @@
 #include "httpStatus.hpp"
 #include "httpResponse.hpp"
 #include "Servers.hpp"
+#include "Connection.hpp"
 
 Request::Request() : _method(""), _path(""), _version(""), _body(""), _statusCode(200), _boundary(""), _contentUploadFile(""), _maxLengthUploadContent(0), _bytesCopied(0),_state(START) { }
 //Request::Request(const Request& other) { *this = other; }
@@ -39,6 +40,7 @@ void	Request::addHeader(string const key, string const value) { this->_header[ke
 void	Request::setHeader(map<string, string> const header) { this->_header = header; }
 void	Request::setStatusCode(int const statusCode) { this->_statusCode = statusCode; }
 void	Request::setState(rState const state) { this->_state = state; }
+void	Request::setIsAutoindex(bool isAutoindex) { this->_isAutoindex = isAutoindex; }
 
 string	            Request::getMethod() const { return (this->_method); }
 string	            Request::getPath() const { return (this->_path); }
@@ -58,6 +60,7 @@ string	Request::getContentUploadFile() const { return (this->_contentUploadFile)
 long		Request::getMaxLengthUploadContent() { return (this->_maxLengthUploadContent); }
 long		Request::getBytesCopied() { return (this->_bytesCopied); }
 string	Request::getUploadedFile() const { return (this->_uploadedFile); }
+bool	Request::getIsAutoindex() const { return (this->_isAutoindex); }
 // ---------------------------
 string	Request::getHeaderValue(const string& key) const{
 	auto iterator = this->_header.find(key);
@@ -81,13 +84,16 @@ void  Request::reset() {
   this->_state = START;
 }
 
-void handleRequest(const int clientSocket, Request& request, ServerBlock serverBlock) {
-	string path = request.getPath();
+// connection.getFd(), connection.getRequest(), connection.getServer()
+// const int clientSocket, Request& request, ServerBlock serverBlock
+void handleRequest(Connection& connection) {
+	const int clientSocket = connection.getFd();
+	Request& request = connection.getRequest();
 	
-	cout << RED << "in handleRequest:" << path << "     "  << request.getMethod() << RESET << endl;
+	cout << RED << "in handleRequest:" << request.getPath() << "     "  << request.getMethod() << RESET << endl;
 	
 	if (request.getMethod() == "GET") {
-		request_path_handler(path, request, serverBlock);
+		request_path_handler(connection);
 	}
 	else if (request.getMethod() == "POST" && request.getPath() == "/var/www/deleteFile.html") {
         cout << "Delete method" << endl;

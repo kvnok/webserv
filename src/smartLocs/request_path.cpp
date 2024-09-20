@@ -64,7 +64,7 @@ void check_baseline(Request &request, string &file, string &path, ServerBlock se
 	}
 }
 
-void check_locs(Request &request, string &folder, string &file, string &path, map<int, string> err_pages, smartLocs sLocs) {
+void check_locs(Connection& connection, Request &request, string &folder, string &file, string &path, map<int, string> err_pages, smartLocs sLocs) {
 	Loc loc;
 	try {
 		loc = sLocs.get_loc(folder);
@@ -93,7 +93,8 @@ void check_locs(Request &request, string &folder, string &file, string &path, ma
 				path = root_and_index;
 				stream.close();
 			}
-			else { // can't open index	
+			else { // can't open index
+				connection.getRequest().setIsAutoindex(true);
 				request.setStatusCode(404);
 			}
 		}
@@ -137,9 +138,13 @@ void ok_print_server_block(ServerBlock &serverBlock) {
 	cout << "index: " << serverBlock.getIndex() << endl;
 }
 
-void request_path_handler(string &path, Request &request, ServerBlock serverBlock) {
-	cout << BOLD << "REQUEST PATH HANDLER" << RESET << endl;
-	cout << BOLD << request.getPath() << RESET << endl;
+void request_path_handler(Connection& connection) {
+	Request& request = connection.getRequest();
+	ServerBlock serverBlock = connection.getServer();
+	string path = request.getPath();
+	connection.getRequest().setIsAutoindex(false);
+	// cout << BOLD << "REQUEST PATH HANDLER" << RESET << endl;
+	// cout << BOLD << request.getPath() << RESET << endl;
 	// ok_print_server_block(serverBlock);
 	// first check if its just / or /file or /folder/
 	string folder;
@@ -158,8 +163,8 @@ void request_path_handler(string &path, Request &request, ServerBlock serverBloc
 		check_baseline(request, file, path, serverBlock, err_pages);
 	}
 	else {
-		cout << BOLD << "CHECKING IN LOC BLOCKS" << RESET << endl;
-		check_locs(request, folder, file, path, err_pages, sLocs);
+		// cout << BOLD << "CHECKING IN LOC BLOCKS" << RESET << endl;
+		check_locs(connection, request, folder, file, path, err_pages, sLocs);
 	}
 	// replace // with /
 	request.setPath(path);
