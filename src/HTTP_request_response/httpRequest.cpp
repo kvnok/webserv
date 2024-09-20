@@ -86,9 +86,8 @@ void  Request::reset() {
 
 // connection.getFd(), connection.getRequest(), connection.getServer()
 // const int clientSocket, Request& request, ServerBlock serverBlock
-void handleRequest(Connection& connection) {
+void handleRequest(Connection& connection, Request& request) {
 	const int clientSocket = connection.getFd();
-	Request& request = connection.getRequest();
 	
 	cout << RED << "in handleRequest:" << request.getPath() << "     "  << request.getMethod() << RESET << endl;
 	
