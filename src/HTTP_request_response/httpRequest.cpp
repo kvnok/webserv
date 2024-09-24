@@ -93,7 +93,7 @@ void handleRequest(Connection& connection) {
 	if (request.getMethod() == "GET") {
 		request_path_handler(connection);
 	}
-	else if (request.getMethod() == "POST" && request.getPath() == "/var/www/deleteFile.html") {
+	else if (request.getMethod() == "POST" && request.getPath() == "/www/deleteFile.html") {
         cout << "Delete method" << endl;
         delete_method(clientSocket, request);
 	}

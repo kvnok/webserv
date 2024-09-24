@@ -66,6 +66,8 @@ void    Servers::readRequest(Connection& connection) {
     }
     if (connection.getRequest().getReadState() == CHUNKED_BODY)
         checkChunkedBody(connection);
+    if (connection.getRequest().getReadState() == CONTENT_LENGTH_BODY)
+        checkContentLengthBody(connection);
     if (connection.getRequest().getReadState() == BODY)
         parseBody(connection.getBuffer(), connection.getRequest());
     if (connection.getRequest().getReadState() == DONE) {
