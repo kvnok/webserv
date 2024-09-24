@@ -1,14 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        ::::::::            */
-/*   Connection.cpp                                     :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2024/06/27 17:28:06 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/09/20 16:14:30 by jvorstma      ########   odam.nl         */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "Connection.hpp"
 #include "httpRequest.hpp"
@@ -43,7 +32,6 @@ void	Connection::addToBuffer(const vector<char> buffer) {
 	this->_buffer.reserve(this->_buffer.size() + buffer.size());
 	this->_buffer.insert(this->_buffer.end(), buffer.begin(), buffer.end()); 
 }
-//maybe not use a vector, but a list or a simple string
 
 void	Connection::addBytesRead(const size_t bRead) { this->_bRead += bRead; }
 void	Connection::addBytesWritten(const size_t bWritten) { this->_bWritten += bWritten; }
@@ -70,8 +58,6 @@ void			Connection::clearBuffer() {
 		this->_buffer.clear(); 
 		this->_buffer.resize(0);
 	}
-	string buf(this->_buffer.begin(), this->_buffer.end());
-	cout << BLU << buf << RESET << endl;
 }
 
 void			Connection::reset() {

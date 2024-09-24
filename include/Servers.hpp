@@ -1,14 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        ::::::::            */
-/*   Servers.hpp                                        :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2024/07/16 14:18:12 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/08 12:19:43 by jvorstma      ########   odam.nl         */
-/*                                                                            */
-/* ************************************************************************** */
 
 #pragma once
 
@@ -17,6 +6,8 @@
 #include <fcntl.h>
 
 using namespace std;
+
+#define BUFFER_SIZE 1024
 
 class Servers
 {
@@ -30,12 +21,12 @@ class Servers
 		~Servers();
 		void	start();
 		void	setFds();
-		void	handleNewConnection(int i);
-		void	handleExistingConnection(Connection& connection, int& i);
+		void	handleNewConnection(size_t i);
+		void	handleExistingConnection(Connection& connection, size_t& i);
 		void	readRequest(Connection& connection);
 		void	executeRequest(Connection& connection);
 		void	writeResponse(Connection& connection);
-		void	closeConnection(Connection& connection, int& i);
+		void	closeConnection(Connection& connection, size_t& i);
 		vector<ServerBlock> &get_serverBlocks();
 		vector<Connection>	&get_connections();
 		vector<pollfd>		&get_fds();
