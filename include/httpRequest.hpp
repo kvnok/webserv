@@ -52,6 +52,7 @@ class Request {
 		string				_uploadedFile;
 		bool 				_isAutoindex;
 		bool				_isCGI;
+		string				_CGIextension;
 		bool				_isRedirect;
 	public:
 		Request();
@@ -69,6 +70,7 @@ class Request {
 		void	setReadState(const readState state);
 		void 	setIsAutoindex(bool isAutoindex);
 		void 	setIsCGI(bool isCGI);
+		void 	setCGIextension(string const CGIextension);
 		void 	setIsRedirect(bool isRedirect);
 
 		string				getMethod() const;
@@ -92,6 +94,7 @@ class Request {
 		string				getUploadedFile() const;
 		bool				getIsAutoindex() const;
 		bool				getIsCGI() const;
+		string				getCGIextension() const;
 		bool				getIsRedirect() const;
 		// ------------------------
 

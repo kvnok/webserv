@@ -85,6 +85,11 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 		cout << YEL << "no file, check for index" << RESET << endl;
 		if (loc.get_index() != "")
 		{
+			if (loc.get_cgi_extension() != "")
+			{
+				request.setIsCGI(true);
+				request.setCGIextension(loc.get_cgi_extension());
+			}
 			cout << YEL << "index: " << loc.get_index() << RESET << endl;
 			string root_and_index = root + "/" + loc.get_index();
 			root_and_index = regex_replace(root_and_index, regex("//+"), "/");
@@ -94,13 +99,14 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 				stream.close();
 			}
 			else { // can't open index
-				connection.getRequest().setIsAutoindex(true);
+				cout << YEL << "cant open index" << RESET << endl;
 				request.setStatusCode(404);
 			}
 		}
 		else if (loc.get_autoindex() == true) {
 			cout << YEL << "autoindex" << RESET << endl;
 			// do autoindex
+			request.setIsAutoindex(true);
 			// for now just 404 because autoindex is not implemented yet
 			request.setStatusCode(404);
 		}

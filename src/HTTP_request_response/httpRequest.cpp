@@ -19,6 +19,7 @@ Request::Request()
 	  _uploadedFile(""),
 	  _isAutoindex(false),
 	  _isCGI(false),
+	  _CGIextension(""),
 	  _isRedirect(false)
 { }
 Request::Request(const Request& other) { *this = other; }
@@ -41,6 +42,7 @@ Request&	Request::operator=(const Request& other) {
 		this->_isAutoindex = other._isAutoindex;
 		this->_isCGI = other._isCGI;
 		this->_isRedirect = other._isRedirect;
+		this->_CGIextension = other._CGIextension;
 	}
 	return (*this);
 }
@@ -55,6 +57,7 @@ void	Request::setStatusCode(int const statusCode) { this->_statusCode = statusCo
 void	Request::setReadState(readState const state) { this->_readState = state; }
 void	Request::setIsAutoindex(bool isAutoindex) { this->_isAutoindex = isAutoindex; }
 void	Request::setIsCGI(bool isCGI) { this->_isCGI = isCGI; }
+void	Request::setCGIextension(string const CGIextension) { this->_CGIextension = CGIextension; }
 void	Request::setIsRedirect(bool isRedirect) { this->_isRedirect = isRedirect; }
 
 string	            Request::getMethod() const { return (this->_method); }
@@ -77,6 +80,7 @@ long	Request::getBytesCopied() const { return (this->_bytesCopied); }
 string	Request::getUploadedFile() const { return (this->_uploadedFile); }
 bool	Request::getIsAutoindex() const { return (this->_isAutoindex); }
 bool	Request::getIsCGI() const { return (this->_isCGI); }
+string	Request::getCGIextension() const { return (this->_CGIextension); }
 bool	Request::getIsRedirect() const { return (this->_isRedirect); }
 // ---------------------------
 string	Request::getHeaderValue(const string& key) const{
@@ -102,6 +106,7 @@ void  Request::reset() {
   this->_uploadedFile = "";
   this->_isAutoindex = false;
   this->_isCGI = false;
+  this->_CGIextension = "";
   this->_isRedirect = false;
 }
 
