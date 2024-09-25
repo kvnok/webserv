@@ -38,7 +38,7 @@ void    Servers::writeResponse(Connection& connection) {
 }
 
 void    Servers::executeRequest(Connection& connection) {
-    handleRequest(connection);
+    handleRequest(connection, connection.getRequest());
     connection.setNextState(WRITE);
 }
 

@@ -34,4 +34,10 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all clean fclean re
+simple:
+	./run.sh simplem
+
+default: all
+	./webserv
+
+.PHONY: all clean fclean re simple default
