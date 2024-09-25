@@ -51,6 +51,9 @@ class Request {
 		int					_bytesCopied;
 		string				_uploadedFile;
 		bool 				_isAutoindex;
+		bool				_isCGI;
+		string				_CGIextension;
+		bool				_isRedirect;
 	public:
 		Request();
 		Request(const Request& other);
@@ -66,6 +69,9 @@ class Request {
 		void	setStatusCode(int const statusCode);
 		void	setReadState(const readState state);
 		void 	setIsAutoindex(bool isAutoindex);
+		void 	setIsCGI(bool isCGI);
+		void 	setCGIextension(string const CGIextension);
+		void 	setIsRedirect(bool isRedirect);
 
 		string				getMethod() const;
 		string				getPath() const;
@@ -87,6 +93,9 @@ class Request {
 		long 				getBytesCopied() const;
 		string				getUploadedFile() const;
 		bool				getIsAutoindex() const;
+		bool				getIsCGI() const;
+		string				getCGIextension() const;
+		bool				getIsRedirect() const;
 		// ------------------------
 
 		void				reset();
@@ -98,7 +107,7 @@ void	checkContentLengthBody(Connection& connection);
 void	parseBody(const vector<char> requestData, Request& request);
 bool	hasAllHeaders(const vector<char> data);
 
-void	handleRequest(Connection& connection);
+void handleRequest(Connection& connection, Request& request);
 
 //https://www.ibm.com/docs/en/app-connect/11.0.0?topic=messages-http-headers
 //resource headers

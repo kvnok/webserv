@@ -85,6 +85,11 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 		cout << YEL << "no file, check for index" << RESET << endl;
 		if (loc.get_index() != "")
 		{
+			if (loc.get_cgi_extension() != "")
+			{
+				request.setIsCGI(true);
+				request.setCGIextension(loc.get_cgi_extension());
+			}
 			cout << YEL << "index: " << loc.get_index() << RESET << endl;
 			string root_and_index = root + "/" + loc.get_index();
 			root_and_index = regex_replace(root_and_index, regex("//+"), "/");
@@ -94,13 +99,14 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 				stream.close();
 			}
 			else { // can't open index
-				connection.getRequest().setIsAutoindex(true);
+				cout << YEL << "cant open index" << RESET << endl;
 				request.setStatusCode(404);
 			}
 		}
 		else if (loc.get_autoindex() == true) {
 			cout << YEL << "autoindex" << RESET << endl;
 			// do autoindex
+			request.setIsAutoindex(true);
 			// for now just 404 because autoindex is not implemented yet
 			request.setStatusCode(404);
 		}
@@ -138,6 +144,48 @@ void ok_print_server_block(ServerBlock &serverBlock) {
 	cout << "index: " << serverBlock.getIndex() << endl;
 }
 
+bool is_this_a_redirect(string &folder, string &file, smartLocs sLocs) {
+	if (folder != "" && file != "") {
+		return false;
+	}
+	if ((folder == "" || folder == "/") && file == "") {
+		return false;
+	}
+	if (file != "") {
+		return false;
+	}
+	Loc loc;
+	try {
+		loc = sLocs.get_loc(folder);
+	}
+	catch (invalid_argument &e) {
+		return false;
+	}
+	if (loc.get_is_redirect() == false) {
+		return false;
+	}
+	return true;
+}
+
+void do_the_redirect(Request &request, string &folder, smartLocs sLocs) {
+	cout << BOLD << "DO THE REDIRECT" << RESET << endl;
+	Loc loc;
+	loc = sLocs.get_loc(folder);
+	string redirect = loc.get_redirect();
+	cout << "redirect: |" << redirect << "|" << endl;
+	request.setStatusCode(loc.get_redirect_code());
+	folder = redirect;
+}
+
+void print_smartLocs(smartLocs sLocs) {
+	cout << GRN << "smartLocs: " << RESET << endl;
+	map<string, Loc> locs = sLocs.get_locs();
+	for (auto it = locs.begin(); it != locs.end(); it++) {
+		cout << "loc: |" << it->first << "|" << endl;
+		it->second.print_location();
+	}
+}
+
 void request_path_handler(Connection& connection) {
 	Request& request = connection.getRequest();
 	ServerBlock serverBlock = connection.getServer();
@@ -156,8 +204,12 @@ void request_path_handler(Connection& connection) {
 	map<int, string> err_pages = serverBlock.getErrorPages();
 	smartLocs sLocs;
 	sLocs.set_locs(serverBlock.getSmartLocs().get_locs());
-	sLocs.set_locs(serverBlock.getSmartLocs().get_locs());
+	// print_smartLocs(sLocs);
 
+	if (is_this_a_redirect(folder, file, sLocs)) {
+		do_the_redirect(request, folder, sLocs);
+		file = "";
+	}
 	if (folder == "/" || folder == "") {
 		cout << BOLD << "CHECKING IN BASELINE" << RESET << endl;
 		check_baseline(request, file, path, serverBlock, err_pages);

@@ -67,7 +67,6 @@ void    Response::reset() {
 void createResponse(Response& response, string path) {
     string content;
     ifstream file(path);
-
     if (!file.is_open())
         response.setStatusCode(404);
     if (response.getStatusCode() == 404 && !file.is_open()) {
@@ -83,3 +82,24 @@ void createResponse(Response& response, string path) {
     // sending a response in chunks => read how much is send/how much you want to send
     // update bytesWritten, loop untill everything is send.
 }
+
+// if (connection.isAutoindex == true) {
+//     // autoindex stuff
+// }
+// else if (connection.isCGI == true) {
+//     // cgi stuff
+// }
+// else {
+//     ifstream file(path);
+//     if (!file.is_open())
+//         response.setStatusCode(404);
+//     if (response.getStatusCode() == 404 && !file.is_open()) {
+//         content = fourZeroFourBody();
+//         path = "404.html";
+//         response.setStatusCode(404);
+//     }
+//     else {
+//         content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+//     }
+// }
+
