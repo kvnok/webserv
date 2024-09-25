@@ -1,16 +1,6 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        ::::::::            */
-/*   httpParse.cpp                                      :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2024/06/03 09:56:01 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/08 15:04:18 by jvorstma      ########   odam.nl         */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "httpRequest.hpp"
+#include "Connection.hpp"
 
 bool find_string(const std::string& str, const std::string& boundary) {
 	if (str.find(boundary) != std::string::npos) {
@@ -96,7 +86,7 @@ static bool validatePath(string const path, Request& request) {
 	return (true);	
 }
 
-static bool	parseRequestLine(string line, Request& request) {
+static bool	parseRequestLine(const string line, Request& request) {
 	string			requestLine[4];
 	istringstream	lineStream(line);
 
@@ -120,29 +110,34 @@ static bool	parseRequestLine(string line, Request& request) {
 	return (true);
 }
 
-string findFileName(const string& contentType)
-{
-    size_t startPos = contentType.find("filename=\"");
+string findFileName(const string& contentType) {
+	string fileName = "filename=\"";
+    size_t startPos = contentType.find(fileName);
     if (startPos == string::npos)
         return "";
-    startPos += 10; //why plus 10??
+    startPos += fileName.size();
     size_t endPos = contentType.find("\"", startPos);
     if (endPos == string::npos)
         return "";
     return (contentType.substr(startPos, endPos - startPos));
 }
 
-void	checkCBody(vector<char> requestData, Request& request) {
-	string buffer(requestData.begin(), requestData.end());
-	request.setBody(buffer);
-	request.setState(DONE);
-	//use the chunked size instead of content length
+void	checkChunkedBody(Connection& connection) {
+	size_t readLength = stoul(connection.getRequest().getHeaderValue("Content-Length"));
+	if (connection.getBuffer().size() == readLength)
+		connection.getRequest().setReadState(BODY);
+	//still need to implement chunked method
 	return ;	
 }
 
-void	checkNBody(vector<char> requestData, Request& request) {
-	if (requestData.size() != stoll(request.getHeaderValue("Content-Length")))
-		return ;
+void	checkContentLengthBody(Connection& connection) {
+	size_t readLength = stoul(connection.getRequest().getHeaderValue("Content-Length"));
+	if (connection.getBuffer().size() == readLength)
+		connection.getRequest().setReadState(BODY);
+	return ;	
+}
+
+void	parseBody(const vector<char> requestData, Request& request) {
 	string buffer(requestData.begin(), requestData.end());
 	request.setBody(buffer);
 	if (find_string(request.getHeaderValue("Content-Type"), "multipart/form-data")) {
@@ -154,42 +149,44 @@ void	checkNBody(vector<char> requestData, Request& request) {
 	}
 	if (!request.getBoundary().empty())
 		request.setContentUploadFile(buffer);
-	request.setState(DONE);
-	return ;	
+	request.setReadState(DONE);
+	return ;
 }
 
-void	checkHeaders(vector<char> requestData, Request& request) {
+void	checkHeaders(const vector<char> requestData, Request& request) {
 	string			buffer(requestData.begin(), requestData.end());
 	istringstream	requestStream(buffer);
 	string			line;
 
 	if (!getline(requestStream, line)) {
 		request.setStatusCode(400);
-		request.setState(DONE);
+		request.setReadState(DONE);
 		return ;
 	}
 	if (!parseRequestLine(line, request)) {
-		request.setState(DONE);
+		request.setReadState(DONE);
 		return ;
 	}
 	if (!parseHeaders(requestStream, line, request)) {
-		request.setState(DONE);
+		request.setReadState(DONE);
 		return ;
 	}
 	if (request.getHeaderValue("Transfer-Encoding") == "chunked")
-		request.setState(CBODY);
+		request.setReadState(CHUNKED_BODY);
 	else if (!request.getHeaderValue("Content-Length").empty())
-		request.setState(NBODY);
+		request.setReadState(CONTENT_LENGTH_BODY);
 	else
-		request.setState(DONE);
+		request.setReadState(DONE);
 	return ;
 }
 
-bool	findHeadersEnd(const vector<char> data) {
+bool	hasAllHeaders(const vector<char> data) {
 	string toFind = "\r\n\r\n";
 	auto i = search(data.begin(), data.end(), toFind.begin(), toFind.end());
 	return (i != data.end());
 }
+
+
 
 //*****************************************************************************************/
 	// if there is a body but not the correct header:  error? or not possible?

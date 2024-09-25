@@ -1,14 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        ::::::::            */
-/*   Servers.cpp                                        :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: jvorstma <jvorstma@student.codam.nl>         +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2024/07/16 14:17:40 by jvorstma      #+#    #+#                 */
-/*   Updated: 2024/08/06 11:16:47 by jvorstma      ########   odam.nl         */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "Servers.hpp"
 
@@ -30,7 +19,7 @@ void    Servers::set_connections(vector<Connection> &connections) { this->_conne
 void    Servers::set_fds(vector<pollfd> &fds) { this->_fds = fds; }
 
 void    Servers::setFds() {
-	for (int i = 0; i < this->_serverBlocks.size(); i++) {
+	for (size_t i = 0; i < this->_serverBlocks.size(); i++) {
 		pollfd fd;
 		fd.fd = this->_serverBlocks[i].getFd();
 		fd.events = POLLIN;
