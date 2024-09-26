@@ -45,11 +45,11 @@ class Request {
 		string				_body;
 		int					_statusCode;
 		readState			_readState;
-		string				_boundary;
-		string				_contentUploadFile;
-		int 				_maxLengthUploadContent;
-		int					_bytesCopied;
-		string				_uploadedFile;
+		string				_boundary; //
+		string				_contentUploadFile; //
+		int 				_maxLengthUploadContent; //
+		int					_bytesCopied; //
+		string				_uploadedFile; //
 		bool 				_isAutoindex;
 		bool				_isCGI;
 		string				_CGIextension;
