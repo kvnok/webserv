@@ -25,7 +25,6 @@ void check_baseline(Request &request, string &file, string &path, ServerBlock se
 	cout << YEL << "root: " << root << RESET << endl;
 	string root_and_file = root + "/" + file;
 	root_and_file = regex_replace(root_and_file, regex("//+"), "/");
-	request.setStatusCode(200);
 
 	if (file.empty()) { // no file, check for index
 		cout << YEL << "no file, check for index" << RESET << endl;
@@ -59,7 +58,7 @@ void check_baseline(Request &request, string &file, string &path, ServerBlock se
 	}
 
 	int statusCode = request.getStatusCode();
-	if (statusCode != 200) {
+	if (statusCode != 200 && (statusCode < 300 || statusCode >= 400)) {
 		path = err_pages[statusCode];
 	}
 }
@@ -79,17 +78,11 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 	string root = loc.get_root();
 	string root_and_file = root + "/" + file;
 	root_and_file = regex_replace(root_and_file, regex("//+"), "/");
-	request.setStatusCode(200);
 
 	if (file.empty()) { // no file, check for index
 		cout << YEL << "no file, check for index" << RESET << endl;
 		if (loc.get_index() != "")
 		{
-			if (loc.get_cgi_extension() != "")
-			{
-				request.setIsCGI(true);
-				request.setCGIextension(loc.get_cgi_extension());
-			}
 			cout << YEL << "index: " << loc.get_index() << RESET << endl;
 			string root_and_index = root + "/" + loc.get_index();
 			root_and_index = regex_replace(root_and_index, regex("//+"), "/");
@@ -104,7 +97,7 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 			}
 		}
 		else if (loc.get_autoindex() == true) {
-			cout << YEL << "autoindex" << RESET << endl;
+			cout << YEL << "AUTOINDEX CASE" << RESET << endl;
 			// do autoindex
 			request.setIsAutoindex(true);
 			// for now just 404 because autoindex is not implemented yet
@@ -117,6 +110,12 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 	}
 	else if (!file.empty()) { // check for file
 		cout << YEL << "check for file" << RESET << endl;
+		if (loc.get_is_cgi() == true)
+		{
+			cout << "identified that its an CGI" << endl;
+			request.setIsCGI(true);
+			request.setCGIextension(loc.get_cgi_extension());
+		}
 		ifstream stream(root_and_file);
 		if (stream.is_open() && is_directory(root_and_file) == false) {
 			cout << YEL << "file found" << RESET << endl;
@@ -132,7 +131,7 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 	}
 
 	int statusCode = request.getStatusCode();
-	if (statusCode != 200) {
+	if (statusCode != 200 && (statusCode < 300 || statusCode >= 400)) {
 		path = err_pages[statusCode];
 	}
 }
@@ -190,11 +189,7 @@ void request_path_handler(Connection& connection) {
 	Request& request = connection.getRequest();
 	ServerBlock serverBlock = connection.getServer();
 	string path = request.getPath();
-	connection.getRequest().setIsAutoindex(false);
-	// cout << BOLD << "REQUEST PATH HANDLER" << RESET << endl;
-	// cout << BOLD << request.getPath() << RESET << endl;
-	// ok_print_server_block(serverBlock);
-	// first check if its just / or /file or /folder/
+	request.setStatusCode(200);
 	string folder;
 	string file;
 	parse_path(path, folder, file);
