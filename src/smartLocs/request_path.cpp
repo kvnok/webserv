@@ -2,6 +2,19 @@
 #include "ServerBlock.hpp"
 #include "autoindex.hpp"
 
+void print_the_loc(Loc loc) {
+	cout << "loc: " << endl;
+	cout << "path: " << loc.get_path() << endl;
+	cout << "root: " << loc.get_root() << endl;
+	cout << "index: " << loc.get_index() << endl;
+	cout << "autoindex: " << loc.get_autoindex() << endl;
+	cout << "is_cgi: " << loc.get_is_cgi() << endl;
+	cout << "cgi_extension: " << loc.get_cgi_extension() << endl;
+	cout << "is_redirect: " << loc.get_is_redirect() << endl;
+	cout << "redirect: " << loc.get_redirect() << endl;
+	cout << "redirect_code: " << loc.get_redirect_code() << endl;
+}
+
 static void parse_path(string &path, string &folder, string &file) {
 	if (path == "/") {
 		cout << YEL << "path is /" << RESET << endl;
@@ -74,6 +87,7 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 		path = folder + "/" + err_pages[404];
 		return;
 	}
+	// print_the_loc(loc);
 
 	string root = loc.get_root();
 	string root_and_file = root + "/" + file;

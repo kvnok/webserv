@@ -23,7 +23,8 @@ string do_autoindex(const string& path) {
 			// Get file size
 			uintmax_t filesize = fs::file_size(entry);
 
-			oss << "<tr><td><a href=\"" << filename << "\">" << filename << "</a></td>";
+			// oss << "<tr><td><a href=\"" << filename << "\">" << filename << "</a></td>";
+			oss << "<tr><td>" << filename << "</a></td>";
 			oss << "<td>" << buffer << "</td>";
 			oss << "<td>" << filesize << "</td></tr>";
 		}
