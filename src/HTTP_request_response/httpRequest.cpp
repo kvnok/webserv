@@ -88,12 +88,13 @@ void handleRequest(Connection& connection) {
 	const int clientSocket = connection.getFd();
 	Request& request = connection.getRequest();
 	
+	if (request.getMethod() == "POST" && request.getPath() == "/www/deleteFile.html") // kevin what about smart loc?
+		request.setMethod("DELETE");
 	cout << RED << "in handleRequest:" << request.getPath() << "     "  << request.getMethod() << RESET << endl;
-	
 	if (request.getMethod() == "GET") {
 		request_path_handler(connection);
 	}
-	else if (request.getMethod() == "POST" && request.getPath() == "/www/deleteFile.html") {
+	else if (request.getMethod() == "DELETE") {
         cout << "Delete method" << endl;
         delete_method(clientSocket, request);
 	}
