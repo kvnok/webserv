@@ -1,14 +1,4 @@
 #include "httpResponse.hpp"
-// #include <iostream>
-// #include <string>
-// #include <unordered_map>
-// #include <sstream>
-// #include <sys/types.h>
-// #include <sys/socket.h>
-// #include <netinet/in.h>
-// #include <unistd.h>
-// #include <arpa/inet.h>
-// #include <filesystem>
 #include "CGI.hpp"
 
 unordered_map<string, string> parse_form_data(const string &body) {
@@ -46,8 +36,6 @@ bool createDirectories(const string& path) {
     return filesystem::create_directories(path);
 }
 
-// remove boundaries from content in progress
-
 string removeBoundaries(const string& content, const string& boundary) {
     string newContent;
 
@@ -61,6 +49,7 @@ string removeBoundaries(const string& content, const string& boundary) {
 void writeFile(const string& storagePath, const string& fileName, const string& content, Request &request) {
     string fullPath = storagePath + fileName;
     
+    cout << "Full path: " << fullPath << endl;
     if (!filesystem::exists(storagePath))
         filesystem::create_directories(storagePath);
     if (filesystem::exists(fullPath)) {
@@ -69,7 +58,6 @@ void writeFile(const string& storagePath, const string& fileName, const string& 
             cerr << "Failed to open file for writing: " << fullPath << endl;
             return;
         }
-        // outFile << removeBoundaries(content, request.getBoundary());
         outFile << content;
     }
     else {
@@ -79,7 +67,6 @@ void writeFile(const string& storagePath, const string& fileName, const string& 
             return;
         }
         outFile << removeBoundaries(content, request.getBoundary());
-        // outFile << content;
     }
 }
 
@@ -91,38 +78,57 @@ bool findLastBoundary(const string& contentType, const string& boundary) {
 }
 
 
+
+static void run_script(const string& script_path) {
+    pid_t pid = fork();
+    int status;
+
+    if (pid == -1) {
+        cerr << "Failed to fork" << endl;
+        return ;
+    }
+    if (pid == 0) {
+        if (waitpid(pid, &status, 0) == -1) {
+            perror("waitpid");
+            exit(EXIT_FAILURE);
+        }
+    }
+    else {
+        cout << "Parent process" << endl;
+    }
+}
+
+void execPythonScript(const std::string &file_name) {
+    // Path to the Python interpreter and the CGI script
+    char *python_cgi = (char *)"/usr/bin/python3";
+    char *script_path = (char *)"/var/cgi-bin/upload_file_in_a_folder.cgi";  // Adjust path
+
+    // Prepare the arguments (script name, file name, file content)
+    char *args[] = {(char *)file_name.c_str(), nullptr};
+
+    // Execute the Python CGI script
+    if (execve(python_cgi, args, nullptr) == -1) {
+        cerr << "Failed to execute Python script" << endl;
+    }
+}
+
 void post_method(int clientSocket, Request &request) {
     string uploadedFile;
     string storage = "www/storage/";
-    // string content;
 
+    cout << "In post method" << endl;
     if (!request.getBoundary().empty() && request.getBytesCopied() <= stol(request.getHeaderValue("Content-Length"))){
         writeFile(storage, request.getUploadedFile(), request.getContentUploadFile(), request);
+        // execPythonScript(request.getUploadedFile(), request.getContentUploadFile());
+        // test_cgi("/home/ibehluli/Desktop/webserver/var/cgi-bin/upload_file_in_a_folder.cgi");
         request.setBytesCopied(request.getBytesCopied() + request.getMaxLengthUploadContent());
         if (request.getBytesCopied() == stol(request.getHeaderValue("Content-Length"))) {
-            // -----------------------------
-            // run cgi to store the file in the right place
-            // vector<string> args = {
-            //     "python3",
-            //     "upload_file_in_a_folder.cgi", // script_to_execute
-            //     "root/index.html", // use smartKevinFindLocation file_path where we want to store the file
-            //     "www/storage/filename" // file_name
-            // };
-    
-            // // Convert the vector of strings to an array of char* for execve
-            // vector<char*> c_args;
-            // for (auto& arg : args) {
-            //     c_args.push_back(const_cast<char*>(arg.c_str()));
-            // }
-            // c_args.push_back(nullptr); // Null-terminate the array
-
-            // // Execute the new script
-            // execve("/usr/bin/python3", c_args.data(), nullptr);
-            // writeFile(storage, uploadedFile, request.getContentUploadFile());
-
             request.setPath("base.html");
         }
     }
     else
-        request.setPath("wrongSizePost.html");
+    {
+        // execPythonScript(request.getPath());
+        cerr << RED << "Error with a post Request" << RESET << endl; 
+    }
 }
