@@ -40,7 +40,7 @@ void    Servers::writeResponse(Connection& connection) {
     connection.getResponse().setClientSocket(connection.getFd());
     connection.getResponse().setVersion(connection.getRequest().getVersion());
     connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
-    createResponse(connection.getResponse(), connection.getRequest().getPath());
+    createResponse(connection);
     // if all bytes have been written, so only set to close when the whole response has been written and send
     if (connection.getRequest().getHeaderValue("Connection") == "close")
         connection.setNextState(CLOSE);

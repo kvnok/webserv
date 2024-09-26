@@ -1,6 +1,7 @@
 #include "httpResponse.hpp"
 #include "httpStatus.hpp"
 #include "autoindex.hpp"
+#include "Connection.hpp"
 
 Response::Response() : _version(""), _statusCode(0), _body(""), _clientSocket(0) {}; // maybe not set statuscode and clientsocket to -1?
 Response::Response(int const clientSocket, int const statusCode, string const version) : _version(version), _statusCode(statusCode), _body(""), _clientSocket(clientSocket) { }
@@ -64,14 +65,18 @@ void    Response::reset() {
     this->_body = "";
 }
 
-void createResponse(Response& response, string path) {
+void	createResponse(Connection& connection) {
+    Response& response = connection.getResponse();
+    Request& request = connection.getRequest();
+    string path = connection.getRequest().getPath();
     string content;
-    if (connection.isAutoindex == true) {
+    
+    if (request.getIsAutoindex() == true) {
         cout << BLU << "CALLING AUTOINDEX" << RESET << endl;
         cout << GRN << "ai: |" << path << "|" << RESET << endl;
         content = do_autoindex(path);
     }
-    else if (connection.isCGI == true) {
+    else if (request.getIsCGI() == true) {
         // cgi stuff
     }
     else {

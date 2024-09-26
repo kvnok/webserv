@@ -97,8 +97,9 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 			}
 		}
 		else if (loc.get_autoindex() == true) {
-			cout << YEL << "AUTOINDEX CASE" << RESET << endl;
+			cout << GRN << "AUTOINDEX CASE" << RESET << endl;
 			request.setIsAutoindex(true);
+			path = root;
 		}
 		else { // no index, no autoindex
 			cout << YEL << "no index, no autoindex" << RESET << endl;
@@ -210,7 +211,6 @@ void request_path_handler(Connection& connection) {
 		// cout << BOLD << "CHECKING IN LOC BLOCKS" << RESET << endl;
 		check_locs(connection, request, folder, file, path, err_pages, sLocs);
 	}
-	// replace // with /
 	request.setPath(path);
-	// cout << BOLD << "END OF REQUEST PATH HANDLER: " << request.getPath() << RESET << endl;
+	cout << BOLD << "END OF REQUEST PATH HANDLER: " << request.getPath() << RESET << endl;
 }
