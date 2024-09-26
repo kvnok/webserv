@@ -65,7 +65,7 @@ void    Servers::readRequest(Connection& connection) {
         return ;
     }
     buffer.resize(bytes);
-//  cout << RED << string(buffer.begin(), buffer.end()) << RESET << endl;
+    cout << RED << string(buffer.begin(), buffer.end()) << RESET << endl;
     connection.addToBuffer(buffer);
     if (connection.getRequest().getReadState() == START) {
         if (hasAllHeaders(connection.getBuffer()))
