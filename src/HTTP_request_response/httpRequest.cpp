@@ -51,6 +51,7 @@ void	Request::setMethod(string const method) { this->_method = method; }
 void	Request::setPath(string const path) { this->_path = path; }
 void	Request::setVersion(string const version) { this->_version = version; }
 void	Request::setBody(string body) { this->_body = body; }
+void	Request::addToBody(string const bodyPart) { this->_body.append(bodyPart); }
 void	Request::addHeader(string const key, string const value) { this->_header[key] = value; }
 void	Request::setHeader(map<string, string> const header) { this->_header = header; }
 void	Request::setStatusCode(int const statusCode) { this->_statusCode = statusCode; }
@@ -124,6 +125,7 @@ void handleRequest(Connection& connection, Request& request) {
 	else if (request.getMethod() == "DELETE") {
         cout << "Delete method" << endl;
         delete_method(clientSocket, request);
+	}
 	else if (request.getMethod() == "POST")
 		post_method(clientSocket, request);
 }

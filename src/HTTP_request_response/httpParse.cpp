@@ -123,34 +123,76 @@ string findFileName(const string& contentType) {
 }
 
 void	checkChunkedBody(Connection& connection) {
-	if (find_end_chunk_in_buffer) {
-		get_chunk_size_from_buffer();
-		cut_of_chunk_size_part_from_buffer()
-		add_chunk_to_body();
-		clear_buffer();
+	vector<char> buf = connection.getBuffer();
+	string d = "\r\n";
+	if (buf.empty())
+		return ;
+	while (!buf.empty()) {
+		string sizeString;
+		string toAdd;
+		size_t chunkSize = 0;
+		auto endSize = search(buf.begin(), buf.end(), d.begin(), d.end());
+		if (endSize == buf.end())
+			return ;
+		sizeString.assign(buf.begin(), endSize);
+		try {
+			chunkSize = stoul(sizeString, nullptr, 16);
+		} catch (...) {
+			cerr << "stoul failed in chunked body" << endl;
+			return ;
+		}
+		endSize += d.size();
+		auto endChunk = search(endSize + d.size(), buf.end(), d.begin(), d.end());
+		if (endChunk == buf.end());
+			return ;
+		toAdd.assign(endSize + d.size(), endChunk);
+		if (chunkSize == 0) {
+			connection.clearBuffer();
+			connection.getRequest().setReadState(DONE);
+			return ;
+		}
+		else {
+			if (toAdd.size() != chunkSize) {
+				cout << "chunk does not match the expected size" << endl;
+				return ;
+			}
+			else {
+				connection.getRequest().addToBody(toAdd);
+				buf.erase(buf.begin(), endChunk + d.size());
+			}
+		}
 	}
 	return ;
 }
 
 void	checkContentLengthBody(Connection& connection) {
-	size_t readLength = stoul(connection.getRequest().getHeaderValue("Content-Length"));
-	if (connection.getBuffer().size() == readLength)
-		connection.getRequest().setReadState(BODY);
+	size_t readLength = 0;
+	try {
+		readLength = stoul(connection.getRequest().getHeaderValue("Content-Length"));
+	} catch (...) {
+		cerr << "stoul failed in content length body" << endl;
+		return ;
+	}
+	if (connection.getBuffer().size() == readLength) {
+		string buffer(connection.getBuffer().begin(), connection.getBuffer().end());
+		connection.getRequest().setBody(buffer);
+		connection.getRequest().setReadState(DONE);
+	}
 	return ;	
 }
 
 void	parseBody(const vector<char> requestData, Request& request) {
 	string buffer(requestData.begin(), requestData.end());
 	request.setBody(buffer);
-	if (find_string(request.getHeaderValue("Content-Type"), "multipart/form-data")) {
-		request.setBoundary(findBoundary(request.getHeaderValue("Content-Type")));
-		request.setContentUploadFile(buffer);
-		request.setMaxLengthUploadContent(buffer.size());
-		if (request.getUploadedFile().empty())
-    	    request.setUploadeFile(findFileName(request.getContentUploadFile()));
-	}
-	if (!request.getBoundary().empty())
-		request.setContentUploadFile(buffer);
+	// if (find_string(request.getHeaderValue("Content-Type"), "multipart/form-data")) {
+	// 	request.setBoundary(findBoundary(request.getHeaderValue("Content-Type")));
+	// 	request.setContentUploadFile(buffer);
+	// 	request.setMaxLengthUploadContent(buffer.size());
+	// 	if (request.getUploadedFile().empty())
+    // 	    request.setUploadeFile(findFileName(request.getContentUploadFile()));
+	// }
+	// if (!request.getBoundary().empty())
+		// request.setContentUploadFile(buffer);
 	request.setReadState(DONE);
 	return ;
 }

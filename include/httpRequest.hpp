@@ -16,7 +16,7 @@ using namespace std;
 
 #define MAX_URI_LENGTH 4096
 
-enum readState {START, HEADERS, CHUNKED_BODY, CONTENT_LENGTH_BODY, BODY, DONE};
+enum readState {START, HEADERS, CHUNKED_BODY, CONTENT_LENGTH_BODY, DONE};
 
 const set<string> validHttpMethods = {
 	"GET", "POST", "DELETE",
@@ -64,6 +64,7 @@ class Request {
 		void	setPath(string const path);
 		void	setVersion(string const version);
 		void	setBody(string const body);
+		void	addToBody(string const bodyPart);
 		void	addHeader(string const key, string const value);
 		void	setHeader(map<string, string> const header);
 		void	setStatusCode(int const statusCode);

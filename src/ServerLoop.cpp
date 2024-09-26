@@ -65,7 +65,7 @@ void    Servers::readRequest(Connection& connection) {
         return ;
     }
     buffer.resize(bytes);
-    cout << RED << string(buffer.begin(), buffer.end()) << RESET << endl;
+    //cout << RED << string(buffer.begin(), buffer.end()) << RESET << endl;
     connection.addToBuffer(buffer);
     if (connection.getRequest().getReadState() == START) {
         if (hasAllHeaders(connection.getBuffer()))
@@ -79,8 +79,6 @@ void    Servers::readRequest(Connection& connection) {
         checkChunkedBody(connection);
     if (connection.getRequest().getReadState() == CONTENT_LENGTH_BODY)
         checkContentLengthBody(connection);
-    if (connection.getRequest().getReadState() == BODY)
-        parseBody(connection.getBuffer(), connection.getRequest());
     if (connection.getRequest().getReadState() == DONE) {
         connection.getBuffer().clear();
         connection.getBuffer().resize(0);
