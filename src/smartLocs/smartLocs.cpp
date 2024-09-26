@@ -32,11 +32,9 @@ void smartLocs::print_locs() {
 map<string, Loc> &smartLocs::get_locs() { return _locs; }
 
 Loc &smartLocs::get_loc(string &path) {
-	map<string, Loc>::iterator it = _locs.begin();
-	for (; it != _locs.end(); it++) {
-		if (path.find(it->first) != string::npos) {
-			return it->second;
-		}
+	map<string, Loc>::iterator it = _locs.find(path);
+	if (it != _locs.end()) {
+		return it->second;
 	}
 	throw invalid_argument("No loc found");
 }
