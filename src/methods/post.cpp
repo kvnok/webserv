@@ -128,7 +128,7 @@ void post_method(int clientSocket, Request &request) {
     }
     else
     {
-        // execPythonScript(request.getPath());
-        cerr << RED << "Error with a post Request" << RESET << endl; 
+        execPythonScript(request.getPath());
+        // cerr << RED << "Error with a post Request" << RESET << endl; 
     }
 }
