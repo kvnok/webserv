@@ -123,11 +123,13 @@ string findFileName(const string& contentType) {
 }
 
 void	checkChunkedBody(Connection& connection) {
-	size_t readLength = stoul(connection.getRequest().getHeaderValue("Content-Length"));
-	if (connection.getBuffer().size() == readLength)
-		connection.getRequest().setReadState(BODY);
-	//still need to implement chunked method
-	return ;	
+	if (find_end_chunk_in_buffer) {
+		get_chunk_size_from_buffer();
+		cut_of_chunk_size_part_from_buffer()
+		add_chunk_to_body();
+		clear_buffer();
+	}
+	return ;
 }
 
 void	checkContentLengthBody(Connection& connection) {
