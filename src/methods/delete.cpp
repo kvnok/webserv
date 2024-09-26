@@ -40,9 +40,13 @@ void delete_method(int clientSocket, Request& request) {
 	else
 	{
 		// File successfully deleted
-		cout << RED << "File: " << file << " deleted successfully." << RESET << endl;
-		removeFileFromStorage(file); // Function to delete the file
-		request.setPath("www/fileDeleted.html");
-		return ;
+		if (request.getBody().empty())
+			cout << RED << "File: " << file << "Delete with curl not working" << RESET << endl;
+		else
+		{
+			cout << RED << "File: " << file << " deleted successfully." << RESET << endl;
+			removeFileFromStorage(file); // Function to delete the file
+			request.setPath("www/fileDeleted.html");
+		}
 	}
 }

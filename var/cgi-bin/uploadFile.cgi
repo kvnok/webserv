@@ -5,7 +5,7 @@ import sys
 
 # Function to create the storage directory if it doesn't exist
 def create_storage_directory():
-    storage_path = "/www/storage/"
+    storage_path = "www/storage/"
     if not os.path.exists(storage_path):
         try:
             os.makedirs(storage_path)

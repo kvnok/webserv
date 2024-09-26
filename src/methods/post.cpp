@@ -98,18 +98,17 @@ static void run_script(const string& script_path) {
     }
 }
 
-void execPythonScript(const std::string &file_name, const std::string &file_content) {
+void execPythonScript(const std::string &file_name) {
     // Path to the Python interpreter and the CGI script
     char *python_cgi = (char *)"/usr/bin/python3";
     char *script_path = (char *)"/var/cgi-bin/upload_file_in_a_folder.cgi";  // Adjust path
 
     // Prepare the arguments (script name, file name, file content)
-    char *args[] = {script_path, (char *)file_name.c_str(), (char *)file_content.c_str(), nullptr};
+    char *args[] = {(char *)file_name.c_str(), nullptr};
 
     // Execute the Python CGI script
     if (execve(python_cgi, args, nullptr) == -1) {
-        perror("Error executing execve");
-        exit(EXIT_FAILURE);
+        cerr << "Failed to execute Python script" << endl;
     }
 }
 
@@ -117,15 +116,19 @@ void post_method(int clientSocket, Request &request) {
     string uploadedFile;
     string storage = "www/storage/";
 
+    cout << "In post method" << endl;
     if (!request.getBoundary().empty() && request.getBytesCopied() <= stol(request.getHeaderValue("Content-Length"))){
-        // writeFile(storage, request.getUploadedFile(), request.getContentUploadFile(), request);
+        writeFile(storage, request.getUploadedFile(), request.getContentUploadFile(), request);
         // execPythonScript(request.getUploadedFile(), request.getContentUploadFile());
-        test_cgi("/home/ibehluli/Desktop/webserver/var/cgi-bin/upload_file_in_a_folder.cgi");
+        // test_cgi("/home/ibehluli/Desktop/webserver/var/cgi-bin/upload_file_in_a_folder.cgi");
         request.setBytesCopied(request.getBytesCopied() + request.getMaxLengthUploadContent());
         if (request.getBytesCopied() == stol(request.getHeaderValue("Content-Length"))) {
             request.setPath("base.html");
         }
     }
     else
-        request.setStatusCode(404);
+    {
+        // execPythonScript(request.getPath());
+        cerr << RED << "Error with a post Request" << RESET << endl; 
+    }
 }
