@@ -31,7 +31,6 @@ void delete_method(int clientSocket, Request& request) {
 	string file = create_file_name(request.getBody());
 
 	// I need it from here kevin kkrooooooon
-	file = "www/storage/" + file;
 	if (!pathExist(file)) {
 		cout << BOLD << "File: " << file << " not found." << RESET << endl;
 		request.setPath("www/fileNotDeleted.html");
@@ -44,6 +43,7 @@ void delete_method(int clientSocket, Request& request) {
 			cout << RED << "File: " << file << "Delete with curl not working" << RESET << endl;
 		else
 		{
+			file = "www/storage/" + file;
 			cout << RED << "File: " << file << " deleted successfully." << RESET << endl;
 			removeFileFromStorage(file); // Function to delete the file
 			request.setPath("www/fileDeleted.html");

@@ -77,40 +77,52 @@ bool findLastBoundary(const string& contentType, const string& boundary) {
 	return (true);
 }
 
-
-
-static void run_script(const string& script_path) {
-    pid_t pid = fork();
-    int status;
-
-    if (pid == -1) {
-        cerr << "Failed to fork" << endl;
-        return ;
-    }
-    if (pid == 0) {
-        if (waitpid(pid, &status, 0) == -1) {
-            perror("waitpid");
-            exit(EXIT_FAILURE);
-        }
-    }
-    else {
-        cout << "Parent process" << endl;
-    }
-}
-
-void execPythonScript(const std::string &file_name) {
-    // Path to the Python interpreter and the CGI script
+void execPythonScript(const std::string &file_path, const std::string &destination_folder) {
     char *python_cgi = (char *)"/usr/bin/python3";
-    char *script_path = (char *)"/var/cgi-bin/upload_file_in_a_folder.cgi";  // Adjust path
+    char *script_path = (char *)"var/cgi-bin/upload_file_in_a_folder.cgi";  // Adjust path
 
-    // Prepare the arguments (script name, file name, file content)
-    char *args[] = {(char *)file_name.c_str(), nullptr};
+    // Prepare the arguments (script name, file path, destination folder)
+    char *args[] = {python_cgi, script_path, (char *)file_path.c_str(), (char *)destination_folder.c_str(), nullptr};
 
     // Execute the Python CGI script
     if (execve(python_cgi, args, nullptr) == -1) {
         cerr << "Failed to execute Python script" << endl;
     }
 }
+
+
+static void run_script(const string& script_path, const string& destination_folder) {
+    pid_t pid = fork();
+    int	pipefd[2];
+    int status;
+
+    if (pipe(pipefd) == -1) {
+        cerr << "Failed to create pipe" << endl;
+        return ;
+    }
+    if (pid == -1) {
+        cerr << "Failed to fork" << endl;
+        return ;
+    }
+    if (pid == 0) {
+        cout << "Child process" << endl;
+        close(pipefd[1]);
+        cout << "Script path: " << script_path << endl;
+        execPythonScript("Makefile" , destination_folder);
+    }
+    else {
+        cout << "Parent process" << endl;
+        close(pipefd[0]);
+        if (waitpid(pid, &status, 0) == -1) {
+            cerr << "Failed to wait for child process" << endl;
+            return ;
+        }
+        else {
+            cout << "Child process exited with status " << status << endl;
+        }
+    }
+}
+
 
 void post_method(int clientSocket, Request &request) {
     string uploadedFile;
@@ -128,7 +140,8 @@ void post_method(int clientSocket, Request &request) {
     }
     else
     {
-        execPythonScript(request.getPath());
+        cout << "HELEOEOE" << endl;
+        run_script(request.getPath(), storage);
         // cerr << RED << "Error with a post Request" << RESET << endl; 
     }
 }
