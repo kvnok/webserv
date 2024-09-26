@@ -98,10 +98,7 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 		}
 		else if (loc.get_autoindex() == true) {
 			cout << YEL << "AUTOINDEX CASE" << RESET << endl;
-			// do autoindex
 			request.setIsAutoindex(true);
-			// for now just 404 because autoindex is not implemented yet
-			request.setStatusCode(404);
 		}
 		else { // no index, no autoindex
 			cout << YEL << "no index, no autoindex" << RESET << endl;

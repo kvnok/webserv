@@ -1,6 +1,6 @@
-
 #include "httpResponse.hpp"
 #include "httpStatus.hpp"
+#include "autoindex.hpp"
 
 Response::Response() : _version(""), _statusCode(0), _body(""), _clientSocket(0) {}; // maybe not set statuscode and clientsocket to -1?
 Response::Response(int const clientSocket, int const statusCode, string const version) : _version(version), _statusCode(statusCode), _body(""), _clientSocket(clientSocket) { }
@@ -66,40 +66,30 @@ void    Response::reset() {
 
 void createResponse(Response& response, string path) {
     string content;
-    ifstream file(path);
-    if (!file.is_open())
-        response.setStatusCode(404);
-    if (response.getStatusCode() == 404 && !file.is_open()) {
-        content = fourZeroFourBody();
-        path = "404.html";
-        response.setStatusCode(404);
+    if (connection.isAutoindex == true) {
+        cout << BLU << "CALLING AUTOINDEX" << RESET << endl;
+        cout << GRN << "ai: |" << path << "|" << RESET << endl;
+        content = do_autoindex(path);
     }
-    else
-        content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+    else if (connection.isCGI == true) {
+        // cgi stuff
+    }
+    else {
+        ifstream file(path);
+        if (!file.is_open())
+            response.setStatusCode(404);
+        if (response.getStatusCode() == 404 && !file.is_open()) {
+            content = fourZeroFourBody();
+            path = "404.html";
+            response.setStatusCode(404);
+        }
+        else {
+            content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+        }
+    }
     response.setBody(content);
     response.setHeaders(content, path, "keep-alive");
     response.sendResponse();
     // sending a response in chunks => read how much is send/how much you want to send
     // update bytesWritten, loop untill everything is send.
 }
-
-// if (connection.isAutoindex == true) {
-//     // autoindex stuff
-// }
-// else if (connection.isCGI == true) {
-//     // cgi stuff
-// }
-// else {
-//     ifstream file(path);
-//     if (!file.is_open())
-//         response.setStatusCode(404);
-//     if (response.getStatusCode() == 404 && !file.is_open()) {
-//         content = fourZeroFourBody();
-//         path = "404.html";
-//         response.setStatusCode(404);
-//     }
-//     else {
-//         content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-//     }
-// }
-
