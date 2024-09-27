@@ -115,8 +115,6 @@ void  Request::reset() {
 void handleRequest(Connection& connection, Request& request) {
 	const int clientSocket = connection.getFd();
 	
-	if (request.getMethod() == "POST" && request.getPath() == "/var/www/deleteFile.html") // isCGI = true?
-		request.setMethod("DELETE");
 	cout << RED << "in handleRequest:" << request.getPath() << "     "  << request.getMethod() << RESET << endl;
 	if (request.getMethod() == "GET") {
 		request_path_handler(connection);
