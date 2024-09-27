@@ -9,6 +9,8 @@
 
 using namespace std;
 
+class Connection;
+
 class Response {
 	private:
 		string				_version;
@@ -41,7 +43,7 @@ class Response {
 		void				reset();
 };
 
-void	createResponse(Response& response, string path);
+void	createResponse(Connection& connection);
 
 void post_method(int clientSocket, Request& request);
 void delete_method(int clientSocket, Request& request);
