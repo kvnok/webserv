@@ -116,6 +116,12 @@ void handleRequest(Connection& connection, Request& request) {
 	const int clientSocket = connection.getFd();
 	
 	cout << RED << "in handleRequest:" << request.getPath() << "     "  << request.getMethod() << RESET << endl;
+	// cout << BLU << request.getHeaderValue("name") << RESET << endl;
+	// cout << "Headers:" << endl;
+	// map<string, string> headers = request.getHeaders();
+	// for (const auto& header : headers) {
+	// 	cout << header.first << ": " << header.second << endl;
+	// }
 	if (request.getMethod() == "GET") {
 		request_path_handler(connection);
 	}
