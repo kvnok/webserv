@@ -80,53 +80,69 @@ bool findLastBoundary(const string& contentType, const string& boundary) {
 	return (true);
 }
 
-void execScript(const std::string &file_path, const std::string &destination_folder) 
+void execScript(char *args[], int pipefd[2], Request &request) 
 {
-    // I think we are going to need to pass the request class as an argument of this function
+    // Ensure correct path for the Python interpreter
     char *python_cgi = (char *)"/usr/bin/python3"; 
-    // It makes more sense to me to put it in the html file
-    char *script_path = (char *)"var/cgi-bin/upload_file_in_a_folder.cgi";  // Adjust path
 
-    // Prepare the arguments (script name, file path, destination folder)
-    char *args[] = {python_cgi, script_path, (char *)file_path.c_str(), (char *)destination_folder.c_str(), nullptr};
+    if (request.getMethod() == "GET") 
+    {
+        cout << "GET script" << endl;
+        close(pipefd[0]);
 
-    // Execute the Python CGI script
-    if (execve(python_cgi, args, nullptr) == -1) {
-        cerr << "Failed to execute Python script" << endl;
+        dup2(pipefd[1], STDOUT_FILENO);
+        close(pipefd[1]);
+
+        if (execve(args[0], args, nullptr) == -1) {
+            cerr << "Failed to execute Python script" << endl;
+            exit(EXIT_FAILURE);  // I dont know how to handle this yet
+        }
+    }
+    else
+    {
+        cout << "POST script" << endl;
+        char *script_path = (char *)"var/cgi-bin/upload_file_in_a_folder.cgi";  // Adjust path
+
+        // we probably need to change this with Jan's code
+        char *args1[] = {python_cgi, script_path, args[0], args[1], nullptr};
+
+        if (execve(python_cgi, args1, nullptr) == -1) {
+            cerr << "Failed to execute Python script" << endl;
+            exit(EXIT_FAILURE);  // I dont know how to handle this yet
+        }
     }
 }
 
-
-static int run_script(const string& script_path, const string& destination_folder) {
-    /////////////////////////////////////////////////////////////
-    //  I think this function can accept the class reqest as an argument or maybe we can just send connection everywhere
-    pid_t pid = fork();
-    int	pipefd[2];
+int run_script(char *args[], Request &request) {
+    int pipefd[2];
     int status;
+    pid_t pid;
 
     if (pipe(pipefd) == -1) {
         cerr << "Failed to create pipe" << endl;
-        return 1;
+        return -1;
     }
-    if (pid == -1) {
+
+    if ((pid = fork()) == -1) {
         cerr << "Failed to fork" << endl;
-        return 1;
+        return -1;
     }
+
     if (pid == 0) {
-        close(pipefd[1]);
-        execScript(script_path , destination_folder);
-    }
+        cout << "Child process" << endl;
+        execScript(args, pipefd, request);
+    } 
     else {
         cout << "Parent process" << endl;
-        close(pipefd[0]);
+        close(pipefd[1]);
         if (waitpid(pid, &status, 0) == -1) {
             cerr << "Failed to wait for child process" << endl;
-            return 1;
+            close(pipefd[0]);  // Clean up
+            return -1;
         }
-        else {
-            cout << "Child process exited with status " << status << endl;
-            // set error code maybe here /* Not Sure */
-        }
+        cout << "Child process finished" << endl;
+        // close(pipefd[0]);  // Close the read of the pipe or not
+        return pipefd[0];
     }
     return 0;
 }
@@ -170,7 +186,12 @@ void post_method(int clientSocket, Request &request)
     /////////////////////////////////////////////////////////////////////////////////////////
     else
     {
-        if (run_script(request.getPath(), storage))
+        // after Jan Gijs extrapolate the body from the request
+        // 
+        // char *args1[] = {(char *)Path.to>cgi, (char *)request.getPath().c_str(), (char *)storage.c_str(), nullptr};
+        string path = request.getPath().c_str();
+        char *args[] = {(char *) path.c_str(), (char *)storage.c_str(), nullptr};
+        if (run_script(args, request))
             request.setPath("www/fileNotUploaded.html");
         else
             request.setPath("www/fileUploaded.html");
