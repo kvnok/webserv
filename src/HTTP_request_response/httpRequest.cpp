@@ -12,11 +12,11 @@ Request::Request()
 	  _body(""),
 	  _statusCode(200),
 	  _readState(START),
-	  _boundary(""),
-	  _contentUploadFile(""),
-	  _maxLengthUploadContent(0),
-	  _bytesCopied(0),
-	  _uploadedFile(""),
+	//   _boundary(""),
+	//   _contentUploadFile(""),
+	//   _maxLengthUploadContent(0),
+	//   _bytesCopied(0),
+	//   _uploadedFile(""),
 	  _isAutoindex(false),
 	  _isCGI(false),
 	  _CGIextension(""),
@@ -34,11 +34,11 @@ Request&	Request::operator=(const Request& other) {
 		this->_body = other._body;
 		this->_statusCode = other._statusCode;
 		this->_readState = other._readState;
-		this->_boundary = other._boundary;
-		this->_contentUploadFile = other._contentUploadFile;
-		this->_maxLengthUploadContent = other._maxLengthUploadContent;
-		this->_bytesCopied = other._bytesCopied;
-		this->_uploadedFile = other._uploadedFile;
+		// this->_boundary = other._boundary;
+		// this->_contentUploadFile = other._contentUploadFile;
+		// this->_maxLengthUploadContent = other._maxLengthUploadContent;
+		// this->_bytesCopied = other._bytesCopied;
+		// this->_uploadedFile = other._uploadedFile;
 		this->_isAutoindex = other._isAutoindex;
 		this->_isCGI = other._isCGI;
 		this->_isRedirect = other._isRedirect;
@@ -56,6 +56,8 @@ void	Request::addHeader(string const key, string const value) { this->_header[ke
 void	Request::setHeader(map<string, string> const header) { this->_header = header; }
 void	Request::setStatusCode(int const statusCode) { this->_statusCode = statusCode; }
 void	Request::setReadState(readState const state) { this->_readState = state; }
+
+void	Request::setCGIPath(string const cgiPath) { this->_cgiPath = cgiPath; }
 void	Request::setIsAutoindex(bool isAutoindex) { this->_isAutoindex = isAutoindex; }
 void	Request::setIsCGI(bool isCGI) { this->_isCGI = isCGI; }
 void	Request::setCGIextension(string const CGIextension) { this->_CGIextension = CGIextension; }
@@ -69,16 +71,18 @@ int                 Request::getStatusCode() const { return (this->_statusCode);
 map<string, string> Request::getHeaders() const { return (this->_header); }
 readState			Request::getReadState() const { return (this->_readState); }
 // ---------------------------
-void	Request::setUploadeFile(string uploadedFile) { this->_uploadedFile = uploadedFile; }
-void	Request::setBytesCopied(long bytesCopied) { this->_bytesCopied = bytesCopied; }
-void	Request::setMaxLengthUploadContent(long maxLengthUploadContent) { this->_maxLengthUploadContent = maxLengthUploadContent; }
-void	Request::setBoundary(string const boundary) { this->_boundary = boundary; }
-void	Request::setContentUploadFile(string const contentUploadFile) { this->_contentUploadFile = contentUploadFile; };
-string	Request::getBoundary() const { return (this->_boundary); }
-string	Request::getContentUploadFile() const { return (this->_contentUploadFile); }
-long	Request::getMaxLengthUploadContent() const { return (this->_maxLengthUploadContent); }
-long	Request::getBytesCopied() const { return (this->_bytesCopied); }
-string	Request::getUploadedFile() const { return (this->_uploadedFile); }
+// void	Request::setUploadeFile(string uploadedFile) { this->_uploadedFile = uploadedFile; }
+// void	Request::setBytesCopied(long bytesCopied) { this->_bytesCopied = bytesCopied; }
+// void	Request::setMaxLengthUploadContent(long maxLengthUploadContent) { this->_maxLengthUploadContent = maxLengthUploadContent; }
+// void	Request::setBoundary(string const boundary) { this->_boundary = boundary; }
+// void	Request::setContentUploadFile(string const contentUploadFile) { this->_contentUploadFile = contentUploadFile; };
+// string	Request::getBoundary() const { return (this->_boundary); }
+// string	Request::getContentUploadFile() const { return (this->_contentUploadFile); }
+// long	Request::getMaxLengthUploadContent() const { return (this->_maxLengthUploadContent); }
+// long	Request::getBytesCopied() const { return (this->_bytesCopied); }
+// string	Request::getUploadedFile() const { return (this->_uploadedFile); }
+
+string	Request::getCGIPath() const { return (this->_cgiPath); }
 bool	Request::getIsAutoindex() const { return (this->_isAutoindex); }
 bool	Request::getIsCGI() const { return (this->_isCGI); }
 string	Request::getCGIextension() const { return (this->_CGIextension); }
@@ -93,22 +97,23 @@ string	Request::getHeaderValue(const string& key) const{
 }
 
 void  Request::reset() {
-  this->_method = "";
-  this->_path = "";
-  this->_version = "";
-  this->_header.clear();
-  this->_body = "";
-  this->_statusCode = 200;
-  this->_readState = START;
-  this->_boundary = "";
-  this->_contentUploadFile = "";
-  this->_maxLengthUploadContent = 0;
-  this->_bytesCopied = 0;
-  this->_uploadedFile = "";
-  this->_isAutoindex = false;
-  this->_isCGI = false;
-  this->_CGIextension = "";
-  this->_isRedirect = false;
+	this->_method = "";
+	this->_path = "";
+	this->_version = "";
+	this->_header.clear();
+	this->_body = "";
+	this->_statusCode = 200;
+	this->_readState = START;
+//   this->_boundary = "";
+//   this->_contentUploadFile = "";
+//   this->_maxLengthUploadContent = 0;
+//   this->_bytesCopied = 0;
+//   this->_uploadedFile = "";
+	this->_cgiPath = "";
+	this->_isAutoindex = false;
+	this->_isCGI = false;
+	this->_CGIextension = "";
+	this->_isRedirect = false;
 }
 
 // connection.getFd(), connection.getRequest(), connection.getServer()
@@ -116,7 +121,7 @@ void  Request::reset() {
 void handleRequest(Connection& connection, Request& request) {
 	const int clientSocket = connection.getFd();
 	
-	cout << RED << "in handleRequest:" << request.getPath() << "     "  << request.getMethod() << RESET << endl;
+	//cout << RED << "in handleRequest:" << request.getPath() << "     "  << request.getMethod() << RESET << endl;
 	// cout << BLU << request.getHeaderValue("name") << RESET << endl;
 	// cout << "Headers:" << endl;
 	// map<string, string> headers = request.getHeaders();
@@ -126,7 +131,7 @@ void handleRequest(Connection& connection, Request& request) {
 	if (request.getMethod() == "GET") { // I ll go to a get method /* dont worry */
 		cout << BLU << "Get method" << RESET << endl;
 		 if (request.getPath() == "/var/cgi-bin/get_time.cgi" || request.getIsCGI() == true) {
-		 	cout << "Test CGI" << endl;
+		 	//cout << "Test CGI" << endl;
 
 			// Store the path in a local string to extend its lifetime
 			string scriptPath = "var/cgi-bin/get_time.cgi"; // Adjust if necessary
@@ -142,10 +147,10 @@ void handleRequest(Connection& connection, Request& request) {
 			char buffer[1024];
         	ssize_t bytesRead;
 
-        	cout << "Output from child process:" << endl;
+        	//cout << "Output from child process:" << endl;
         	while ((bytesRead = read(fdForPolling, buffer, sizeof(buffer) - 1)) > 0) {
             	buffer[bytesRead] = '\0';
-            	cout << buffer;
+            	//cout << buffer;
         	}
 			
 		}
@@ -153,9 +158,11 @@ void handleRequest(Connection& connection, Request& request) {
 			request_path_handler(connection);
 	}
 	else if (request.getMethod() == "DELETE") {
-        cout << "Delete method" << endl;
+        cout << BLU << "Delete method" << RESET << endl;
         delete_method(clientSocket, request);
 	}
-	else if (request.getMethod() == "POST")
+	else if (request.getMethod() == "POST") {
+		cout << BLU << "POST method" << RESET << endl;
 		post_method(clientSocket, request);
+	}
 }

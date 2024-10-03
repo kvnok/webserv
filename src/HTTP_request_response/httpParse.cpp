@@ -2,34 +2,6 @@
 #include "httpRequest.hpp"
 #include "Connection.hpp"
 
-bool find_string(const std::string& str, const std::string& boundary) {
-	if (str.find(boundary) != std::string::npos) {
-		return (true);
-	}
-	return (false);
-}
-
-string findBoundary(const string& contentType) {
-	string toFind = "boundary=";
-	size_t pos = contentType.find(toFind);
-	if (pos == string::npos) {
-		return ("");
-	}
-	return (contentType.substr(pos + toFind.size()));
-}
-
-string findFileName(const string& contentType) {
-	string fileName = "filename=\"";
-    size_t startPos = contentType.find(fileName);
-    if (startPos == string::npos)
-        return ("");
-    startPos += fileName.size();
-    size_t endPos = contentType.find("\"", startPos);
-    if (endPos == string::npos)
-        return ("");
-    return (contentType.substr(startPos, endPos - startPos));
-}
-
 static bool	parseHeaders(istringstream &headerStream, string line, Request& request) {
 	size_t	totLen = 0;
 
@@ -122,27 +94,56 @@ static bool	parseRequestLine(const string line, Request& request) {
 	}
 	return (true);
 }
+/////////
+string findBoundary(const string& headerValue) {
+	string toFind = "boundary=";
+	auto pos = search(headerValue.begin(), headerValue.end(), toFind.begin(), toFind.end());
+	if (pos == headerValue.end())
+		return ("");
+	string boundary(pos + toFind.size(), headerValue.end());
+	return (boundary);
+}
 
+string findFileName(const string& contentType) {
+	string fileName = "filename=\"";
+    size_t startPos = contentType.find(fileName);
+    if (startPos == string::npos)
+        return ("");
+    startPos += fileName.size();
+    size_t endPos = contentType.find("\"", startPos);
+    if (endPos == string::npos)
+        return ("");
+    return (contentType.substr(startPos, endPos - startPos));
+}
+/////////////////
 void	parseBody(Request& request) {
 	string buffer(request.getBody().begin(), request.getBody().end());
+	string boundary = "";
+	if (request.getHeaderValue("Content-Type").find("multipart/form-data") != string::npos)
+		boundary = findBoundary(request.getHeaderValue("Content-Type"));
+	if (boundary.empty() || buffer.empty())
+		return ; //handle this correctly
+	cout << YEL << boundary << RESET << endl;
+	request.setCGIPath(findFileName(buffer));
+	if (request.getCGIPath().empty())
+		cout << BLU << "empty cgi path" << RESET << endl;
+	else
+		cout << BLU << "cgi path: " << request.getCGIPath() << RESET << endl;
 
-	//it exits before this functions
-	cout << "Parse Body" << endl;
-	if (find_string(request.getHeaderValue("Content-Type"), "multipart/form-data")) {
-		request.setBoundary(findBoundary(request.getHeaderValue("Content-Type")));
-		request.setContentUploadFile(buffer);
-		request.setMaxLengthUploadContent(buffer.size());
-		if (request.getUploadedFile().empty())
-    	    request.setUploadeFile(findFileName(request.getContentUploadFile()));
-		if (!request.getBoundary().empty())
-			request.setContentUploadFile(buffer);
+	auto pos = search(buffer.begin(), buffer.end(), boundary.begin(), boundary.end());
+	while (pos != buffer.end()) {
+		string tmp_buffer = ..;
+		buffer = tmp_buffer;
+		pos = search(buffer.begin(), buffer.end(), boundary.begin(), boundary.end());
 	}
+	request.setBody(buffer);
 	return ;
 }
 
 void	checkChunkedBody(Connection& connection) {
 	vector<char> buf = connection.getBuffer();
 	const string d = "\r\n";
+	
 	while (!buf.empty()) {
 		auto endSize = search(buf.begin(), buf.end(), d.begin(), d.end());
 		if (endSize == buf.end())
@@ -158,15 +159,18 @@ void	checkChunkedBody(Connection& connection) {
 		}
 		size_t fullChunkSize = (endSize - buf.begin()) + d.size() + chunkSize + d.size();
 		if (buf.size() < fullChunkSize) {		
-			cout << YEL << chunkSize << endl;
+			cout << YEL << "Chunksize: " << chunkSize << RESET << endl;
 			return ;
 		}
 		auto chunkStart = endSize + d.size();
 		string toAdd(chunkStart, chunkStart + chunkSize);
+		cout << YEL << "ToADD: " << toAdd << RESET << endl;
 		if (chunkSize == 0) {
-			connection.clearBuffer();
+			cout << "it goes in to CB func" << endl;
+			connection.clearBuffer(); 
 			parseBody(connection.getRequest());
 			connection.getRequest().setReadState(DONE);
+			cout << "reached end of CB func" << endl;
 			return ;
 		}
 		connection.getRequest().addToBody(toAdd);
@@ -185,10 +189,14 @@ void	checkContentLengthBody(Connection& connection) {
 		return ;
 	}
 	if (connection.getBuffer().size() == readLength) {
-		string buffer(connection.getBuffer().begin(), connection.getBuffer().end());
+		cout << "it goes into CL func" << endl;
+		vector<char> buf = connection.getBuffer();
+		string buffer(buf.begin(), buf.end());
+		cout << buffer << endl;
 		connection.getRequest().setBody(buffer);
 		parseBody(connection.getRequest());
 		connection.getRequest().setReadState(DONE);
+		cout << "reached end of CL func" << endl;
 	}
 	return ;	
 }
@@ -211,8 +219,6 @@ void	checkHeaders(const vector<char> requestData, Request& request) {
 		request.setReadState(DONE);
 		return ;
 	}
-	if (request.getHeaderValue("Transfer-Encoding") == "chunked")
-		cout << request.getHeaderValue("Transfer-Encoding") << endl;
 	if (request.getHeaderValue("Transfer-Encoding") == "chunked")
 		request.setReadState(CHUNKED_BODY);
 	else if (!request.getHeaderValue("Content-Length").empty())

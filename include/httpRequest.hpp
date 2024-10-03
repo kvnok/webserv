@@ -45,11 +45,12 @@ class Request {
 		string				_body;
 		int					_statusCode;
 		readState			_readState;
-		string				_boundary; //
-		string				_contentUploadFile; //
-		int 				_maxLengthUploadContent; //
-		int					_bytesCopied; //
-		string				_uploadedFile; //
+		string				_cgiPath;
+		// string				_boundary; //
+		// string				_contentUploadFile; //
+		// int 				_maxLengthUploadContent; //
+		// int					_bytesCopied; //
+		// string				_uploadedFile; //
 		bool 				_isAutoindex;
 		bool				_isCGI;
 		string				_CGIextension;
@@ -69,6 +70,7 @@ class Request {
 		void	setHeader(map<string, string> const header);
 		void	setStatusCode(int const statusCode);
 		void	setReadState(const readState state);
+		void	setCGIPath(const string cgiName);
 		void 	setIsAutoindex(bool isAutoindex);
 		void 	setIsCGI(bool isCGI);
 		void 	setCGIextension(string const CGIextension);
@@ -83,16 +85,17 @@ class Request {
 		string				getHeaderValue(const string& key) const;
 		readState			getReadState() const;
 		// -----------------------
-		void				setUploadeFile(const string uploadedFile);
-		void				setBytesCopied(const long bytesCopied);
-		void				setMaxLengthUploadContent(const long maxLengthUploadContent);
-		void				setBoundary(string const boundary);
-		void				setContentUploadFile(string const contentUploadFile);
-		string 				getBoundary() const;
-		string 				getContentUploadFile() const;
-		long 				getMaxLengthUploadContent() const;
-		long 				getBytesCopied() const;
-		string				getUploadedFile() const;
+		// void				setUploadeFile(const string uploadedFile);
+		// void				setBytesCopied(const long bytesCopied);
+		// void				setMaxLengthUploadContent(const long maxLengthUploadContent);
+		// void				setBoundary(string const boundary);
+		// void				setContentUploadFile(string const contentUploadFile);
+		// string 				getBoundary() const;
+		// string 				getContentUploadFile() const;
+		// long 				getMaxLengthUploadContent() const;
+		// long 				getBytesCopied() const;
+		// string				getUploadedFile() const;
+		string				getCGIPath() const;
 		bool				getIsAutoindex() const;
 		bool				getIsCGI() const;
 		string				getCGIextension() const;
@@ -108,7 +111,7 @@ void	checkContentLengthBody(Connection& connection);
 void	parseBody(Request& request);
 bool	hasAllHeaders(const vector<char> data);
 
-void handleRequest(Connection& connection, Request& request);
+void	handleRequest(Connection& connection, Request& request);
 
 //https://www.ibm.com/docs/en/app-connect/11.0.0?topic=messages-http-headers
 //resource headers

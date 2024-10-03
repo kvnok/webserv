@@ -27,15 +27,15 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
 
 void    Servers::writeResponse(Connection& connection) {
     Request &request = connection.getRequest();
-    if (request.getIsAutoindex()) {
-        // do autoindex stuff
-    }
-    else if (request.getIsCGI()) {
-        // do cgi stuff
-    }
-    else if (request.getStatusCode() >= 400) {
-        // do error stuff
-    }
+    // if (request.getIsAutoindex()) {
+    //     // do autoindex stuff
+    // }
+    // else if (request.getIsCGI()) {
+    //     // do cgi stuff
+    // }
+    // else if (request.getStatusCode() >= 400) {
+    //     // do error stuff
+    // }
 
     connection.getResponse().setClientSocket(connection.getFd());
     connection.getResponse().setVersion(connection.getRequest().getVersion());
@@ -65,7 +65,6 @@ void    Servers::readRequest(Connection& connection) {
         return ;
     }
     buffer.resize(bytes);
-    //cout << RED << string(buffer.begin(), buffer.end()) << RESET << endl;
     connection.addToBuffer(buffer);
     if (connection.getRequest().getReadState() == START) {
         if (hasAllHeaders(connection.getBuffer()))
@@ -74,7 +73,6 @@ void    Servers::readRequest(Connection& connection) {
     if (connection.getRequest().getReadState() == HEADERS) {    
         checkHeaders(connection.getBuffer(), connection.getRequest());
         connection.clearBuffer();
-        cout << connection.getRequest().getReadState() << endl;
     }
     if (connection.getRequest().getReadState() == CHUNKED_BODY)
         checkChunkedBody(connection);
@@ -93,11 +91,16 @@ void    Servers::handleExistingConnection(Connection& connection, size_t& i) {
             readRequest(connection);
             break ;
         case EXECUTE:
+            // in execute, when we need to use an extra fd, we create the fd, set the state to cgi.
             executeRequest(connection);
             break ;
         case WRITE:
             writeResponse(connection);
             break ;
+       // case CGI:
+            //handleCgi(connection, i);
+            //in handleCgi, we get the body that we need to respond, or the path
+            //set the state of the cgi fd to close, and set the state of the client fd to write.
         case CLEANUP:
             connection.reset();
             break;
@@ -123,7 +126,7 @@ void    Servers::start() {
                 if ((this->_fds[i].revents & POLLIN))
                     handleExistingConnection(this->_connections[client_index], i);
                 else if ((this->_fds[i].revents & POLLOUT))
-                  handleExistingConnection(this->_connections[client_index], i);
+                    handleExistingConnection(this->_connections[client_index], i);
             }
             if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                 close(this->_fds[i].fd);

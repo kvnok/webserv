@@ -72,8 +72,8 @@ void	createResponse(Connection& connection) {
     string content;
     
     if (request.getIsAutoindex() == true) {
-        cout << BLU << "CALLING AUTOINDEX" << RESET << endl;
-        cout << GRN << "ai: |" << path << "|" << RESET << endl;
+        // cout << BLU << "CALLING AUTOINDEX" << RESET << endl;
+        // cout << GRN << "ai: |" << path << "|" << RESET << endl;
         content = do_autoindex(path);
     }
     else if (request.getIsCGI() == true) {

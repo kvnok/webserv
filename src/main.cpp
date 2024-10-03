@@ -33,11 +33,11 @@ int main(int argc, char **argv) {
 			// ok_print_server_block(serverBlock);
 		}
 		Servers servers(serverBlocks);
-		cout << "IN MAIN" << endl;
-		for (int i = 0; i < servers.get_serverBlocks().size(); i++) {
-			cout << "new block: " << endl;
-			ok_print_server_block(servers.get_serverBlocks()[i]);
-		}
+		// cout << "IN MAIN" << endl;
+		// for (int i = 0; i < servers.get_serverBlocks().size(); i++) {
+		// 	cout << "new block: " << endl;
+		// 	ok_print_server_block(servers.get_serverBlocks()[i]);
+		// }
 		servers.start();
 	} catch (exception &e) {
 		//also need to close fd's if they are open
