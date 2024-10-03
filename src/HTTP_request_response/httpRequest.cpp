@@ -116,11 +116,41 @@ void  Request::reset() {
 void handleRequest(Connection& connection, Request& request) {
 	const int clientSocket = connection.getFd();
 	
-	if (request.getMethod() == "POST" && request.getPath() == "/var/www/deleteFile.html") // isCGI = true?
-		request.setMethod("DELETE");
 	cout << RED << "in handleRequest:" << request.getPath() << "     "  << request.getMethod() << RESET << endl;
-	if (request.getMethod() == "GET") {
-		request_path_handler(connection);
+	// cout << BLU << request.getHeaderValue("name") << RESET << endl;
+	// cout << "Headers:" << endl;
+	// map<string, string> headers = request.getHeaders();
+	// for (const auto& header : headers) {
+	// 	cout << header.first << ": " << header.second << endl;
+	// }
+	if (request.getMethod() == "GET") { // I ll go to a get method /* dont worry */
+		cout << BLU << "Get method" << RESET << endl;
+		 if (request.getPath() == "/var/cgi-bin/get_time.cgi" || request.getIsCGI() == true) {
+		 	cout << "Test CGI" << endl;
+
+			// Store the path in a local string to extend its lifetime
+			string scriptPath = "var/cgi-bin/get_time.cgi"; // Adjust if necessary
+
+			// Prepare arguments for the script execution
+			char *args[] = {
+				const_cast<char*>("/usr/bin/python3"),    // Path to the interpreter
+				const_cast<char*>(scriptPath.c_str()),     // The script path
+				nullptr                                     // Null terminator
+			};
+			int fdForPolling = run_script(args, request);
+			// connection.setFdForPolling(fdForPolling); maybe we can do it here.
+			char buffer[1024];
+        	ssize_t bytesRead;
+
+        	cout << "Output from child process:" << endl;
+        	while ((bytesRead = read(fdForPolling, buffer, sizeof(buffer) - 1)) > 0) {
+            	buffer[bytesRead] = '\0';
+            	cout << buffer;
+        	}
+			
+		}
+		else
+			request_path_handler(connection);
 	}
 	else if (request.getMethod() == "DELETE") {
         cout << "Delete method" << endl;

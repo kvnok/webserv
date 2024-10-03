@@ -46,6 +46,7 @@ class Response {
 void	createResponse(Connection& connection);
 
 void post_method(int clientSocket, Request& request);
+int run_script(char *args[], Request &request);
 void delete_method(int clientSocket, Request& request);
 
 // add fucntions outside class

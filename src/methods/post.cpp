@@ -1,4 +1,5 @@
 #include "httpResponse.hpp"
+#include <filesystem>
 #include "CGI.hpp"
 
 unordered_map<string, string> parse_form_data(const string &body) {
@@ -17,15 +18,18 @@ unordered_map<string, string> parse_form_data(const string &body) {
     return form_data;
 }
 
-bool fileExists(const string &path) {
-    struct stat buffer;
-    return (stat(path.c_str(), &buffer) == 0);
-}
 
 void printRequestHeaders(const map<string, string> &headers) {
     for (const auto &header : headers) {
         cout << header.first << ": " << header.second << endl;
     }
+}
+
+bool fileExists(string &path) {
+    if (filesystem::exists(path))
+        return true;
+    else
+        return false;
 }
 
 bool storageExist(const string& path) {
@@ -49,7 +53,6 @@ string removeBoundaries(const string& content, const string& boundary) {
 void writeFile(const string& storagePath, const string& fileName, const string& content, Request &request) {
     string fullPath = storagePath + fileName;
     
-    cout << "Full path: " << fullPath << endl;
     if (!filesystem::exists(storagePath))
         filesystem::create_directories(storagePath);
     if (filesystem::exists(fullPath)) {
@@ -77,58 +80,121 @@ bool findLastBoundary(const string& contentType, const string& boundary) {
 	return (true);
 }
 
+void execScript(char *args[], int pipefd[2], Request &request) 
+{
+    // Ensure correct path for the Python interpreter
+    char *python_cgi = (char *)"/usr/bin/python3"; 
 
+    if (request.getMethod() == "GET") 
+    {
+        cout << "GET script" << endl;
+        close(pipefd[0]);
 
-static void run_script(const string& script_path) {
-    pid_t pid = fork();
-    int status;
+        dup2(pipefd[1], STDOUT_FILENO);
+        close(pipefd[1]);
 
-    if (pid == -1) {
-        cerr << "Failed to fork" << endl;
-        return ;
-    }
-    if (pid == 0) {
-        if (waitpid(pid, &status, 0) == -1) {
-            perror("waitpid");
-            exit(EXIT_FAILURE);
-        }
-    }
-    else {
-        cout << "Parent process" << endl;
-    }
-}
-
-void execPythonScript(const std::string &file_name) {
-    // Path to the Python interpreter and the CGI script
-    char *python_cgi = (char *)"/usr/bin/python3";
-    char *script_path = (char *)"/var/cgi-bin/upload_file_in_a_folder.cgi";  // Adjust path
-
-    // Prepare the arguments (script name, file name, file content)
-    char *args[] = {(char *)file_name.c_str(), nullptr};
-
-    // Execute the Python CGI script
-    if (execve(python_cgi, args, nullptr) == -1) {
-        cerr << "Failed to execute Python script" << endl;
-    }
-}
-
-void post_method(int clientSocket, Request &request) {
-    string uploadedFile;
-    string storage = "www/storage/";
-
-    cout << "In post method" << endl;
-    if (!request.getBoundary().empty() && request.getBytesCopied() <= stol(request.getHeaderValue("Content-Length"))){
-        writeFile(storage, request.getUploadedFile(), request.getContentUploadFile(), request);
-        // execPythonScript(request.getUploadedFile(), request.getContentUploadFile());
-        // test_cgi("/home/ibehluli/Desktop/webserver/var/cgi-bin/upload_file_in_a_folder.cgi");
-        request.setBytesCopied(request.getBytesCopied() + request.getMaxLengthUploadContent());
-        if (request.getBytesCopied() == stol(request.getHeaderValue("Content-Length"))) {
-            request.setPath("base.html");
+        if (execve(args[0], args, nullptr) == -1) {
+            cerr << "Failed to execute Python script" << endl;
+            exit(EXIT_FAILURE);  // I dont know how to handle this yet
         }
     }
     else
     {
-        // execPythonScript(request.getPath());
-        cerr << RED << "Error with a post Request" << RESET << endl; 
+        cout << "POST script" << endl;
+        char *script_path = (char *)"var/cgi-bin/upload_file_in_a_folder.cgi";  // Adjust path
+
+        // we probably need to change this with Jan's code
+        char *args1[] = {python_cgi, script_path, args[0], args[1], nullptr};
+
+        if (execve(python_cgi, args1, nullptr) == -1) {
+            cerr << "Failed to execute Python script" << endl;
+            exit(EXIT_FAILURE);  // I dont know how to handle this yet
+        }
+    }
+}
+
+int run_script(char *args[], Request &request) {
+    int pipefd[2];
+    int status;
+    pid_t pid;
+
+    if (pipe(pipefd) == -1) {
+        cerr << "Failed to create pipe" << endl;
+        return -1;
+    }
+
+    if ((pid = fork()) == -1) {
+        cerr << "Failed to fork" << endl;
+        return -1;
+    }
+
+    if (pid == 0) {
+        cout << "Child process" << endl;
+        execScript(args, pipefd, request);
+    } 
+    else {
+        cout << "Parent process" << endl;
+        close(pipefd[1]);
+        if (waitpid(pid, &status, 0) == -1) {
+            cerr << "Failed to wait for child process" << endl;
+            close(pipefd[0]);  // Clean up
+            return -1;
+        }
+        cout << "Child process finished" << endl;
+        // close(pipefd[0]);  // Close the read of the pipe or not
+        return pipefd[0];
+    }
+    return 0;
+}
+
+string extract_file_name(const string &path) {
+    size_t posSlash = path.find_last_of('/');
+    string file = path.substr(posSlash + 1);
+    return file;
+}
+
+void post_method(int clientSocket, Request &request)
+{
+    string uploadedFile;
+    string storage = "www/storage/";
+    string fullPath;
+
+    if (request.getPath() == "/www/deleteFile.html") // isCGI = true?
+	{
+        // switch to delete method
+        delete_method(clientSocket, request);
+        return ;
+    }
+    if (!request.getUploadedFile().empty())
+        fullPath = storage + request.getUploadedFile();
+    else
+        fullPath = storage + extract_file_name(request.getPath());
+    if (fileExists(fullPath)) {
+        request.setPath("www/fileExists.html");
+        return ;
+    }
+    // Once Jan's code is merged, we can use the body and go to the CGI script in both cases
+    /////////////////////////////////////////////////////////////////////////////////////////
+    if (!request.getBoundary().empty() && request.getBytesCopied() <= stol(request.getHeaderValue("Content-Length"))){
+        writeFile(storage, request.getUploadedFile(), request.getContentUploadFile(), request);
+        request.setBytesCopied(request.getBytesCopied() + request.getMaxLengthUploadContent());
+        if (request.getBytesCopied() == stol(request.getHeaderValue("Content-Length")))
+            request.setPath("www/fileUploaded.html");
+        else
+            request.setPath("www/fileNotUploaded.html");
+    }
+    /////////////////////////////////////////////////////////////////////////////////////////
+    else
+    {
+        // after Jan Gijs extrapolate the body from the request
+        // 
+        // char *args1[] = {(char *)Path.to>cgi, (char *)request.getPath().c_str(), (char *)storage.c_str(), nullptr};
+        string path = request.getPath().c_str();
+        char *args[] = {(char *) path.c_str(), (char *)storage.c_str(), nullptr};
+        if (run_script(args, request))
+            request.setPath("www/fileNotUploaded.html");
+        else
+            request.setPath("www/fileUploaded.html");
+        // cerr << RED << "Error with a post Request" << RESET << endl; 
     }
 }
