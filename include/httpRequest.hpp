@@ -105,7 +105,7 @@ class Request {
 void	checkHeaders(const vector<char> requestData, Request& request);
 void	checkChunkedBody(Connection& connection);
 void	checkContentLengthBody(Connection& connection);
-void	parseBody(const vector<char> requestData, Request& request);
+void	parseBody(Request& request);
 bool	hasAllHeaders(const vector<char> data);
 
 void handleRequest(Connection& connection, Request& request);

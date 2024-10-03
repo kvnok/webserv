@@ -4,17 +4,30 @@
 
 bool find_string(const std::string& str, const std::string& boundary) {
 	if (str.find(boundary) != std::string::npos) {
-		return true;
+		return (true);
 	}
-	return false;
+	return (false);
 }
 
 string findBoundary(const string& contentType) {
-	size_t pos = contentType.find("boundary=");
+	string toFind = "boundary=";
+	size_t pos = contentType.find(toFind);
 	if (pos == string::npos) {
-		return "";
+		return ("");
 	}
-	return contentType.substr(pos + 9);
+	return (contentType.substr(pos + toFind.size()));
+}
+
+string findFileName(const string& contentType) {
+	string fileName = "filename=\"";
+    size_t startPos = contentType.find(fileName);
+    if (startPos == string::npos)
+        return ("");
+    startPos += fileName.size();
+    size_t endPos = contentType.find("\"", startPos);
+    if (endPos == string::npos)
+        return ("");
+    return (contentType.substr(startPos, endPos - startPos));
 }
 
 static bool	parseHeaders(istringstream &headerStream, string line, Request& request) {
@@ -27,16 +40,16 @@ static bool	parseHeaders(istringstream &headerStream, string line, Request& requ
 			return (false);
 		}
 		totLen += len;
-		string	headerLine[2];
-		size_t	splitPos = line.find(':');
-		if (line.back() != '\r' || line.length() <= splitPos + 2) {
+		string	toFind = ": ";
+		auto splitPos = search(line.begin(), line.end(), toFind.begin(), toFind.end());
+		if (line.back() != '\r' || splitPos == line.end()) {
 			request.setStatusCode(400);
 			return (false);
 		}
-		headerLine[0] = line.substr(0, splitPos);
-		headerLine[1] = line.substr(splitPos + 2, line.length() - (splitPos + 2));
-		if (!headerLine[0].empty() && !headerLine[1].empty())
-			request.addHeader(headerLine[0], headerLine[1]);
+		string key(line.begin(), splitPos);
+		string value(splitPos + toFind.size(), line.end() - 1); // -1 to get rid of the \r at the end of the string
+		if (!key.empty() && !value.empty())
+			request.addHeader(key, value);
 		else {
 			request.setStatusCode(400);
 			return (false);
@@ -105,62 +118,59 @@ static bool	parseRequestLine(const string line, Request& request) {
 	if (request.getMethod() == "POST" && (request.getPath() == "/coffee" \
 		|| request.getPath() == "/brew")) {
 		request.setStatusCode(418);
-		return (false); 
+		return (false); //does this still work?
 	}
 	return (true);
 }
 
-string findFileName(const string& contentType) {
-	string fileName = "filename=\"";
-    size_t startPos = contentType.find(fileName);
-    if (startPos == string::npos)
-        return "";
-    startPos += fileName.size();
-    size_t endPos = contentType.find("\"", startPos);
-    if (endPos == string::npos)
-        return "";
-    return (contentType.substr(startPos, endPos - startPos));
+void	parseBody(Request& request) {
+	string buffer(request.getBody().begin(), request.getBody().end());
+
+	//it exits before this functions
+	cout << "Parse Body" << endl;
+	if (find_string(request.getHeaderValue("Content-Type"), "multipart/form-data")) {
+		request.setBoundary(findBoundary(request.getHeaderValue("Content-Type")));
+		request.setContentUploadFile(buffer);
+		request.setMaxLengthUploadContent(buffer.size());
+		if (request.getUploadedFile().empty())
+    	    request.setUploadeFile(findFileName(request.getContentUploadFile()));
+		if (!request.getBoundary().empty())
+			request.setContentUploadFile(buffer);
+	}
+	return ;
 }
 
 void	checkChunkedBody(Connection& connection) {
 	vector<char> buf = connection.getBuffer();
-	string d = "\r\n";
-	if (buf.empty())
-		return ;
+	const string d = "\r\n";
 	while (!buf.empty()) {
-		string sizeString;
-		string toAdd;
-		size_t chunkSize = 0;
 		auto endSize = search(buf.begin(), buf.end(), d.begin(), d.end());
 		if (endSize == buf.end())
 			return ;
-		sizeString.assign(buf.begin(), endSize);
+		string sizeString(buf.begin(), endSize);
+		size_t chunkSize;
 		try {
 			chunkSize = stoul(sizeString, nullptr, 16);
 		} catch (...) {
 			cerr << "stoul failed in chunked body" << endl;
+			connection.getRequest().setReadState(DONE); // add an error state?
 			return ;
 		}
-		endSize += d.size();
-		auto endChunk = search(endSize + d.size(), buf.end(), d.begin(), d.end());
-		if (endChunk == buf.end());
+		size_t fullChunkSize = (endSize - buf.begin()) + d.size() + chunkSize + d.size();
+		if (buf.size() < fullChunkSize) {		
+			cout << YEL << chunkSize << endl;
 			return ;
-		toAdd.assign(endSize + d.size(), endChunk);
+		}
+		auto chunkStart = endSize + d.size();
+		string toAdd(chunkStart, chunkStart + chunkSize);
 		if (chunkSize == 0) {
 			connection.clearBuffer();
+			parseBody(connection.getRequest());
 			connection.getRequest().setReadState(DONE);
 			return ;
 		}
-		else {
-			if (toAdd.size() != chunkSize) {
-				cout << "chunk does not match the expected size" << endl;
-				return ;
-			}
-			else {
-				connection.getRequest().addToBody(toAdd);
-				buf.erase(buf.begin(), endChunk + d.size());
-			}
-		}
+		connection.getRequest().addToBody(toAdd);
+		buf.erase(buf.begin(), chunkStart + chunkSize + d.size());
 	}
 	return ;
 }
@@ -171,30 +181,16 @@ void	checkContentLengthBody(Connection& connection) {
 		readLength = stoul(connection.getRequest().getHeaderValue("Content-Length"));
 	} catch (...) {
 		cerr << "stoul failed in content length body" << endl;
+		connection.getRequest().setReadState(DONE); // add an error state?
 		return ;
 	}
 	if (connection.getBuffer().size() == readLength) {
 		string buffer(connection.getBuffer().begin(), connection.getBuffer().end());
 		connection.getRequest().setBody(buffer);
+		parseBody(connection.getRequest());
 		connection.getRequest().setReadState(DONE);
 	}
 	return ;	
-}
-
-void	parseBody(const vector<char> requestData, Request& request) {
-	string buffer(requestData.begin(), requestData.end());
-	request.setBody(buffer);
-	// if (find_string(request.getHeaderValue("Content-Type"), "multipart/form-data")) {
-	// 	request.setBoundary(findBoundary(request.getHeaderValue("Content-Type")));
-	// 	request.setContentUploadFile(buffer);
-	// 	request.setMaxLengthUploadContent(buffer.size());
-	// 	if (request.getUploadedFile().empty())
-    // 	    request.setUploadeFile(findFileName(request.getContentUploadFile()));
-	// }
-	// if (!request.getBoundary().empty())
-		// request.setContentUploadFile(buffer);
-	request.setReadState(DONE);
-	return ;
 }
 
 void	checkHeaders(const vector<char> requestData, Request& request) {
@@ -215,6 +211,8 @@ void	checkHeaders(const vector<char> requestData, Request& request) {
 		request.setReadState(DONE);
 		return ;
 	}
+	if (request.getHeaderValue("Transfer-Encoding") == "chunked")
+		cout << request.getHeaderValue("Transfer-Encoding") << endl;
 	if (request.getHeaderValue("Transfer-Encoding") == "chunked")
 		request.setReadState(CHUNKED_BODY);
 	else if (!request.getHeaderValue("Content-Length").empty())

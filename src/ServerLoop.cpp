@@ -74,6 +74,7 @@ void    Servers::readRequest(Connection& connection) {
     if (connection.getRequest().getReadState() == HEADERS) {    
         checkHeaders(connection.getBuffer(), connection.getRequest());
         connection.clearBuffer();
+        cout << connection.getRequest().getReadState() << endl;
     }
     if (connection.getRequest().getReadState() == CHUNKED_BODY)
         checkChunkedBody(connection);
