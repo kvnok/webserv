@@ -124,7 +124,7 @@ void handleRequest(Connection& connection, Request& request) {
 	// }
 	if (request.getMethod() == "GET") { // I ll go to a get method /* dont worry */
 		cout << BLU << "Get method" << RESET << endl;
-		 if (request.getPath() == "/var/cgi-bin/get_time.cgi" || request.getIsCGI() == false) {
+		 if (request.getPath() == "/var/cgi-bin/get_time.cgi" || request.getIsCGI() == true) {
 		 	cout << "Test CGI" << endl;
 
 			// Store the path in a local string to extend its lifetime
