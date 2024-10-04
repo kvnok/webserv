@@ -124,7 +124,7 @@ void    Servers::start() {
                 if ((this->_fds[i].revents & POLLIN))
                     handleExistingConnection(this->_connections[client_index], i);
                 else if ((this->_fds[i].revents & POLLOUT))
-                  handleExistingConnection(this->_connections[client_index], i);
+                    handleExistingConnection(this->_connections[client_index], i);
             }
             if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                 close(this->_fds[i].fd);

@@ -77,7 +77,9 @@ void	createResponse(Connection& connection) {
         content = do_autoindex(path);
     }
     else if (request.getIsCGI() == true) {
-        // cgi stuff
+        // I just want to see if this is called and if it works
+        // feel free to change this
+        content = request.getBody();
     }
     else {
         ifstream file(path);

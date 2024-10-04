@@ -24,35 +24,16 @@ void removeFileFromStorage(const string& file) {
 		cout << "File successfully deleted." << endl;
 	}
 }
-/// kevini need you smart lock
-
-// string name_from_last_back_slach(const string &path) {
-//     size_t posSlash = path.find_last_of('/');
-//     string file = path.substr(posSlash + 1);
-//     return file;
-// }
-
-// string name_from_first_back_slach(const string &path) {
-//     size_t posSlash = path.find_first_of('/');
-//     string file = path.substr(posSlash + 1);
-//     return file;
-// }
 
 int mustBeInStorage(const string& path) {
 	int pos = path.find("storage");
 	cout << "Pos: " << pos << endl;
 	if (pos == -1)
 		return 1;
-	// string fileFromPath = name_from_last_back_slach(path);
-	// string fileInStorage = name_from_first_back_slach(path.substr(pos));
-	// cout << "File: " << fileFromPath << endl;
-	// cout << "File in storage: " << fileInStorage << endl;
-	// if (fileInStorage != fileFromPath)
-	// 	return 1;
 	return 0;
 }
 
-void delete_method(int clientSocket, Request& request) {
+void delete_method(Connection& connection, Request& request) {
 	string file = "";
 	if (request.getMethod() == "DELETE") {
 		cout << RED << "Delete with curl not working" << RESET << endl;
