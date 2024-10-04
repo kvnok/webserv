@@ -84,7 +84,9 @@ void writeFile(const string& storagePath, const string& fileName, const string& 
 void execScript(char *args[], int pipefd[2], Request &request) 
 {
     // Ensure correct path for the Python interpreter
-    char *python_cgi = (char *)"/usr/bin/python3"; 
+    char *python_cgi = (char *)"/usr/bin/python3";
+
+    // here is going be no difference
 
     if (request.getMethod() == "GET") 
     {
@@ -96,27 +98,26 @@ void execScript(char *args[], int pipefd[2], Request &request)
 
         if (execve(args[0], args, nullptr) == -1) {
             cerr << "Failed to execute Python script" << endl;
-            exit(EXIT_FAILURE);  // I dont know how to handle this yet
         }
     }
     else
     {
         cout << "POST script" << endl;
-        char *script_path = (char *)"var/cgi-bin/upload_file_in_a_folder.cgi";  // Adjust path
-
-        // we probably need to change this with Jan's code
+        char *script_path = (char *)"var/cgi-bin/upload_file_in_a_folder.cgi";  // we probably need to change this with Jan's code
+        close(pipefd[0]);
         char *args1[] = {python_cgi, script_path, args[0], args[1], nullptr};
-
+        dup2(pipefd[1], STDOUT_FILENO);
+        close(pipefd[1]);
+        
         if (execve(python_cgi, args1, nullptr) == -1) {
             cerr << "Failed to execute Python script" << endl;
-            exit(EXIT_FAILURE);  // I dont know how to handle this yet
         }
     }
 }
 
 int run_script(char *args[], Request &request) {
     int pipefd[2];
-    int status;
+    int status = -1;
     pid_t pid;
 
     if (pipe(pipefd) == -1) {
@@ -129,23 +130,19 @@ int run_script(char *args[], Request &request) {
         return -1;
     }
 
-    if (pid == 0) {
-        cout << "Child process" << endl;
+    if (pid == 0)
         execScript(args, pipefd, request);
-    } 
     else {
-        cout << "Parent process" << endl;
         close(pipefd[1]);
         if (waitpid(pid, &status, 0) == -1) {
             cerr << "Failed to wait for child process" << endl;
-            close(pipefd[0]);  // Clean up
+            close(pipefd[0]);
             return -1;
         }
-        cout << "Child process finished" << endl;
-        // close(pipefd[0]);  // Close the read of the pipe or not
-        return pipefd[0];
+        // close(pipefd[0]);  // we need to do it for the Post method I believe to check with JG
+        return pipefd[0]; // Return the read end of the pipe
     }
-    return 0;
+    return status;
 }
 
 string extract_file_name(const string &path) {
@@ -154,7 +151,16 @@ string extract_file_name(const string &path) {
     return file;
 }
 
-void post_method(int clientSocket, Request &request)
+// bool check_permissions(const string &path) {
+//     struct stat sb;
+    
+
+//     if (stat(path.c_str(), &sb) == 0 && sb.st_mode & S_IRUSR && !S_ISDIR(sb.st_mode))
+//         return true;
+//     return false;
+// }
+
+void post_method(Connection& connection, Request &request)
 {
     string uploadedFile;
     string storage = "www/storage/";
@@ -163,39 +169,56 @@ void post_method(int clientSocket, Request &request)
     if (request.getPath() == "/www/deleteFile.html") // isCGI = true?
 	{
         // switch to delete method
-        delete_method(clientSocket, request);
+        delete_method(connection, request);
         return ;
     }
     if (!request.getCGIPath().empty())
         fullPath = storage + request.getCGIPath();
     else
         fullPath = storage + extract_file_name(request.getPath());
+    // if (!check_permissions(fullPath)) {
+    //     request.setPath("www/fileNotUploaded.html");
+    //     return ;
+    // }
     if (fileExists(fullPath)) {
         request.setPath("www/fileExists.html");
         return ;
     }
     // Once Jan's code is merged, we can use the body and go to the CGI script in both cases
     /////////////////////////////////////////////////////////////////////////////////////////
-    //if (!request.getBoundary().empty() && request.getBytesCopied() <= stol(request.getHeaderValue("Content-Length"))){
-    writeFile(storage, request.getCGIPath(), request.getBody(), request);
-        //request.setBytesCopied(request.getBytesCopied() + request.getMaxLengthUploadContent());
-       // if (request.getBytesCopied() == stol(request.getHeaderValue("Content-Length")))
-       //     request.setPath("www/fileUploaded.html");
-      //  else
-       //     request.setPath("www/fileNotUploaded.html");
-    //}
+    if (!request.getBoundary().empty() && request.getBytesCopied() <= stol(request.getHeaderValue("Content-Length"))){
+        writeFile(storage, request.getUploadedFile(), request.getContentUploadFile(), request);
+        request.setBytesCopied(request.getBytesCopied() + request.getMaxLengthUploadContent());
+        if (request.getBytesCopied() == stol(request.getHeaderValue("Content-Length")))
+            request.setPath("www/fileUploaded.html");
+        else
+            request.setPath("www/fileNotUploaded.html");
+    }
+    /////////////////////////////////////////////////////////////////////////////////////////
+    // char *args[] = {                                          /** Jan this is what we need for running the script **/
+    //     (char *)request.fileName.c_str(),
+    //     (char *)request.fileContent().c_str(),
+    //     (char *)storage.c_str(), // we have that already
+    //     nullptr
+    // };
+    // of Course i need the path to the script which means what i showed you in from the html file
     /////////////////////////////////////////////////////////////////////////////////////////
     //else
     {
-        // after Jan Gijs extrapolate the body from the request
-        // 
-        // char *args1[] = {(char *)Path.to>cgi, (char *)request.getPath().c_str(), (char *)storage.c_str(), nullptr};
-        // string path = request.getPath().c_str();
-        // char *args[] = {(char *) path.c_str(), (char *)storage.c_str(), nullptr};
-        // if (run_script(args, request))
-        //     request.setPath("www/fileNotUploaded.html");
-        // else
-        //     request.setPath("www/fileUploaded.html");
-        // cerr << RED << "Error with a post Request" << RESET << endl; 
+        int ret = 0;
+        string path = request.getPath().c_str();
+        char *args[] = {(char *) path.c_str(), (char *)storage.c_str(), nullptr};
+        int fd = run_script(args, request);
+        char buffer[1024];
+        ssize_t bytesRead;
+        while ((bytesRead = read(fd, buffer, sizeof(buffer) - 1)) > 0) {
+            buffer[bytesRead] = '\0';
+            cout << RED << buffer << RESET << endl;
+            if (strstr(buffer, "Error:") != nullptr) {
+                connection.getRequest().setBody(buffer);
+            }
+            else
+                request.setPath("www/fileUploaded.html");
+        }
     }
 }
