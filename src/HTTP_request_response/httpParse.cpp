@@ -130,12 +130,12 @@ void	parseBody(Request& request) {
 	else
 		cout << BLU << "cgi path: " << request.getCGIPath() << RESET << endl;
 
-	auto pos = search(buffer.begin(), buffer.end(), boundary.begin(), boundary.end());
-	while (pos != buffer.end()) {
-		string tmp_buffer = ..;
-		buffer = tmp_buffer;
-		pos = search(buffer.begin(), buffer.end(), boundary.begin(), boundary.end());
-	}
+	// auto pos = search(buffer.begin(), buffer.end(), boundary.begin(), boundary.end());
+	// while (pos != buffer.end() && (string)tmp(pos, buffer.end()) != boundary + "--") {
+	// 	string tmp_buffer = ..;
+	// 	buffer = tmp_buffer;
+	// 	pos = search(buffer.begin(), buffer.end(), boundary.begin(), boundary.end());
+	// }
 	request.setBody(buffer);
 	return ;
 }
@@ -192,7 +192,7 @@ void	checkContentLengthBody(Connection& connection) {
 		cout << "it goes into CL func" << endl;
 		vector<char> buf = connection.getBuffer();
 		string buffer(buf.begin(), buf.end());
-		cout << buffer << endl;
+		cout << YEL << buffer << RESET << endl;
 		connection.getRequest().setBody(buffer);
 		parseBody(connection.getRequest());
 		connection.getRequest().setReadState(DONE);

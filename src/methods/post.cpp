@@ -40,15 +40,15 @@ bool createDirectories(const string& path) {
     return filesystem::create_directories(path);
 }
 
-string removeBoundaries(const string& content, const string& boundary) {
-    string newContent;
+// string removeBoundaries(const string& content, const string& boundary) {
+//     string newContent;
 
-    size_t file_start = content.find("\r\n\r\n", content.find("filename=")) + 4;
-    size_t file_end = content.size() - boundary.size() - 6;
+//     size_t file_start = content.find("\r\n\r\n", content.find("filename=")) + 4;
+//     size_t file_end = content.size() - boundary.size() - 6;
 
-    newContent = content.substr(file_start, file_end - file_start);
-    return newContent;
-}
+//     newContent = content.substr(file_start, file_end - file_start);
+//     return newContent;
+// }
 
 void writeFile(const string& storagePath, const string& fileName, const string& content, Request &request) {
     string fullPath = storagePath + fileName;
@@ -69,16 +69,17 @@ void writeFile(const string& storagePath, const string& fileName, const string& 
             cerr << "Failed to open file for writing: " << fullPath << endl;
             return;
         }
-        outFile << removeBoundaries(content, request.getBoundary());
+        //outFile << removeBoundaries(content, request.getBoundary());
+        outFile << request.getCGIPath();
     }
 }
 
-bool findLastBoundary(const string& contentType, const string& boundary) {
-	size_t pos = contentType.find(boundary);
-	if (pos == string::npos)
-		return (false);
-	return (true);
-}
+// bool findLastBoundary(const string& contentType, const string& boundary) {
+// 	size_t pos = contentType.find(boundary);
+// 	if (pos == string::npos)
+// 		return (false);
+// 	return (true);
+// }
 
 void execScript(char *args[], int pipefd[2], Request &request) 
 {
@@ -165,8 +166,8 @@ void post_method(int clientSocket, Request &request)
         delete_method(clientSocket, request);
         return ;
     }
-    if (!request.getUploadedFile().empty())
-        fullPath = storage + request.getUploadedFile();
+    if (!request.getCGIPath().empty())
+        fullPath = storage + request.getCGIPath();
     else
         fullPath = storage + extract_file_name(request.getPath());
     if (fileExists(fullPath)) {
@@ -175,26 +176,26 @@ void post_method(int clientSocket, Request &request)
     }
     // Once Jan's code is merged, we can use the body and go to the CGI script in both cases
     /////////////////////////////////////////////////////////////////////////////////////////
-    if (!request.getBoundary().empty() && request.getBytesCopied() <= stol(request.getHeaderValue("Content-Length"))){
-        writeFile(storage, request.getUploadedFile(), request.getContentUploadFile(), request);
-        request.setBytesCopied(request.getBytesCopied() + request.getMaxLengthUploadContent());
-        if (request.getBytesCopied() == stol(request.getHeaderValue("Content-Length")))
-            request.setPath("www/fileUploaded.html");
-        else
-            request.setPath("www/fileNotUploaded.html");
-    }
+    //if (!request.getBoundary().empty() && request.getBytesCopied() <= stol(request.getHeaderValue("Content-Length"))){
+    writeFile(storage, request.getCGIPath(), request.getBody(), request);
+        //request.setBytesCopied(request.getBytesCopied() + request.getMaxLengthUploadContent());
+       // if (request.getBytesCopied() == stol(request.getHeaderValue("Content-Length")))
+       //     request.setPath("www/fileUploaded.html");
+      //  else
+       //     request.setPath("www/fileNotUploaded.html");
+    //}
     /////////////////////////////////////////////////////////////////////////////////////////
-    else
+    //else
     {
         // after Jan Gijs extrapolate the body from the request
         // 
         // char *args1[] = {(char *)Path.to>cgi, (char *)request.getPath().c_str(), (char *)storage.c_str(), nullptr};
-        string path = request.getPath().c_str();
-        char *args[] = {(char *) path.c_str(), (char *)storage.c_str(), nullptr};
-        if (run_script(args, request))
-            request.setPath("www/fileNotUploaded.html");
-        else
-            request.setPath("www/fileUploaded.html");
+        // string path = request.getPath().c_str();
+        // char *args[] = {(char *) path.c_str(), (char *)storage.c_str(), nullptr};
+        // if (run_script(args, request))
+        //     request.setPath("www/fileNotUploaded.html");
+        // else
+        //     request.setPath("www/fileUploaded.html");
         // cerr << RED << "Error with a post Request" << RESET << endl; 
     }
 }
