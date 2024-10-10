@@ -36,25 +36,27 @@ const set<string> supportedHttpVersions = {
 	"HTTP/1.1"
 };
 
+struct Part {
+	map<string, string> headers;
+	string				body;
+};
+
 class Request {
 	private:
-		string				_method;
-		string				_path;
-		string				_version;
-		map<string, string>	_header;
-		string				_body;
-		int					_statusCode;
-		readState			_readState;
-		string				_cgiPath;
-		// string				_boundary; //
-		// string				_contentUploadFile; //
-		// int 				_maxLengthUploadContent; //
-		// int					_bytesCopied; //
-		// string				_uploadedFile; //
-		bool 				_isAutoindex;
-		bool				_isCGI;
-		string				_CGIextension;
-		bool				_isRedirect;
+		string					_method;
+		string					_path;
+		string					_version;
+		map<string, string>		_header;
+		string					_body;
+		int						_statusCode;
+		readState				_readState;
+		bool					_multipartFlag;
+		vector<Part>			_parts;
+		bool 					_isAutoindex;
+		bool					_isCGI;
+		string					_CGIextension;
+		string					_cgiPath;
+		bool					_isRedirect;
 	public:
 		Request();
 		Request(const Request& other);
@@ -69,12 +71,14 @@ class Request {
 		void	addHeader(string const key, string const value);
 		void	setHeader(map<string, string> const header);
 		void	setStatusCode(int const statusCode);
-		void	setReadState(const readState state);
-		void	setCGIPath(const string cgiName);
-		void 	setIsAutoindex(bool isAutoindex);
-		void 	setIsCGI(bool isCGI);
+		void	setReadState(readState const state);
+		void	setMultipartFlag(bool const flag);
+		void	setParts(vector<Part> const parts);
+		void 	setIsAutoindex(bool const isAutoindex);
+		void 	setIsCGI(bool const isCGI);
 		void 	setCGIextension(string const CGIextension);
-		void 	setIsRedirect(bool isRedirect);
+		void	setCGIPath(string const cgiName);
+		void 	setIsRedirect(bool const isRedirect);
 
 		string				getMethod() const;
 		string				getPath() const;
@@ -84,21 +88,12 @@ class Request {
 		map<string, string>	getHeaders() const;
 		string				getHeaderValue(const string& key) const;
 		readState			getReadState() const;
-		// -----------------------
-		// void				setUploadeFile(const string uploadedFile);
-		// void				setBytesCopied(const long bytesCopied);
-		// void				setMaxLengthUploadContent(const long maxLengthUploadContent);
-		// void				setBoundary(string const boundary);
-		// void				setContentUploadFile(string const contentUploadFile);
-		// string 				getBoundary() const;
-		// string 				getContentUploadFile() const;
-		// long 				getMaxLengthUploadContent() const;
-		// long 				getBytesCopied() const;
-		// string				getUploadedFile() const;
-		string				getCGIPath() const;
+		bool				getMultipartFlag() const;
+		vector<Part>		getParts() const;
 		bool				getIsAutoindex() const;
 		bool				getIsCGI() const;
 		string				getCGIextension() const;
+		string				getCGIPath() const;
 		bool				getIsRedirect() const;
 		// ------------------------
 
@@ -108,7 +103,7 @@ class Request {
 void	checkHeaders(const vector<char> requestData, Request& request);
 void	checkChunkedBody(Connection& connection);
 void	checkContentLengthBody(Connection& connection);
-void	parseBody(Request& request);
+void	parseBodyParts(Request& request);
 bool	hasAllHeaders(const vector<char> data);
 
 void	handleRequest(Connection& connection, Request& request);

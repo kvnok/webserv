@@ -94,7 +94,7 @@ static bool	parseRequestLine(const string line, Request& request) {
 	}
 	return (true);
 }
-/////////
+
 string findBoundary(const string& headerValue) {
 	string toFind = "boundary=";
 	auto pos = search(headerValue.begin(), headerValue.end(), toFind.begin(), toFind.end());
@@ -115,28 +115,36 @@ string findFileName(const string& contentType) {
         return ("");
     return (contentType.substr(startPos, endPos - startPos));
 }
-/////////////////
-void	parseBody(Request& request) {
-	string buffer(request.getBody().begin(), request.getBody().end());
-	string boundary = "";
+
+void	parseBodyParts(Request& request) {
+	string			buffer = request.getBody();
+	string 			boundary = "";
+	vector<Part>	parts;
+
 	if (request.getHeaderValue("Content-Type").find("multipart/form-data") != string::npos)
 		boundary = findBoundary(request.getHeaderValue("Content-Type"));
 	if (boundary.empty() || buffer.empty())
-		return ; //handle this correctly
-	cout << YEL << boundary << RESET << endl;
+		return ; //handle error
+	auto pos = search(buffer.begin(), buffer.end(), boundary.begin(), boundary.end());
+	while (pos != buffer.end()) {
+		string tmpB(pos + boundary.size(), buffer.end());
+		if (tmpB.empty())
+			return ; //handle error
+		if (tmpB == "--\r")
+			break ;
+		auto nextPos = search(tmpB.begin(), tmpB.end(), boundary.begin(), boundary.end());
+		if (nextPos == tmpB.end())
+			return ; //handle error
+		//get headers, find "\r\n", add body.
+		
+		buffer = tmpB;
+		pos = nextPos;
+	}
 	request.setCGIPath(findFileName(buffer));
 	if (request.getCGIPath().empty())
-		cout << BLU << "empty cgi path" << RESET << endl;
+		cout << RED << "empty cgi path" << RESET << endl;
 	else
 		cout << BLU << "cgi path: " << request.getCGIPath() << RESET << endl;
-
-	// auto pos = search(buffer.begin(), buffer.end(), boundary.begin(), boundary.end());
-	// while (pos != buffer.end() && (string)tmp(pos, buffer.end()) != boundary + "--") {
-	// 	string tmp_buffer = ..;
-	// 	buffer = tmp_buffer;
-	// 	pos = search(buffer.begin(), buffer.end(), boundary.begin(), boundary.end());
-	// }
-	request.setBody(buffer);
 	return ;
 }
 
@@ -144,39 +152,40 @@ void	checkChunkedBody(Connection& connection) {
 	vector<char> buf = connection.getBuffer();
 	const string d = "\r\n";
 	
-	while (!buf.empty()) {
+	while (true) {
+		if (buf.empty())
+			break ;
 		auto endSize = search(buf.begin(), buf.end(), d.begin(), d.end());
 		if (endSize == buf.end())
-			return ;
-		string sizeString(buf.begin(), endSize);
+			break ;
 		size_t chunkSize;
 		try {
-			chunkSize = stoul(sizeString, nullptr, 16);
+			chunkSize = stoul(string(buf.begin(), endSize), nullptr, 16);
 		} catch (...) {
 			cerr << "stoul failed in chunked body" << endl;
 			connection.getRequest().setReadState(DONE); // add an error state?
-			return ;
+			break ;
+		}
+		if (chunkSize == 0) {
+			if (connection.getRequest().getMultipartFlag())
+				parseBodyParts(connection.getRequest());
+			connection.getRequest().setReadState(DONE);
+			break ;
 		}
 		size_t fullChunkSize = (endSize - buf.begin()) + d.size() + chunkSize + d.size();
 		if (buf.size() < fullChunkSize) {		
-			cout << YEL << "Chunksize: " << chunkSize << RESET << endl;
-			return ;
+			cout << YEL << "Chunksize to small: " << chunkSize << RESET << endl;
+			break ;
 		}
 		auto chunkStart = endSize + d.size();
 		string toAdd(chunkStart, chunkStart + chunkSize);
 		cout << YEL << "ToADD: " << toAdd << RESET << endl;
-		if (chunkSize == 0) {
-			cout << "it goes in to CB func" << endl;
-			connection.clearBuffer(); 
-			parseBody(connection.getRequest());
-			connection.getRequest().setReadState(DONE);
-			cout << "reached end of CB func" << endl;
-			return ;
-		}
 		connection.getRequest().addToBody(toAdd);
 		buf.erase(buf.begin(), chunkStart + chunkSize + d.size());
 	}
+	connection.setBuffer(buf);
 	return ;
+	//still needs to be fixed, think it will skip parts now
 }
 
 void	checkContentLengthBody(Connection& connection) {
@@ -188,15 +197,14 @@ void	checkContentLengthBody(Connection& connection) {
 		connection.getRequest().setReadState(DONE); // add an error state?
 		return ;
 	}
-	if (connection.getBuffer().size() == readLength) {
-		cout << "it goes into CL func" << endl;
+	if (connection.getBuffer().size() == readLength) { //need catch error if length stay's to short or to long
 		vector<char> buf = connection.getBuffer();
 		string buffer(buf.begin(), buf.end());
-		cout << YEL << buffer << RESET << endl;
-		connection.getRequest().setBody(buffer);
-		parseBody(connection.getRequest());
+		//cout << YEL << buffer << RESET << endl;;
+		connection.getRequest().setBody(buffer); // reduce to one step, instead of 3
+		if (connection.getRequest().getMultipartFlag())
+			parseBodyParts(connection.getRequest());
 		connection.getRequest().setReadState(DONE);
-		cout << "reached end of CL func" << endl;
 	}
 	return ;	
 }
@@ -211,14 +219,12 @@ void	checkHeaders(const vector<char> requestData, Request& request) {
 		request.setReadState(DONE);
 		return ;
 	}
-	if (!parseRequestLine(line, request)) {
+	if (!parseRequestLine(line, request) || !parseHeaders(requestStream, line, request)) {
 		request.setReadState(DONE);
 		return ;
 	}
-	if (!parseHeaders(requestStream, line, request)) {
-		request.setReadState(DONE);
-		return ;
-	}
+	if (request.getHeaderValue("Content-Type").find("multipart/form-data") != string::npos)
+		request.setMultipartFlag(true);
 	if (request.getHeaderValue("Transfer-Encoding") == "chunked")
 		request.setReadState(CHUNKED_BODY);
 	else if (!request.getHeaderValue("Content-Length").empty())
@@ -233,8 +239,6 @@ bool	hasAllHeaders(const vector<char> data) {
 	auto i = search(data.begin(), data.end(), toFind.begin(), toFind.end());
 	return (i != data.end());
 }
-
-
 
 //*****************************************************************************************/
 	// if there is a body but not the correct header:  error? or not possible?

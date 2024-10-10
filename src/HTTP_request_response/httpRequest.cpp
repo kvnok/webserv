@@ -12,14 +12,11 @@ Request::Request()
 	  _body(""),
 	  _statusCode(200),
 	  _readState(START),
-	//   _boundary(""),
-	//   _contentUploadFile(""),
-	//   _maxLengthUploadContent(0),
-	//   _bytesCopied(0),
-	//   _uploadedFile(""),
+	  _multipartFlag(false),
 	  _isAutoindex(false),
 	  _isCGI(false),
 	  _CGIextension(""),
+	  _cgiPath(""),
 	  _isRedirect(false)
 { }
 Request::Request(const Request& other) { *this = other; }
@@ -34,15 +31,13 @@ Request&	Request::operator=(const Request& other) {
 		this->_body = other._body;
 		this->_statusCode = other._statusCode;
 		this->_readState = other._readState;
-		// this->_boundary = other._boundary;
-		// this->_contentUploadFile = other._contentUploadFile;
-		// this->_maxLengthUploadContent = other._maxLengthUploadContent;
-		// this->_bytesCopied = other._bytesCopied;
-		// this->_uploadedFile = other._uploadedFile;
+		this->_multipartFlag = other._multipartFlag;
+		this->_parts = other._parts;
 		this->_isAutoindex = other._isAutoindex;
 		this->_isCGI = other._isCGI;
-		this->_isRedirect = other._isRedirect;
 		this->_CGIextension = other._CGIextension;
+		this->_cgiPath = other._cgiPath;
+		this->_isRedirect = other._isRedirect;
 	}
 	return (*this);
 }
@@ -56,12 +51,13 @@ void	Request::addHeader(string const key, string const value) { this->_header[ke
 void	Request::setHeader(map<string, string> const header) { this->_header = header; }
 void	Request::setStatusCode(int const statusCode) { this->_statusCode = statusCode; }
 void	Request::setReadState(readState const state) { this->_readState = state; }
-
-void	Request::setCGIPath(string const cgiPath) { this->_cgiPath = cgiPath; }
-void	Request::setIsAutoindex(bool isAutoindex) { this->_isAutoindex = isAutoindex; }
-void	Request::setIsCGI(bool isCGI) { this->_isCGI = isCGI; }
+void	Request::setMultipartFlag(bool const flag) { this->_multipartFlag = flag; }
+void	Request::setParts(vector<Part> const parts) { this->_parts = parts; }
+void	Request::setIsAutoindex(bool const isAutoindex) { this->_isAutoindex = isAutoindex; }
+void	Request::setIsCGI(bool const isCGI) { this->_isCGI = isCGI; }
 void	Request::setCGIextension(string const CGIextension) { this->_CGIextension = CGIextension; }
-void	Request::setIsRedirect(bool isRedirect) { this->_isRedirect = isRedirect; }
+void	Request::setCGIPath(string const cgiPath) { this->_cgiPath = cgiPath; }
+void	Request::setIsRedirect(bool const isRedirect) { this->_isRedirect = isRedirect; }
 
 string	            Request::getMethod() const { return (this->_method); }
 string	            Request::getPath() const { return (this->_path); }
@@ -70,25 +66,15 @@ string	            Request::getBody() const { return (this->_body); }
 int                 Request::getStatusCode() const { return (this->_statusCode); }
 map<string, string> Request::getHeaders() const { return (this->_header); }
 readState			Request::getReadState() const { return (this->_readState); }
-// ---------------------------
-// void	Request::setUploadeFile(string uploadedFile) { this->_uploadedFile = uploadedFile; }
-// void	Request::setBytesCopied(long bytesCopied) { this->_bytesCopied = bytesCopied; }
-// void	Request::setMaxLengthUploadContent(long maxLengthUploadContent) { this->_maxLengthUploadContent = maxLengthUploadContent; }
-// void	Request::setBoundary(string const boundary) { this->_boundary = boundary; }
-// void	Request::setContentUploadFile(string const contentUploadFile) { this->_contentUploadFile = contentUploadFile; };
-// string	Request::getBoundary() const { return (this->_boundary); }
-// string	Request::getContentUploadFile() const { return (this->_contentUploadFile); }
-// long	Request::getMaxLengthUploadContent() const { return (this->_maxLengthUploadContent); }
-// long	Request::getBytesCopied() const { return (this->_bytesCopied); }
-// string	Request::getUploadedFile() const { return (this->_uploadedFile); }
+bool				Request::getMultipartFlag() const { return (this->_multipartFlag); }
+vector<Part>		Request::getParts() const { return (this->_parts); }
+bool				Request::getIsAutoindex() const { return (this->_isAutoindex); }
+bool				Request::getIsCGI() const { return (this->_isCGI); }
+string				Request::getCGIextension() const { return (this->_CGIextension); }
+string				Request::getCGIPath() const { return (this->_cgiPath); }
+bool				Request::getIsRedirect() const { return (this->_isRedirect); }
 
-string	Request::getCGIPath() const { return (this->_cgiPath); }
-bool	Request::getIsAutoindex() const { return (this->_isAutoindex); }
-bool	Request::getIsCGI() const { return (this->_isCGI); }
-string	Request::getCGIextension() const { return (this->_CGIextension); }
-bool	Request::getIsRedirect() const { return (this->_isRedirect); }
-// ---------------------------
-string	Request::getHeaderValue(const string& key) const{
+string				Request::getHeaderValue(const string& key) const{
 	auto iterator = this->_header.find(key);
 	
 	if (iterator == this->_header.end())
@@ -104,24 +90,16 @@ void  Request::reset() {
 	this->_body = "";
 	this->_statusCode = 200;
 	this->_readState = START;
-//   this->_boundary = "";
-//   this->_contentUploadFile = "";
-//   this->_maxLengthUploadContent = 0;
-//   this->_bytesCopied = 0;
-//   this->_uploadedFile = "";
-	this->_cgiPath = "";
+	this->_multipartFlag = false;
+	this->_parts.clear();
 	this->_isAutoindex = false;
 	this->_isCGI = false;
 	this->_CGIextension = "";
+	this->_cgiPath = "";
 	this->_isRedirect = false;
 }
 
-// connection.getFd(), connection.getRequest(), connection.getServer()
-// const int clientSocket, Request& request, ServerBlock serverBlock
 void handleRequest(Connection& connection, Request& request) {
-	// const int clientSocket = connection.getFd();
-	
-	//cout << RED << "in handleRequest:" << request.getPath() << "     "  << request.getMethod() << RESET << endl;
 	if (request.getMethod() == "GET") {
 		cout << BLU << "Get method" << RESET << endl;
 		getMethod(connection, request);

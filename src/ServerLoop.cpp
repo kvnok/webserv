@@ -70,7 +70,7 @@ void    Servers::readRequest(Connection& connection) {
         if (hasAllHeaders(connection.getBuffer()))
             connection.getRequest().setReadState(HEADERS);
     }
-    if (connection.getRequest().getReadState() == HEADERS) {    
+    if (connection.getRequest().getReadState() == HEADERS) {
         checkHeaders(connection.getBuffer(), connection.getRequest());
         connection.clearBuffer();
     }

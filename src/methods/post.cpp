@@ -2,7 +2,7 @@
 #include <filesystem>
 #include "CGI.hpp"
 
-unordered_map<string, string> parse_form_data(const string &body) {
+static unordered_map<string, string> parse_form_data(const string &body) {
     unordered_map<string, string> form_data;
     istringstream ss(body);
     string token;
@@ -19,24 +19,24 @@ unordered_map<string, string> parse_form_data(const string &body) {
 }
 
 
-void printRequestHeaders(const map<string, string> &headers) {
+static void printRequestHeaders(const map<string, string> &headers) {
     for (const auto &header : headers) {
         cout << header.first << ": " << header.second << endl;
     }
 }
 
-bool fileExists(string &path) {
+static bool fileExists(string &path) {
     if (filesystem::exists(path))
         return true;
     else
         return false;
 }
 
-bool storageExist(const string& path) {
+static bool storageExist(const string& path) {
     return filesystem::exists(path);
 }
 
-bool createDirectories(const string& path) {
+static bool createDirectories(const string& path) {
     return filesystem::create_directories(path);
 }
 
@@ -50,7 +50,7 @@ bool createDirectories(const string& path) {
 //     return newContent;
 // }
 
-void writeFile(const string& storagePath, const string& fileName, const string& content, Request &request) {
+static bool writeFile(const string& storagePath, const string& fileName, const string& content, Request &request) {
     string fullPath = storagePath + fileName;
     
     if (!filesystem::exists(storagePath))
@@ -59,7 +59,7 @@ void writeFile(const string& storagePath, const string& fileName, const string& 
         ofstream outFile(fullPath, ios::binary | ios::app);
         if (!outFile) {
             cerr << "Failed to open file for writing: " << fullPath << endl;
-            return;
+            return (false);
         }
         outFile << content;
     }
@@ -67,11 +67,12 @@ void writeFile(const string& storagePath, const string& fileName, const string& 
         ofstream outFile(fullPath, ios::binary);
         if (!outFile) {
             cerr << "Failed to open file for writing: " << fullPath << endl;
-            return;
+            return (false);
         }
         //outFile << removeBoundaries(content, request.getBoundary());
         outFile << request.getCGIPath();
     }
+    return (true);
 }
 
 // bool findLastBoundary(const string& contentType, const string& boundary) {
@@ -81,7 +82,7 @@ void writeFile(const string& storagePath, const string& fileName, const string& 
 // 	return (true);
 // }
 
-void execScript(char *args[], int pipefd[2], Request &request) 
+static void execScript(char *args[], int pipefd[2], Request &request) 
 {
     // Ensure correct path for the Python interpreter
     char *python_cgi = (char *)"/usr/bin/python3";
@@ -145,7 +146,7 @@ int run_script(char *args[], Request &request) {
     return status;
 }
 
-string extract_file_name(const string &path) {
+static string extract_file_name(const string &path) {
     size_t posSlash = path.find_last_of('/');
     string file = path.substr(posSlash + 1);
     return file;
@@ -160,14 +161,12 @@ string extract_file_name(const string &path) {
 //     return false;
 // }
 
-void post_method(Connection& connection, Request &request)
-{
+void post_method(Connection& connection, Request &request) {
     string uploadedFile;
     string storage = "www/storage/";
     string fullPath;
 
-    if (request.getPath() == "/www/deleteFile.html") // isCGI = true?
-	{
+    if (request.getPath() == "/www/deleteFile.html") { // isCGI = true?
         // switch to delete method
         delete_method(connection, request);
         return ;
@@ -186,14 +185,12 @@ void post_method(Connection& connection, Request &request)
     }
     // Once Jan's code is merged, we can use the body and go to the CGI script in both cases
     /////////////////////////////////////////////////////////////////////////////////////////
-    if (!request.getBoundary().empty() && request.getBytesCopied() <= stol(request.getHeaderValue("Content-Length"))){
-        writeFile(storage, request.getUploadedFile(), request.getContentUploadFile(), request);
-        request.setBytesCopied(request.getBytesCopied() + request.getMaxLengthUploadContent());
-        if (request.getBytesCopied() == stol(request.getHeaderValue("Content-Length")))
-            request.setPath("www/fileUploaded.html");
-        else
-            request.setPath("www/fileNotUploaded.html");
-    }
+
+    // change to new request vars  == writeFile(storage, request.getCGIPath(), request.getBody(), request);
+    if (writeFile(storage, request.getCGIPath(), request.getBody(), request))
+        request.setPath("www/fileUploaded.html");
+    else
+        request.setPath("www/fileNotUploaded.html");
     /////////////////////////////////////////////////////////////////////////////////////////
     // char *args[] = {                                          /** Jan this is what we need for running the script **/
     //     (char *)request.fileName.c_str(),
@@ -204,21 +201,18 @@ void post_method(Connection& connection, Request &request)
     // of Course i need the path to the script which means what i showed you in from the html file
     /////////////////////////////////////////////////////////////////////////////////////////
     //else
-    {
-        int ret = 0;
-        string path = request.getPath().c_str();
-        char *args[] = {(char *) path.c_str(), (char *)storage.c_str(), nullptr};
-        int fd = run_script(args, request);
-        char buffer[1024];
-        ssize_t bytesRead;
-        while ((bytesRead = read(fd, buffer, sizeof(buffer) - 1)) > 0) {
-            buffer[bytesRead] = '\0';
-            cout << RED << buffer << RESET << endl;
-            if (strstr(buffer, "Error:") != nullptr) {
-                connection.getRequest().setBody(buffer);
-            }
-            else
-                request.setPath("www/fileUploaded.html");
-        }
+    int ret = 0;
+    string path = request.getPath().c_str();
+    char *args[] = {(char *) path.c_str(), (char *)storage.c_str(), nullptr};
+    int fd = run_script(args, request);
+    char buffer[1024];
+    ssize_t bytesRead;
+    while ((bytesRead = read(fd, buffer, sizeof(buffer) - 1)) > 0) {
+        buffer[bytesRead] = '\0';
+        cout << RED << buffer << RESET << endl;
+        if (strstr(buffer, "Error:") != nullptr)
+            connection.getRequest().setBody(buffer);
+        else
+            request.setPath("www/fileUploaded.html");
     }
 }
