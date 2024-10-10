@@ -16,6 +16,7 @@ Request::Request()
 	  _isAutoindex(false),
 	  _isCGI(false),
 	  _CGIextension(""),
+	  _cgiBody(""),
 	  _cgiPath(""),
 	  _isRedirect(false)
 { }
@@ -36,6 +37,7 @@ Request&	Request::operator=(const Request& other) {
 		this->_isAutoindex = other._isAutoindex;
 		this->_isCGI = other._isCGI;
 		this->_CGIextension = other._CGIextension;
+		this->_cgiBody = other._cgiBody;
 		this->_cgiPath = other._cgiPath;
 		this->_isRedirect = other._isRedirect;
 	}
@@ -56,6 +58,7 @@ void	Request::setParts(vector<Part> const parts) { this->_parts = parts; }
 void	Request::setIsAutoindex(bool const isAutoindex) { this->_isAutoindex = isAutoindex; }
 void	Request::setIsCGI(bool const isCGI) { this->_isCGI = isCGI; }
 void	Request::setCGIextension(string const CGIextension) { this->_CGIextension = CGIextension; }
+void	Request::setCGIBody(string const cgiBody) { this->_cgiBody = cgiBody; }
 void	Request::setCGIPath(string const cgiPath) { this->_cgiPath = cgiPath; }
 void	Request::setIsRedirect(bool const isRedirect) { this->_isRedirect = isRedirect; }
 
@@ -71,6 +74,7 @@ vector<Part>		Request::getParts() const { return (this->_parts); }
 bool				Request::getIsAutoindex() const { return (this->_isAutoindex); }
 bool				Request::getIsCGI() const { return (this->_isCGI); }
 string				Request::getCGIextension() const { return (this->_CGIextension); }
+string				Request::getCGIBody() const { return (this->_cgiBody); }
 string				Request::getCGIPath() const { return (this->_cgiPath); }
 bool				Request::getIsRedirect() const { return (this->_isRedirect); }
 
@@ -95,6 +99,7 @@ void  Request::reset() {
 	this->_isAutoindex = false;
 	this->_isCGI = false;
 	this->_CGIextension = "";
+	this->_cgiBody = "";
 	this->_cgiPath = "";
 	this->_isRedirect = false;
 }

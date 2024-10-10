@@ -100,20 +100,45 @@ string findBoundary(const string& headerValue) {
 	auto pos = search(headerValue.begin(), headerValue.end(), toFind.begin(), toFind.end());
 	if (pos == headerValue.end())
 		return ("");
-	string boundary(pos + toFind.size(), headerValue.end());
-	return (boundary);
+	return (string(pos + toFind.size(), headerValue.end()));
 }
 
-string findFileName(const string& contentType) {
-	string fileName = "filename=\"";
-    size_t startPos = contentType.find(fileName);
-    if (startPos == string::npos)
-        return ("");
-    startPos += fileName.size();
-    size_t endPos = contentType.find("\"", startPos);
-    if (endPos == string::npos)
-        return ("");
-    return (contentType.substr(startPos, endPos - startPos));
+static	Part	parsePart(string content, Request& request) {
+	Part 	newPart;
+	string	hbLim = "\r\n\r\n";
+	string	nl = "\r\n";
+
+	cout << "HERE" << endl;
+	auto hbPos = search(content.begin(), content.end(), hbLim.begin(), hbLim.end());
+	if (hbPos == content.end())
+		return (newPart); // add error handling, part is empty
+	auto start = search(content.begin(), hbPos, nl.begin(), nl.begin());
+	start += nl.size();
+	while (start != hbPos) {
+		auto end = search(start, hbPos, nl.begin(), nl.end()); 
+		auto kvLim = find(start, end, ':');
+		if (start >= end || kvLim >= end)
+			break ; //handle error
+		newPart.headers[string(start, kvLim)] = string(kvLim + 2, end);
+		start = end + nl.size();
+	}
+	cout << "also HERE" << endl;
+	newPart.body = string(hbPos + hbLim.size(), content.end());
+	if (newPart.headers["Content-Disposition"].find("name=\"file\";") != string::npos) {
+		request.setCGIBody(newPart.body);
+		cout << YEL << request.getCGIBody() << RESET << endl;
+	}
+	string value = newPart.headers["Content-Disposition"];
+	string toFind = "filename=\"";
+	auto i = search(value.begin(), value.end(), toFind.begin(), toFind.end());
+	if (i < value.end()) {
+		auto j = find(i + toFind.size(), value.end(), '\"');
+		if (j < value.end()) {
+			request.setCGIPath(string(i, j));
+			cout << request.getCGIPath() << endl;
+		}
+	}
+	return (newPart);
 }
 
 void	parseBodyParts(Request& request) {
@@ -125,26 +150,20 @@ void	parseBodyParts(Request& request) {
 		boundary = findBoundary(request.getHeaderValue("Content-Type"));
 	if (boundary.empty() || buffer.empty())
 		return ; //handle error
-	auto pos = search(buffer.begin(), buffer.end(), boundary.begin(), boundary.end());
-	while (pos != buffer.end()) {
-		string tmpB(pos + boundary.size(), buffer.end());
-		if (tmpB.empty())
-			return ; //handle error
-		if (tmpB == "--\r")
+	while (true) {
+		if (buffer.begin() + boundary.size() >= buffer.end())
 			break ;
-		auto nextPos = search(tmpB.begin(), tmpB.end(), boundary.begin(), boundary.end());
-		if (nextPos == tmpB.end())
-			return ; //handle error
-		//get headers, find "\r\n", add body.
-		
-		buffer = tmpB;
-		pos = nextPos;
+		string	tmpB(buffer.begin() + boundary.size(), buffer.end());
+		if (tmpB.empty())
+			break ; //handle error
+		else if (tmpB == "--")
+			break ;
+		auto pos = search(tmpB.begin() + boundary.size(), tmpB.end(), boundary.begin(), boundary.end());
+		if (pos == tmpB.end())
+			break ; //handle error
+		parts.push_back(parsePart(string(buffer.begin() + boundary.size(), pos), request));
+		buffer.erase(buffer.begin(), pos);
 	}
-	request.setCGIPath(findFileName(buffer));
-	if (request.getCGIPath().empty())
-		cout << RED << "empty cgi path" << RESET << endl;
-	else
-		cout << BLU << "cgi path: " << request.getCGIPath() << RESET << endl;
 	return ;
 }
 
@@ -178,9 +197,7 @@ void	checkChunkedBody(Connection& connection) {
 			break ;
 		}
 		auto chunkStart = endSize + d.size();
-		string toAdd(chunkStart, chunkStart + chunkSize);
-		cout << YEL << "ToADD: " << toAdd << RESET << endl;
-		connection.getRequest().addToBody(toAdd);
+		connection.getRequest().addToBody(string(chunkStart, chunkStart + chunkSize));
 		buf.erase(buf.begin(), chunkStart + chunkSize + d.size());
 	}
 	connection.setBuffer(buf);
@@ -199,9 +216,7 @@ void	checkContentLengthBody(Connection& connection) {
 	}
 	if (connection.getBuffer().size() == readLength) { //need catch error if length stay's to short or to long
 		vector<char> buf = connection.getBuffer();
-		string buffer(buf.begin(), buf.end());
-		//cout << YEL << buffer << RESET << endl;;
-		connection.getRequest().setBody(buffer); // reduce to one step, instead of 3
+		connection.getRequest().setBody(string(buf.begin(), buf.end()));
 		if (connection.getRequest().getMultipartFlag())
 			parseBodyParts(connection.getRequest());
 		connection.getRequest().setReadState(DONE);

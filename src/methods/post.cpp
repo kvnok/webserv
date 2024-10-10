@@ -187,7 +187,9 @@ void post_method(Connection& connection, Request &request) {
     /////////////////////////////////////////////////////////////////////////////////////////
 
     // change to new request vars  == writeFile(storage, request.getCGIPath(), request.getBody(), request);
-    if (writeFile(storage, request.getCGIPath(), request.getBody(), request))
+    if (request.getCGIBody().empty())
+        request.setCGIBody(request.getBody());
+    if (writeFile(storage, request.getCGIPath(), request.getCGIBody(), request))
         request.setPath("www/fileUploaded.html");
     else
         request.setPath("www/fileNotUploaded.html");

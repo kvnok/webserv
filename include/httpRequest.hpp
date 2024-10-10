@@ -55,6 +55,7 @@ class Request {
 		bool 					_isAutoindex;
 		bool					_isCGI;
 		string					_CGIextension;
+		string					_cgiBody;
 		string					_cgiPath;
 		bool					_isRedirect;
 	public:
@@ -77,6 +78,7 @@ class Request {
 		void 	setIsAutoindex(bool const isAutoindex);
 		void 	setIsCGI(bool const isCGI);
 		void 	setCGIextension(string const CGIextension);
+		void	setCGIBody(string const cgiBody);
 		void	setCGIPath(string const cgiName);
 		void 	setIsRedirect(bool const isRedirect);
 
@@ -93,6 +95,7 @@ class Request {
 		bool				getIsAutoindex() const;
 		bool				getIsCGI() const;
 		string				getCGIextension() const;
+		string				getCGIBody() const;
 		string				getCGIPath() const;
 		bool				getIsRedirect() const;
 		// ------------------------
