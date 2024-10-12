@@ -20,6 +20,7 @@ static bool	parseHeaders(istringstream &headerStream, string line, Request& requ
 		}
 		string key(line.begin(), splitPos);
 		string value(splitPos + toFind.size(), line.end() - 1); // -1 to get rid of the \r at the end of the string
+		//cout << YEL << key << ": " << value << RESET << endl;
 		if (!key.empty() && !value.empty())
 			request.addHeader(key, value);
 		else {
@@ -124,7 +125,7 @@ static	Part	parsePart(string content, Request& request) {
 	newPart.body = string(hbPos + hbLim.size(), content.end());
 	if (newPart.headers["Content-Disposition"].find("name=\"file\";") != string::npos) {
 		request.setCGIBody(newPart.body);
-		cout << YEL << request.getCGIBody() << RESET << endl;
+		//cout << YEL << request.getCGIBody() << RESET << endl;
 	}
 	string value = newPart.headers["Content-Disposition"];
 	string toFind = "filename=\"";
@@ -146,6 +147,7 @@ void	parseBodyParts(Request& request) {
 		boundary = findBoundary(request.getHeaderValue("Content-Type"));
 	if (boundary.empty() || body.empty())
 		return ; //handle error;
+	boundary = "--" + boundary;
 	auto i = search(body.begin(), body.end(), boundary.begin(), boundary.end());
 	if (i == body.end())
 		return ; //handle error.
@@ -192,10 +194,8 @@ void	checkChunkedBody(Connection& connection) {
 			break ;
 		}
 		size_t fullChunkSize = (endSize - buf.begin()) + d.size() + chunkSize + d.size();
-		if (buf.size() < fullChunkSize) {		
-			cout << YEL << "Chunksize to small: " << chunkSize << RESET << endl;
+		if (buf.size() < fullChunkSize)
 			break ;
-		}
 		auto chunkStart = endSize + d.size();
 		connection.getRequest().addToBody(string(chunkStart, chunkStart + chunkSize));
 		buf.erase(buf.begin(), chunkStart + chunkSize + d.size());
@@ -214,10 +214,11 @@ void	checkContentLengthBody(Connection& connection) {
 		connection.getRequest().setReadState(DONE); // set status code
 		return ;
 	}
+	// cout << RED << string(connection.getBuffer().begin(), connection.getBuffer().end()) << RESET << endl;
 	if (connection.getBuffer().size() == readLength) { //need catch error if length stay's to short or to long
 		vector<char> buf = connection.getBuffer();
-		//cout << string(buf.begin(), buf.end()) << endl;
 		connection.getRequest().setBody(string(buf.begin(), buf.end()));
+		//cout << connection.getRequest().getBody() << endl;
 		if (connection.getRequest().getMultipartFlag())
 			parseBodyParts(connection.getRequest());
 		connection.getRequest().setReadState(DONE);

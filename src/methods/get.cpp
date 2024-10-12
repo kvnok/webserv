@@ -13,7 +13,7 @@ void getMethod(Connection& connection) {
 	}
 	else
 	{
-		cout << "Test CGI" << endl;	
+		//cout << "Test CGI" << endl;	
 		// If the path is a CGI script, we need to execute it
 		// Prepare the path to the script
 		string scriptPath = "var/cgi-bin/get_time.cgi"; // Adjust if necessary	

@@ -55,7 +55,7 @@ static bool createDirectories(const string& path) {
 static bool writeFile(const string& storagePath, const string& fileName, const string& content) {
     string fullPath = storagePath + fileName;
 
-    cout << RED << fullPath << RESET << endl;
+    // cout << RED << fullPath << RESET << endl;
     if (!filesystem::exists(storagePath))
         filesystem::create_directories(storagePath);
     if (filesystem::exists(fullPath)) {
@@ -72,7 +72,7 @@ static bool writeFile(const string& storagePath, const string& fileName, const s
             cerr << "Failed to open file for writing: " << fullPath << endl;
             return (false);
         }
-        outFile << fileName;
+        outFile << content;
     }
     return (true);
 }
@@ -93,7 +93,7 @@ static void execScript(char *args[], int pipefd[2], Request &request)
 
     if (request.getMethod() == "GET") 
     {
-        cout << "GET script" << endl;
+        // cout << "GET script" << endl;
         close(pipefd[0]);
 
         dup2(pipefd[1], STDOUT_FILENO);
@@ -105,7 +105,7 @@ static void execScript(char *args[], int pipefd[2], Request &request)
     }
     else
     {
-        cout << "POST script" << endl;
+        // cout << "POST script" << endl;
         char *script_path = (char *)"var/cgi-bin/upload_file_in_a_folder.cgi";  // we probably need to change this with Jan's code
         close(pipefd[0]);
         char *args1[] = {python_cgi, script_path, args[0], args[1], nullptr};
@@ -168,7 +168,6 @@ void post_method(Connection& connection) {
     string storage = "www/storage/";
     string fullPath;
 
-    cout << YEL << connection.getRequest().getCGIPath() << RESET << endl;
     if (connection.getRequest().getPath() == "/www/deleteFile.html") { // isCGI = true?
         delete_method(connection);
         return ;
