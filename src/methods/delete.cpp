@@ -1,5 +1,6 @@
 #include "httpResponse.hpp"
 #include "httpRequest.hpp"
+#include "Connection.hpp"
 
 bool pathExist(const string& path) {
     return filesystem::exists(path);
@@ -33,35 +34,34 @@ int mustBeInStorage(const string& path) {
 	return 0;
 }
 
-void delete_method(Connection& connection, Request& request) {
+void delete_method(Connection& connection) {
 	string file = "";
-	if (request.getMethod() == "DELETE") {
+	if (connection.getRequest().getMethod() == "DELETE") {
 		cout << RED << "Delete with curl not working" << RESET << endl;
-		if (mustBeInStorage(request.getPath()))
+		if (mustBeInStorage(connection.getRequest().getPath()))
 		{
 			cout << "File not in storage" << endl;
-			request.setPath("www/fileNotDeleted.html");
+			connection.getRequest().setPath("www/fileNotDeleted.html");
 			return ;
 		}
 		else
 		{
 			cout << "Delete method from curl" << endl;
-			file = "." + request.getPath();
-			request.setPath("www/fileDeleted.html");
+			file = "." + connection.getRequest().getPath();
+			connection.getRequest().setPath("www/fileDeleted.html");
 		}
 	}
-	else
-	{
+	else{
 		cout << "Delete method from Browser" << endl;
-		file = create_file_name(request.getBody());
+		file = create_file_name(connection.getRequest().getBody());
 		file = "./www/storage/" + file;
 		if (!pathExist(file)) {
 			cout << BOLD << "File: " << file << " not found." << RESET << endl;
-			request.setPath("www/fileNotDeleted.html");
+			connection.getRequest().setPath("www/fileNotDeleted.html");
 			return ;
 		}
 	}
 	cout << RED << "File: " << file << " deleted successfully." << RESET << endl;
 	removeFileFromStorage(file); // Function to delete the file
-	request.setPath("www/fileDeleted.html");
+	connection.getRequest().setPath("www/fileDeleted.html");
 }

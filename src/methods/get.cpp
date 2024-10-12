@@ -2,12 +2,12 @@
 #include "httpResponse.hpp"
 #include "Connection.hpp"
 
-void getMethod(Connection &connection, Request &request) {
+void getMethod(Connection& connection) {
 	// Store the path in a local string to extend its lifetime
-	if (request.getPath() == "/var/cgi-bin/get_time.cgi") {
-		request.setIsCGI(true);
+	if (connection.getRequest().getPath() == "/var/cgi-bin/get_time.cgi") {
+		connection.getRequest().setIsCGI(true);
 	}
-	if (request.getIsCGI() == false) {
+	if (connection.getRequest().getIsCGI() == false) {
 		// If the path is not a CGI script, we can simply send the file
 		request_path_handler(connection);
 	}
@@ -27,7 +27,7 @@ void getMethod(Connection &connection, Request &request) {
 		///////////////////////////
 		// Hey JG remember here is the first fd that we need for polling
 		// We can store this fd in the connection class
-		int fdForPolling = run_script(args, request);
+		int fdForPolling = run_script(args, connection.getRequest());
 		
 		// connection.setFdForPolling(fdForPolling); maybe we can do it here.
 		char buffer[1024];

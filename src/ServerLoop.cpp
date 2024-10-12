@@ -49,7 +49,7 @@ void    Servers::writeResponse(Connection& connection) {
 }
 
 void    Servers::executeRequest(Connection& connection) {
-    handleRequest(connection, connection.getRequest());
+    handleRequest(connection);
     connection.setNextState(WRITE);
 }
 

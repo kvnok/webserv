@@ -104,18 +104,18 @@ void  Request::reset() {
 	this->_isRedirect = false;
 }
 
-void handleRequest(Connection& connection, Request& request) {
-	if (request.getMethod() == "GET") {
+void handleRequest(Connection& connection) {
+	if (connection.getRequest().getMethod() == "GET") {
 		cout << BLU << "Get method" << RESET << endl;
-		getMethod(connection, request);
+		getMethod(connection);
 	}
-	else if (request.getMethod() == "DELETE") {
+	else if (connection.getRequest().getMethod() == "DELETE") {
         cout << BLU << "Delete method" << endl;
-        delete_method(connection, request);
+        delete_method(connection);
 	}
-	else if (request.getMethod() == "POST")
+	else if (connection.getRequest().getMethod() == "POST")
 	{
 		cout << BLU << "Post method" << RESET << endl;
-		post_method(connection, request);
+		post_method(connection);
 	}
 }

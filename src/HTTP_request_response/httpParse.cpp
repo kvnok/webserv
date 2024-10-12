@@ -108,7 +108,6 @@ static	Part	parsePart(string content, Request& request) {
 	string	hbLim = "\r\n\r\n";
 	string	nl = "\r\n";
 
-	cout << "HERE" << endl;
 	auto hbPos = search(content.begin(), content.end(), hbLim.begin(), hbLim.end());
 	if (hbPos == content.end())
 		return (newPart); // add error handling, part is empty
@@ -122,7 +121,6 @@ static	Part	parsePart(string content, Request& request) {
 		newPart.headers[string(start, kvLim)] = string(kvLim + 2, end);
 		start = end + nl.size();
 	}
-	cout << "also HERE" << endl;
 	newPart.body = string(hbPos + hbLim.size(), content.end());
 	if (newPart.headers["Content-Disposition"].find("name=\"file\";") != string::npos) {
 		request.setCGIBody(newPart.body);
@@ -131,38 +129,40 @@ static	Part	parsePart(string content, Request& request) {
 	string value = newPart.headers["Content-Disposition"];
 	string toFind = "filename=\"";
 	auto i = search(value.begin(), value.end(), toFind.begin(), toFind.end());
-	if (i < value.end()) {
+	if (i != value.end()) {
 		auto j = find(i + toFind.size(), value.end(), '\"');
-		if (j < value.end()) {
-			request.setCGIPath(string(i, j));
-			cout << request.getCGIPath() << endl;
-		}
+		if (j < value.end())
+			request.setCGIPath(string(i + toFind.size(), j));
 	}
 	return (newPart);
 }
 
 void	parseBodyParts(Request& request) {
-	string			buffer = request.getBody();
+	string			body = request.getBody();
 	string 			boundary = "";
 	vector<Part>	parts;
 
 	if (request.getHeaderValue("Content-Type").find("multipart/form-data") != string::npos)
 		boundary = findBoundary(request.getHeaderValue("Content-Type"));
-	if (boundary.empty() || buffer.empty())
-		return ; //handle error
+	if (boundary.empty() || body.empty())
+		return ; //handle error;
+	auto i = search(body.begin(), body.end(), boundary.begin(), boundary.end());
+	if (i == body.end())
+		return ; //handle error.
+	i += boundary.size();
 	while (true) {
-		if (buffer.begin() + boundary.size() >= buffer.end())
-			break ;
-		string	tmpB(buffer.begin() + boundary.size(), buffer.end());
+		if (i >= body.end())
+			break ; //handle error
+		string	tmpB(i, body.end());
 		if (tmpB.empty())
 			break ; //handle error
 		else if (tmpB == "--")
-			break ;
-		auto pos = search(tmpB.begin() + boundary.size(), tmpB.end(), boundary.begin(), boundary.end());
+			break ; //finished
+		auto pos = search(tmpB.begin(), tmpB.end(), boundary.begin(), boundary.end());
 		if (pos == tmpB.end())
 			break ; //handle error
-		parts.push_back(parsePart(string(buffer.begin() + boundary.size(), pos), request));
-		buffer.erase(buffer.begin(), pos);
+		parts.push_back(parsePart(string(tmpB.begin(), pos), request));
+		i = search(i, body.end(), boundary.begin(), boundary.end()) + boundary.size();
 	}
 	return ;
 }
@@ -211,11 +211,12 @@ void	checkContentLengthBody(Connection& connection) {
 		readLength = stoul(connection.getRequest().getHeaderValue("Content-Length"));
 	} catch (...) {
 		cerr << "stoul failed in content length body" << endl;
-		connection.getRequest().setReadState(DONE); // add an error state?
+		connection.getRequest().setReadState(DONE); // set status code
 		return ;
 	}
 	if (connection.getBuffer().size() == readLength) { //need catch error if length stay's to short or to long
 		vector<char> buf = connection.getBuffer();
+		//cout << string(buf.begin(), buf.end()) << endl;
 		connection.getRequest().setBody(string(buf.begin(), buf.end()));
 		if (connection.getRequest().getMultipartFlag())
 			parseBodyParts(connection.getRequest());

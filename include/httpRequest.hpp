@@ -109,7 +109,7 @@ void	checkContentLengthBody(Connection& connection);
 void	parseBodyParts(Request& request);
 bool	hasAllHeaders(const vector<char> data);
 
-void	handleRequest(Connection& connection, Request& request);
+void	handleRequest(Connection& connection);
 
 //https://www.ibm.com/docs/en/app-connect/11.0.0?topic=messages-http-headers
 //resource headers

@@ -1,4 +1,6 @@
 #include "httpResponse.hpp"
+#include "httpRequest.hpp"
+#include "Connection.hpp"
 #include <filesystem>
 #include "CGI.hpp"
 
@@ -50,9 +52,10 @@ static bool createDirectories(const string& path) {
 //     return newContent;
 // }
 
-static bool writeFile(const string& storagePath, const string& fileName, const string& content, Request &request) {
+static bool writeFile(const string& storagePath, const string& fileName, const string& content) {
     string fullPath = storagePath + fileName;
-    
+
+    cout << RED << fullPath << RESET << endl;
     if (!filesystem::exists(storagePath))
         filesystem::create_directories(storagePath);
     if (filesystem::exists(fullPath)) {
@@ -69,8 +72,7 @@ static bool writeFile(const string& storagePath, const string& fileName, const s
             cerr << "Failed to open file for writing: " << fullPath << endl;
             return (false);
         }
-        //outFile << removeBoundaries(content, request.getBoundary());
-        outFile << request.getCGIPath();
+        outFile << fileName;
     }
     return (true);
 }
@@ -161,38 +163,38 @@ static string extract_file_name(const string &path) {
 //     return false;
 // }
 
-void post_method(Connection& connection, Request &request) {
+void post_method(Connection& connection) {
     string uploadedFile;
     string storage = "www/storage/";
     string fullPath;
 
-    if (request.getPath() == "/www/deleteFile.html") { // isCGI = true?
-        // switch to delete method
-        delete_method(connection, request);
+    cout << YEL << connection.getRequest().getCGIPath() << RESET << endl;
+    if (connection.getRequest().getPath() == "/www/deleteFile.html") { // isCGI = true?
+        delete_method(connection);
         return ;
     }
-    if (!request.getCGIPath().empty())
-        fullPath = storage + request.getCGIPath();
+    if (!connection.getRequest().getCGIPath().empty())
+        fullPath = storage + connection.getRequest().getCGIPath();
     else
-        fullPath = storage + extract_file_name(request.getPath());
+        fullPath = storage + extract_file_name(connection.getRequest().getPath());
     // if (!check_permissions(fullPath)) {
     //     request.setPath("www/fileNotUploaded.html");
     //     return ;
     // }
     if (fileExists(fullPath)) {
-        request.setPath("www/fileExists.html");
+        connection.getRequest().setPath("www/fileExists.html");
         return ;
     }
     // Once Jan's code is merged, we can use the body and go to the CGI script in both cases
     /////////////////////////////////////////////////////////////////////////////////////////
 
     // change to new request vars  == writeFile(storage, request.getCGIPath(), request.getBody(), request);
-    if (request.getCGIBody().empty())
-        request.setCGIBody(request.getBody());
-    if (writeFile(storage, request.getCGIPath(), request.getCGIBody(), request))
-        request.setPath("www/fileUploaded.html");
+    if (connection.getRequest().getCGIBody().empty())
+        connection.getRequest().setCGIBody(connection.getRequest().getBody());
+    if (writeFile(storage, connection.getRequest().getCGIPath(), connection.getRequest().getCGIBody()))
+        connection.getRequest().setPath("www/fileUploaded.html");
     else
-        request.setPath("www/fileNotUploaded.html");
+        connection.getRequest().setPath("www/fileNotUploaded.html");
     /////////////////////////////////////////////////////////////////////////////////////////
     // char *args[] = {                                          /** Jan this is what we need for running the script **/
     //     (char *)request.fileName.c_str(),
@@ -204,9 +206,9 @@ void post_method(Connection& connection, Request &request) {
     /////////////////////////////////////////////////////////////////////////////////////////
     //else
     int ret = 0;
-    string path = request.getPath().c_str();
+    string path = connection.getRequest().getPath().c_str();
     char *args[] = {(char *) path.c_str(), (char *)storage.c_str(), nullptr};
-    int fd = run_script(args, request);
+    int fd = run_script(args, connection.getRequest());
     char buffer[1024];
     ssize_t bytesRead;
     while ((bytesRead = read(fd, buffer, sizeof(buffer) - 1)) > 0) {
@@ -215,6 +217,6 @@ void post_method(Connection& connection, Request &request) {
         if (strstr(buffer, "Error:") != nullptr)
             connection.getRequest().setBody(buffer);
         else
-            request.setPath("www/fileUploaded.html");
+            connection.getRequest().setPath("www/fileUploaded.html");
     }
 }
