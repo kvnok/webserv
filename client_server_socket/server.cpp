@@ -15,7 +15,7 @@ static bool	receiveMessage(int clientSocket, const std::string& clientName)
 	if (bytesReceived <= 0)
 		return true;
 	std::string message(buffer);
-	std::cout << clientName << " says: " << message << std::endl;
+	//std::cout << clientName << " says: " << message << std::endl;
 	return (message == "exit");
 }
 

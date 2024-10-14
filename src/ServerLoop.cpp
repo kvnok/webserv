@@ -27,15 +27,15 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
 
 void    Servers::writeResponse(Connection& connection) {
     Request &request = connection.getRequest();
-    if (request.getIsAutoindex()) {
-        // do autoindex stuff
-    }
-    else if (request.getIsCGI()) {
-        // do cgi stuff
-    }
-    else if (request.getStatusCode() >= 400) {
-        // do error stuff
-    }
+    // if (request.getIsAutoindex()) {
+    //     // do autoindex stuff
+    // }
+    // else if (request.getIsCGI()) {
+    //     // do cgi stuff
+    // }
+    // else if (request.getStatusCode() >= 400) {
+    //     // do error stuff
+    // }
 
     connection.getResponse().setClientSocket(connection.getFd());
     connection.getResponse().setVersion(connection.getRequest().getVersion());
@@ -49,7 +49,7 @@ void    Servers::writeResponse(Connection& connection) {
 }
 
 void    Servers::executeRequest(Connection& connection) {
-    handleRequest(connection, connection.getRequest());
+    handleRequest(connection);
     connection.setNextState(WRITE);
 }
 
@@ -65,13 +65,12 @@ void    Servers::readRequest(Connection& connection) {
         return ;
     }
     buffer.resize(bytes);
-    // cout << RED << string(buffer.begin(), buffer.end()) << RESET << endl;
     connection.addToBuffer(buffer);
     if (connection.getRequest().getReadState() == START) {
         if (hasAllHeaders(connection.getBuffer()))
             connection.getRequest().setReadState(HEADERS);
     }
-    if (connection.getRequest().getReadState() == HEADERS) {    
+    if (connection.getRequest().getReadState() == HEADERS) {
         checkHeaders(connection.getBuffer(), connection.getRequest());
         connection.clearBuffer();
     }
@@ -79,8 +78,6 @@ void    Servers::readRequest(Connection& connection) {
         checkChunkedBody(connection);
     if (connection.getRequest().getReadState() == CONTENT_LENGTH_BODY)
         checkContentLengthBody(connection);
-    if (connection.getRequest().getReadState() == BODY)
-        parseBody(connection.getBuffer(), connection.getRequest());
     if (connection.getRequest().getReadState() == DONE) {
         connection.getBuffer().clear();
         connection.getBuffer().resize(0);
@@ -94,11 +91,16 @@ void    Servers::handleExistingConnection(Connection& connection, size_t& i) {
             readRequest(connection);
             break ;
         case EXECUTE:
+            // in execute, when we need to use an extra fd, we create the fd, set the state to cgi.
             executeRequest(connection);
             break ;
         case WRITE:
             writeResponse(connection);
             break ;
+       // case CGI:
+            //handleCgi(connection, i);
+            //in handleCgi, we get the body that we need to respond, or the path
+            //set the state of the cgi fd to close, and set the state of the client fd to write.
         case CLEANUP:
             connection.reset();
             break;

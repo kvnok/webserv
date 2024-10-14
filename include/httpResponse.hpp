@@ -45,10 +45,10 @@ class Response {
 
 void	createResponse(Connection& connection);
 
-void	post_method(Connection& connection, Request& request);
-void	getMethod(Connection &connection, Request &request);
+void	post_method(Connection& connection);
+void	getMethod(Connection &connection);
 int		run_script(char *args[], Request &request);
-void	delete_method(Connection& connection, Request& request);
+void	delete_method(Connection& connection);
 
 // add fucntions outside class
 //	  - get file with body, open and read, create headers, fill response class
