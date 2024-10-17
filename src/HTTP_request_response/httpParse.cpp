@@ -125,14 +125,14 @@ static	Part	parsePart(string content, Request& request) {
 		newPart.headers[string(start, kvLim)] = string(kvLim + 2, end);
 		start = end + nl.size();
 	}
-	newPart.body = string(hbPos + hbLim.size(), content.end());
+	newPart.body = string(hbPos + hbLim.size(), content.end() - 2);
 	if (newPart.headers["Content-Disposition"].find("name=\"file\";") != string::npos) {
 		request.setCGIBody(newPart.body);
 		//cout << YEL << request.getCGIBody() << RESET << endl;
 	}
 	if (newPart.headers["Content-Disposition"].find("name=\"cgi_upload\"") != string::npos) {
 		request.setCGIExecutor(newPart.body);
-		//cout << BLU << request.getCGIExecutor() << RESET << endl;
+		cout << BLU << request.getCGIExecutor() << "!!!" << RESET << endl;
 	}
 	string value = newPart.headers["Content-Disposition"];
 	string toFind = "filename=\"";
