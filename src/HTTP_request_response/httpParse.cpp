@@ -83,15 +83,18 @@ static bool	parseRequestLine(const string line, Request& request) {
 		return (false);
 	}
 	request.setMethod(requestLine[0]);
+	//cout << "Method: " << requestLine[0] << endl;
 	request.setPath(requestLine[1]);
+	//cout << "Path: " << requestLine[1] << endl;
 	request.setVersion(requestLine[2]);
+	//cout << "Version: " << requestLine[2] << endl;
 	if (!validateMethod(request.getMethod(), request) || !validateVersion(request.getVersion(), request) \
 		|| !validatePath(request.getPath(), request))
 		return (false);
 	if (request.getMethod() == "POST" && (request.getPath() == "/coffee" \
 		|| request.getPath() == "/brew")) {
 		request.setStatusCode(418);
-		return (false); //does this still work?
+		return (false);
 	}
 	return (true);
 }
@@ -127,13 +130,19 @@ static	Part	parsePart(string content, Request& request) {
 		request.setCGIBody(newPart.body);
 		//cout << YEL << request.getCGIBody() << RESET << endl;
 	}
+	if (newPart.headers["Content-Disposition"].find("name=\"cgi_upload\"") != string::npos) {
+		request.setCGIExecutor(newPart.body);
+		//cout << BLU << request.getCGIExecutor() << RESET << endl;
+	}
 	string value = newPart.headers["Content-Disposition"];
 	string toFind = "filename=\"";
 	auto i = search(value.begin(), value.end(), toFind.begin(), toFind.end());
 	if (i != value.end()) {
 		auto j = find(i + toFind.size(), value.end(), '\"');
-		if (j < value.end())
+		if (j < value.end()) {
 			request.setCGIPath(string(i + toFind.size(), j));
+			//cout << RED << request.getCGIPath() << RESET << endl;
+		}
 	}
 	return (newPart);
 }
@@ -214,11 +223,10 @@ void	checkContentLengthBody(Connection& connection) {
 		connection.getRequest().setReadState(DONE); // set status code
 		return ;
 	}
-	//cout << RED << string(connection.getBuffer().begin(), connection.getBuffer().end()) << RESET << endl;
 	if (connection.getBuffer().size() == readLength) { //need catch error if length stay's to short or to long
 		vector<char> buf = connection.getBuffer();
 		connection.getRequest().setBody(string(buf.begin(), buf.end()));
-		//cout << connection.getRequest().getBody() << endl;
+		// cout << RED << "BODY: " << string(buf.begin(), buf.end()) << RESET << endl;
 		if (connection.getRequest().getMultipartFlag())
 			parseBodyParts(connection.getRequest());
 		connection.getRequest().setReadState(DONE);
