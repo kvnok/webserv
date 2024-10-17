@@ -18,6 +18,7 @@ Request::Request()
 	  _CGIextension(""),
 	  _cgiBody(""),
 	  _cgiPath(""),
+	  _cgiExecutor(""),
 	  _isRedirect(false)
 { }
 Request::Request(const Request& other) { *this = other; }
@@ -39,6 +40,7 @@ Request&	Request::operator=(const Request& other) {
 		this->_CGIextension = other._CGIextension;
 		this->_cgiBody = other._cgiBody;
 		this->_cgiPath = other._cgiPath;
+		this->_cgiExecutor = other._cgiExecutor;
 		this->_isRedirect = other._isRedirect;
 	}
 	return (*this);
@@ -60,6 +62,7 @@ void	Request::setIsCGI(bool const isCGI) { this->_isCGI = isCGI; }
 void	Request::setCGIextension(string const CGIextension) { this->_CGIextension = CGIextension; }
 void	Request::setCGIBody(string const cgiBody) { this->_cgiBody = cgiBody; }
 void	Request::setCGIPath(string const cgiPath) { this->_cgiPath = cgiPath; }
+void	Request::setCGIExecutor(string const cgiExecutor) { this->_cgiExecutor = cgiExecutor; }
 void	Request::setIsRedirect(bool const isRedirect) { this->_isRedirect = isRedirect; }
 
 string	            Request::getMethod() const { return (this->_method); }
@@ -76,6 +79,7 @@ bool				Request::getIsCGI() const { return (this->_isCGI); }
 string				Request::getCGIextension() const { return (this->_CGIextension); }
 string				Request::getCGIBody() const { return (this->_cgiBody); }
 string				Request::getCGIPath() const { return (this->_cgiPath); }
+string				Request::getCGIExecutor() const { return (this->_cgiExecutor); }
 bool				Request::getIsRedirect() const { return (this->_isRedirect); }
 
 string				Request::getHeaderValue(const string& key) const{
@@ -101,6 +105,7 @@ void  Request::reset() {
 	this->_CGIextension = "";
 	this->_cgiBody = "";
 	this->_cgiPath = "";
+	this->_cgiExecutor = "";
 	this->_isRedirect = false;
 }
 
@@ -111,11 +116,11 @@ void handleRequest(Connection& connection) {
 	}
 	else if (connection.getRequest().getMethod() == "DELETE") {
         cout << BLU << "Delete method" << endl;
-        delete_method(connection);
+        deleteMethod(connection);
 	}
 	else if (connection.getRequest().getMethod() == "POST")
 	{
 		cout << BLU << "Post method" << RESET << endl;
-		post_method(connection);
+		postMethod(connection);
 	}
 }

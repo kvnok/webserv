@@ -42,23 +42,10 @@ static bool createDirectories(const string& path) {
     return filesystem::create_directories(path);
 }
 
-// string removeBoundaries(const string& content, const string& boundary) {
-//     string newContent;
-
-//     size_t file_start = content.find("\r\n\r\n", content.find("filename=")) + 4;
-//     size_t file_end = content.size() - boundary.size() - 6;
-
-//     newContent = content.substr(file_start, file_end - file_start);
-//     return newContent;
-// }
-
-static bool writeFile(const string& storagePath, const string& fileName, const string& content) {
-    string fullPath = storagePath + fileName;
-
-    // cout << RED << fullPath << RESET << endl;
-    if (!filesystem::exists(storagePath))
-        filesystem::create_directories(storagePath);
-    if (filesystem::exists(fullPath)) {
+static bool writeFile(const string& storage, const string& fullPath, const string& content) {
+    if (!filesystem::exists(storage))
+        filesystem::create_directories(storage);
+    if (filesystem::exists(storage)) {
         ofstream outFile(fullPath, ios::binary | ios::app);
         if (!outFile) {
             cerr << "Failed to open file for writing: " << fullPath << endl;
@@ -77,13 +64,6 @@ static bool writeFile(const string& storagePath, const string& fileName, const s
     return (true);
 }
 
-// bool findLastBoundary(const string& contentType, const string& boundary) {
-// 	size_t pos = contentType.find(boundary);
-// 	if (pos == string::npos)
-// 		return (false);
-// 	return (true);
-// }
-
 static void execScript(char *args[], int pipefd[2], Request &request) 
 {
     // Ensure correct path for the Python interpreter
@@ -93,7 +73,6 @@ static void execScript(char *args[], int pipefd[2], Request &request)
 
     if (request.getMethod() == "GET") 
     {
-        // cout << "GET script" << endl;
         close(pipefd[0]);
 
         dup2(pipefd[1], STDOUT_FILENO);
@@ -105,10 +84,10 @@ static void execScript(char *args[], int pipefd[2], Request &request)
     }
     else
     {
-        // cout << "POST script" << endl;
-        char *script_path = (char *)"var/cgi-bin/upload_file_in_a_folder.cgi";  // we probably need to change this with Jan's code
+        string  buf = request.getCGIExecutor();
+        string script_path = buf.c_str(); // we probably need to change this with Jan's code
         close(pipefd[0]);
-        char *args1[] = {python_cgi, script_path, args[0], args[1], nullptr};
+        char *args1[] = {python_cgi, (char*)script_path.c_str(), args[0], args[1], nullptr};
         dup2(pipefd[1], STDOUT_FILENO);
         close(pipefd[1]);
         
@@ -150,7 +129,11 @@ int run_script(char *args[], Request &request) {
 
 static string extract_file_name(const string &path) {
     size_t posSlash = path.find_last_of('/');
-    string file = path.substr(posSlash + 1);
+    string file;
+    // if (posSlash == string::npos)
+    //     file = path;
+    // else
+        file = path.substr(posSlash + 1);
     return file;
 }
 
@@ -163,19 +146,20 @@ static string extract_file_name(const string &path) {
 //     return false;
 // }
 
-void post_method(Connection& connection) {
+void postMethod(Connection& connection) {
     string uploadedFile;
     string storage = "www/storage/";
     string fullPath;
 
-    if (connection.getRequest().getPath() == "/www/deleteFile.html") { // isCGI = true?
-        delete_method(connection);
+    if (connection.getRequest().getPath() == "deleteFile.html") { // isCGI = true?
+        deleteMethod(connection); // find a better way
         return ;
     }
-    if (!connection.getRequest().getCGIPath().empty())
-        fullPath = storage + connection.getRequest().getCGIPath();
-    else
-        fullPath = storage + extract_file_name(connection.getRequest().getPath());
+    if (connection.getRequest().getCGIPath().empty()) {
+        cout << "CGI Path was empty" << endl;
+        connection.getRequest().setCGIPath(connection.getRequest().getPath()); // hacky?
+    }
+    fullPath = storage + extract_file_name(connection.getRequest().getCGIPath());
     // if (!check_permissions(fullPath)) {
     //     request.setPath("www/fileNotUploaded.html");
     //     return ;
@@ -184,13 +168,9 @@ void post_method(Connection& connection) {
         connection.getRequest().setPath("www/fileExists.html");
         return ;
     }
-    // Once Jan's code is merged, we can use the body and go to the CGI script in both cases
-    /////////////////////////////////////////////////////////////////////////////////////////
-
-    // change to new request vars  == writeFile(storage, request.getCGIPath(), request.getBody(), request);
     if (connection.getRequest().getCGIBody().empty())
-        connection.getRequest().setCGIBody(connection.getRequest().getBody());
-    if (writeFile(storage, connection.getRequest().getCGIPath(), connection.getRequest().getCGIBody()))
+        connection.getRequest().setCGIBody(connection.getRequest().getBody()); // maybe not correct?
+    if (writeFile(storage, fullPath, connection.getRequest().getCGIBody()))
         connection.getRequest().setPath("www/fileUploaded.html");
     else
         connection.getRequest().setPath("www/fileNotUploaded.html");
@@ -205,10 +185,10 @@ void post_method(Connection& connection) {
     /////////////////////////////////////////////////////////////////////////////////////////
     //else
     int ret = 0;
-    string path = connection.getRequest().getPath().c_str();
+    string path = connection.getRequest().getCGIPath().c_str();
     char *args[] = {(char *) path.c_str(), (char *)storage.c_str(), nullptr};
-    int fd = run_script(args, connection.getRequest());
-    char buffer[1024];
+    int fd = run_script(args, connection.getRequest()); // this fd should be added to the poll
+    char buffer[1024]; // why 1024?
     ssize_t bytesRead;
     while ((bytesRead = read(fd, buffer, sizeof(buffer) - 1)) > 0) {
         buffer[bytesRead] = '\0';

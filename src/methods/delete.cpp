@@ -34,7 +34,7 @@ int mustBeInStorage(const string& path) {
 	return 0;
 }
 
-void delete_method(Connection& connection) {
+void deleteMethod(Connection& connection) {
 	string file = "";
 	if (connection.getRequest().getMethod() == "DELETE") {
 		//cout << RED << "Delete with curl not working" << RESET << endl;

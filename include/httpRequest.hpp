@@ -57,6 +57,7 @@ class Request {
 		string					_CGIextension;
 		string					_cgiBody;
 		string					_cgiPath;
+		string					_cgiExecutor;
 		bool					_isRedirect;
 	public:
 		Request();
@@ -80,6 +81,7 @@ class Request {
 		void 	setCGIextension(string const CGIextension);
 		void	setCGIBody(string const cgiBody);
 		void	setCGIPath(string const cgiName);
+		void	setCGIExecutor(string const cgiExecutor);
 		void 	setIsRedirect(bool const isRedirect);
 
 		string				getMethod() const;
@@ -97,6 +99,7 @@ class Request {
 		string				getCGIextension() const;
 		string				getCGIBody() const;
 		string				getCGIPath() const;
+		string				getCGIExecutor() const;
 		bool				getIsRedirect() const;
 		// ------------------------
 
