@@ -12,8 +12,6 @@ def save_file(file_path, destination_folder):
     :param destination_folder: Folder where the file should be saved
     """
     # print(f"File Name: {file_name}")
-    file_path = "." + file_path
-    print(f"File Path: {file_path}")
     if not os.path.isfile(file_path):
         print(f"Error: {file_path} is not a valid file.")
         return

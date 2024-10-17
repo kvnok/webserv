@@ -84,9 +84,13 @@ static void execScript(char *args[], int pipefd[2], Request &request)
     }
     else
     {
-        string  buf = request.getCGIExecutor();
-        string script_path = buf.c_str(); // we probably need to change this with Jan's code
         close(pipefd[0]);
+        string  pathToCgi = "var/cgi-bin/";
+        string  buf = pathToCgi + request.getCGIExecutor();
+        string script_path = buf.c_str(); // we probably need to change this with Jan's code
+        cout << "Script path: " << script_path << endl;
+        for (int i = 0; args[i] != nullptr; i++)
+            cout << "Args: " << args[i] << endl;
         char *args1[] = {python_cgi, (char*)script_path.c_str(), args[0], args[1], nullptr};
         dup2(pipefd[1], STDOUT_FILENO);
         close(pipefd[1]);
@@ -170,10 +174,10 @@ void postMethod(Connection& connection) {
     }
     if (connection.getRequest().getCGIBody().empty())
         connection.getRequest().setCGIBody(connection.getRequest().getBody()); // maybe not correct?
-    if (writeFile(storage, fullPath, connection.getRequest().getCGIBody()))
-        connection.getRequest().setPath("www/fileUploaded.html");
-    else
-        connection.getRequest().setPath("www/fileNotUploaded.html");
+    // if (writeFile(storage, fullPath, connection.getRequest().getCGIBody()))
+    //     connection.getRequest().setPath("www/fileUploaded.html");
+    // else
+    //     connection.getRequest().setPath("www/fileNotUploaded.html");
     /////////////////////////////////////////////////////////////////////////////////////////
     // char *args[] = {                                          /** Jan this is what we need for running the script **/
     //     (char *)request.fileName.c_str(),
