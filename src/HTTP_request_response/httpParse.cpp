@@ -214,7 +214,7 @@ void	checkContentLengthBody(Connection& connection) {
 		connection.getRequest().setReadState(DONE); // set status code
 		return ;
 	}
-	// cout << RED << string(connection.getBuffer().begin(), connection.getBuffer().end()) << RESET << endl;
+	//cout << RED << string(connection.getBuffer().begin(), connection.getBuffer().end()) << RESET << endl;
 	if (connection.getBuffer().size() == readLength) { //need catch error if length stay's to short or to long
 		vector<char> buf = connection.getBuffer();
 		connection.getRequest().setBody(string(buf.begin(), buf.end()));
@@ -223,7 +223,7 @@ void	checkContentLengthBody(Connection& connection) {
 			parseBodyParts(connection.getRequest());
 		connection.getRequest().setReadState(DONE);
 	}
-	return ;	
+	return ;
 }
 
 void	checkHeaders(const vector<char> requestData, Request& request) {

@@ -4,7 +4,7 @@
 void    Servers::handleNewConnection(size_t i) {
     int clientSocket = accept(this->_serverBlocks[i].getFd(), NULL, NULL);
     if (clientSocket == -1) {
-        cerr << "accept failed" << endl; // implement error/exception meganism
+        cerr << "accept failed" << endl;
         return ;
     }
     if (fcntl(clientSocket, F_SETFL, O_NONBLOCK) == -1) {
@@ -16,12 +16,10 @@ void    Servers::handleNewConnection(size_t i) {
 }
 
 void    Servers::closeConnection(Connection& connection, size_t& i) {
-    cout << "closing socket: " << connection.getFd() << endl;
     close(connection.getFd());
     this->_fds.erase(this->_fds.begin() + i);
     this->_connections.erase(this->_connections.begin() + (i - this->_serverBlocks.size()));
     i--;
-    // what if the server socket needs to be closed, how should we handle deleting all connections and there fd's made by that server
     return;
 }
 
@@ -65,6 +63,7 @@ void    Servers::readRequest(Connection& connection) {
         return ;
     }
     buffer.resize(bytes);
+    //cout << YEL << string(buffer.begin(), buffer.end()) << RESET << endl;
     connection.addToBuffer(buffer);
     if (connection.getRequest().getReadState() == START) {
         if (hasAllHeaders(connection.getBuffer()))
