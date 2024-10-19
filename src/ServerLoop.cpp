@@ -39,7 +39,6 @@ void    Servers::writeResponse(Connection& connection) {
     connection.getResponse().setVersion(connection.getRequest().getVersion());
     connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
     createResponse(connection);
-    // if all bytes have been written, so only set to close when the whole response has been written and send
     if (connection.getRequest().getHeaderValue("Connection") == "close")
         connection.setNextState(CLOSE);
     else
@@ -47,7 +46,8 @@ void    Servers::writeResponse(Connection& connection) {
 }
 
 void    Servers::executeRequest(Connection& connection) {
-    handleRequest(connection);
+    if (connection.getRequest().getStatusCode() == 200)
+        handleRequest(connection);
     connection.setNextState(WRITE);
 }
 
@@ -122,8 +122,12 @@ void    Servers::start() {
             else {
                 size_t  client_index = i - this->_serverBlocks.size();
 
-                if ((this->_fds[i].revents & POLLIN))
+                if ((this->_fds[i].revents & POLLIN)) {
+                    if (this->_connections[client_index].getNextState() == EXECUTE && \
+                        this->_connections[client_index].getRequest().getStatusCode() == 200)
+                        this->_connections[client_index].getRequest().setStatusCode(400); // fd is ready to read, but we are 'done' reading, so the request is invalid
                     handleExistingConnection(this->_connections[client_index], i);
+                }
                 else if ((this->_fds[i].revents & POLLOUT))
                     handleExistingConnection(this->_connections[client_index], i);
             }

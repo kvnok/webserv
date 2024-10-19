@@ -36,11 +36,6 @@ const set<string> supportedHttpVersions = {
 	"HTTP/1.1"
 };
 
-struct Part {
-	map<string, string> headers;
-	string				body;
-};
-
 class Request {
 	private:
 		string					_method;
@@ -48,16 +43,14 @@ class Request {
 		string					_version;
 		map<string, string>		_header;
 		string					_body;
+		unsigned long			_contentLength;
 		int						_statusCode;
 		readState				_readState;
 		bool					_multipartFlag;
-		vector<Part>			_parts;
 		bool 					_isAutoindex;
 		bool					_isCGI;
-		string					_CGIextension;
-		string					_cgiBody;
-		string					_cgiPath;
-		string					_cgiExecutor;
+		string					_CGIExtension;
+		string					_CGIPath;
 		bool					_isRedirect;
 	public:
 		Request();
@@ -70,36 +63,32 @@ class Request {
 		void	setVersion(string const version);
 		void	setBody(string const body);
 		void	addToBody(string const bodyPart);
+		void	setContentLength(unsigned long const cLength);
 		void	addHeader(string const key, string const value);
 		void	setHeader(map<string, string> const header);
 		void	setStatusCode(int const statusCode);
 		void	setReadState(readState const state);
 		void	setMultipartFlag(bool const flag);
-		void	setParts(vector<Part> const parts);
 		void 	setIsAutoindex(bool const isAutoindex);
 		void 	setIsCGI(bool const isCGI);
-		void 	setCGIextension(string const CGIextension);
-		void	setCGIBody(string const cgiBody);
-		void	setCGIPath(string const cgiName);
-		void	setCGIExecutor(string const cgiExecutor);
+		void 	setCGIExtension(string const CGIExtension);
+		void	setCGIPath(string const CGIPath);
 		void 	setIsRedirect(bool const isRedirect);
 
 		string				getMethod() const;
 		string				getPath() const;
 		string				getVersion() const;
 		string				getBody() const;
+		unsigned long		getContentLength() const;
 		int					getStatusCode() const;
 		map<string, string>	getHeaders() const;
 		string				getHeaderValue(const string& key) const;
 		readState			getReadState() const;
 		bool				getMultipartFlag() const;
-		vector<Part>		getParts() const;
 		bool				getIsAutoindex() const;
 		bool				getIsCGI() const;
-		string				getCGIextension() const;
-		string				getCGIBody() const;
+		string				getCGIExtension() const;
 		string				getCGIPath() const;
-		string				getCGIExecutor() const;
 		bool				getIsRedirect() const;
 		// ------------------------
 
