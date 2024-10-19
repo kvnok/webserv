@@ -38,6 +38,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <filesystem>
+#include <type_traits>
 
 using namespace std;
 
@@ -61,4 +62,31 @@ void color_print(string color, Args... args) {
 	cout << color;
 	(cout << ... << args);
 	cout << RESET << endl;
+}
+
+template<typename T>
+string formatNumberPrint(T value) {
+    static_assert(is_integral<T>::value, "Type must be an integral type.");
+    
+    // Convert the number to a string
+    ostringstream oss;
+    oss << value;
+    string number = oss.str();
+
+    // Format the integer part with thousands separators
+    string formattedIntegerPart;
+    int count = 0;
+
+    for (int i = number.length() - 1; i >= 0; --i) {
+        if (count > 0 && count % 3 == 0) {
+            formattedIntegerPart += '.'; // Add the thousands separator (dot)
+        }
+        formattedIntegerPart += number[i];
+        count++;
+    }
+
+    // Reverse the formatted integer part to restore original order
+    reverse(formattedIntegerPart.begin(), formattedIntegerPart.end());
+
+    return formattedIntegerPart; // Return formatted number
 }
