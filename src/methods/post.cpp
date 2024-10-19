@@ -84,7 +84,7 @@ static void execScript(char *args[], int pipefd[2], Request &request)
     }
     else
     {
-        string  buf = request.getCGIExecutor();
+        string  buf = request.getCGIPath();
         string script_path = buf.c_str(); // we probably need to change this with Jan's code
         close(pipefd[0]);
         char *args1[] = {python_cgi, (char*)script_path.c_str(), args[0], args[1], nullptr};
@@ -168,9 +168,7 @@ void postMethod(Connection& connection) {
         connection.getRequest().setPath("www/fileExists.html");
         return ;
     }
-    if (connection.getRequest().getCGIBody().empty())
-        connection.getRequest().setCGIBody(connection.getRequest().getBody()); // maybe not correct?
-    if (writeFile(storage, fullPath, connection.getRequest().getCGIBody()))
+    if (writeFile(storage, fullPath, connection.getRequest().getBody()))
         connection.getRequest().setPath("www/fileUploaded.html");
     else
         connection.getRequest().setPath("www/fileNotUploaded.html");

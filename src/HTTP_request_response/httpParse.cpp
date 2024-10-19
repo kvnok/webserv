@@ -201,6 +201,11 @@ void	checkChunkedBody(Connection& connection) {
 		unsigned long fullChunkSize = (endSize - buf.begin()) + d.size() + chunkSize + d.size();
 		if (buf.size() < fullChunkSize)
 			break ;
+		if (connection.getServer().getMaxBody() != 0 && fullChunkSize > connection.getServer().getMaxBody()) {
+			connection.getRequest().setStatusCode(413);
+			connection.getRequest().setReadState(DONE);
+			return ;
+		}
 		auto chunkStart = endSize + d.size();
 		connection.getRequest().addToBody(string(chunkStart, chunkStart + chunkSize));
 		buf.erase(buf.begin(), chunkStart + chunkSize + d.size());
@@ -208,16 +213,16 @@ void	checkChunkedBody(Connection& connection) {
 	connection.setBuffer(buf);
 	return ;
 	//TODO: double check if it works correct
-	//TODO: add size check
 }
 
 void	checkContentLengthBody(Connection& connection) {
 	unsigned long	readLength = connection.getRequest().getContentLength();
 
-	// if (readLength > connection.getServer().get_max_body_size())) {
-	// 	connection.getRequest().setStatusCode(413);
-	// 	connection.getRequest().setReadState(DONE);
-	// }
+	if (connection.getServer().getMaxBody() != 0 && readLength > connection.getServer().getMaxBody()) {
+		connection.getRequest().setStatusCode(413);
+		connection.getRequest().setReadState(DONE);
+		return ;
+	}
 	if (connection.getBuffer().size() == readLength) { //need catch error if length stay's to short or to long
 		vector<char> buf = connection.getBuffer();
 		connection.getRequest().setBody(string(buf.begin(), buf.end()));
@@ -274,20 +279,3 @@ bool	hasAllHeaders(const vector<char> data) {
 	auto i = search(data.begin(), data.end(), toFind.begin(), toFind.end());
 	return (i != data.end());
 }
-
-//*****************************************************************************************/
-	// if there is a body but not the correct header:  error? or not possible?
-	// Transfer-encoding and content-length might be present together, 
-	// transfer-endcoding can be set to chunked, in which case there are chunks of body
-	// need a way to parse that
-	// else if (request.getMethod() == "POST" && request.getBody().length() > 10000) {
-	// 	request.setStatusCode(413);
-	// 	return (false);
-	// }
-	// else if (request.getMethod() == "POST" && request.getBody().length() == 0) {
-	// 	request.setStatusCode(411);
-	// 	return (false);
-	// }
-	// else if(request.getMethod() == "POST" && request.getBody().length() > 0) {
-	// 	request.setStatusCode(200);
-	// }

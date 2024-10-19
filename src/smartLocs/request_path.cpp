@@ -126,7 +126,7 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 		{
 			//cout << "identified that its an CGI" << endl;
 			request.setIsCGI(true);
-			request.setCGIextension(loc.get_cgi_extension());
+			request.setCGIExtension(loc.get_cgi_extension());
 		}
 		ifstream stream(root_and_file);
 		if (stream.is_open() && is_directory(root_and_file) == false) {

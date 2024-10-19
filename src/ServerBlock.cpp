@@ -7,7 +7,7 @@ ServerBlock::ServerBlock( void ) {
 	this->_host = "";
     if (!this->_server_names.empty())
         this->_server_names[0] = "";
-    this->_client_max_body_size = "";
+    this->_client_max_body_size = 0;
     this->_index = "";
     this->_error_pages[404] = "";
     this->_root = "";
@@ -20,7 +20,7 @@ vector<string>      ServerBlock::getServerName() { return this->_server_names; }
 int                 ServerBlock::getPort() { return this->_port; }
 string              ServerBlock::getHost() { return this->_host; }
 string              ServerBlock::getListen() { return this->_listen; }
-string              ServerBlock::getMaxBody() { return this->_client_max_body_size; }
+unsigned int        ServerBlock::getMaxBody() { return this->_client_max_body_size; }
 string              ServerBlock::getIndex() { return this->_index; }
 map<int, string>    ServerBlock::getErrorPages() { return this->_error_pages; }
 string              ServerBlock::getRoot() { return this->_root; }
