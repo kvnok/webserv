@@ -64,15 +64,15 @@ static bool writeFile(const string& storage, const string& fullPath, const strin
     return (true);
 }
 
-static void execScript(char *args[], int pipefd[2], Request &request) 
+void execScript(char *args[], int pipefd[2], Request &request) 
 {
     // Ensure correct path for the Python interpreter
     char *python_cgi = (char *)"/usr/bin/python3";
-
     // here is going be no difference
 
     if (request.getMethod() == "GET") 
     {
+        cout << "GET script" << endl;
         close(pipefd[0]);
 
         dup2(pipefd[1], STDOUT_FILENO);
@@ -80,23 +80,23 @@ static void execScript(char *args[], int pipefd[2], Request &request)
 
         if (execve(args[0], args, nullptr) == -1) {
             cerr << "Failed to execute Python script" << endl;
+            exit(EXIT_FAILURE);  // I dont know how to handle this yet
         }
     }
     else
     {
+        cout << "POST script" << endl;
+        char *script_path = (char *)"var/cgi-bin/upload_file_in_a_folder.cgi";  // Adjust path we probably need to change this with Jan's code
         close(pipefd[0]);
-        string  pathToCgi = "var/cgi-bin/";
-        string  buf = pathToCgi + request.getCGIExecutor();
-        string script_path = buf.c_str(); // we probably need to change this with Jan's code
-        cout << "Script path: " << script_path << endl;
-        for (int i = 0; args[i] != nullptr; i++)
-            cout << "Args: " << args[i] << endl;
-        char *args1[] = {python_cgi, (char*)script_path.c_str(), args[0], args[1], nullptr};
+        for (int i = 0; i < 2; i++)
+            cout << args[i] << endl;
+        char *args1[] = {python_cgi, script_path, args[0], args[1], nullptr};
         dup2(pipefd[1], STDOUT_FILENO);
         close(pipefd[1]);
         
         if (execve(python_cgi, args1, nullptr) == -1) {
             cerr << "Failed to execute Python script" << endl;
+            exit(EXIT_FAILURE);  // I dont know how to handle this yet
         }
     }
 }
@@ -141,14 +141,14 @@ static string extract_file_name(const string &path) {
     return file;
 }
 
-// bool check_permissions(const string &path) {
-//     struct stat sb;
+bool check_permissions(const string &path) {
+    struct stat sb;
     
 
-//     if (stat(path.c_str(), &sb) == 0 && sb.st_mode & S_IRUSR && !S_ISDIR(sb.st_mode))
-//         return true;
-//     return false;
-// }
+    if (stat(path.c_str(), &sb) == 0 && sb.st_mode & S_IRUSR && !S_ISDIR(sb.st_mode))
+        return true;
+    return false;
+}
 
 void postMethod(Connection& connection) {
     string uploadedFile;
@@ -164,42 +164,41 @@ void postMethod(Connection& connection) {
         connection.getRequest().setCGIPath(connection.getRequest().getPath()); // hacky?
     }
     fullPath = storage + extract_file_name(connection.getRequest().getCGIPath());
-    // if (!check_permissions(fullPath)) {
-    //     request.setPath("www/fileNotUploaded.html");
-    //     return ;
-    // }
+    if (check_permissions(fullPath)) {   // where we want to add the check for the permissions
+        cout << "Permission denied" << endl;
+        connection.getRequest().setPath("var/error/403.html");
+        // connection.getRequest().setStatusCode(403); // == request.setPath(var/error/403.html)
+        return ;
+    }
     if (fileExists(fullPath)) {
         connection.getRequest().setPath("www/fileExists.html");
         return ;
     }
-    if (connection.getRequest().getCGIBody().empty())
+    if (!connection.getRequest().getCGIBody().empty())
+    {
         connection.getRequest().setCGIBody(connection.getRequest().getBody()); // maybe not correct?
-    // if (writeFile(storage, fullPath, connection.getRequest().getCGIBody()))
-    //     connection.getRequest().setPath("www/fileUploaded.html");
-    // else
-    //     connection.getRequest().setPath("www/fileNotUploaded.html");
-    /////////////////////////////////////////////////////////////////////////////////////////
-    // char *args[] = {                                          /** Jan this is what we need for running the script **/
-    //     (char *)request.fileName.c_str(),
-    //     (char *)request.fileContent().c_str(),
-    //     (char *)storage.c_str(), // we have that already
-    //     nullptr
-    // };
-    // of Course i need the path to the script which means what i showed you in from the html file
-    /////////////////////////////////////////////////////////////////////////////////////////
-    //else
-    int ret = 0;
-    string path = connection.getRequest().getCGIPath().c_str();
-    char *args[] = {(char *) path.c_str(), (char *)storage.c_str(), nullptr};
-    int fd = run_script(args, connection.getRequest()); // this fd should be added to the poll
-    char buffer[1024]; // why 1024?
-    ssize_t bytesRead;
-    while ((bytesRead = read(fd, buffer, sizeof(buffer) - 1)) > 0) {
-        buffer[bytesRead] = '\0';
-        cout << RED << buffer << RESET << endl;
-        if (strstr(buffer, "Error:") != nullptr)
-            connection.getRequest().setBody(buffer);
-        else
+        if (writeFile(storage, fullPath, connection.getRequest().getCGIBody()))
             connection.getRequest().setPath("www/fileUploaded.html");
+        else
+            connection.getRequest().setPath("www/fileNotUploaded.html");
     }
+    else
+    {
+        int ret = 0;
+        string path = connection.getRequest().getCGIPath().c_str();
+        char *args[] = {(char *) path.c_str(), (char *)storage.c_str(), nullptr};
+        int fd = run_script(args, connection.getRequest()); // this fd should be added to the poll
+        char buffer[1024]; // why 1024?
+        ssize_t bytesRead;
+        while ((bytesRead = read(fd, buffer, sizeof(buffer) - 1)) > 0) {
+            buffer[bytesRead] = '\0';
+            cout << RED << buffer << RESET << endl;
+            if (strstr(buffer, "Error:") != nullptr)
+                connection.getRequest().setBody(buffer);
+            else
+                connection.getRequest().setPath("www/fileUploaded.html");
+        }
+    }
+    connection.getRequest().setStatusCode(400);
+    // return fd
 }
