@@ -25,15 +25,6 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
 
 void    Servers::writeResponse(Connection& connection) {
     Request &request = connection.getRequest();
-    // if (request.getIsAutoindex()) {
-    //     // do autoindex stuff
-    // }
-    // else if (request.getIsCGI()) {
-    //     // do cgi stuff
-    // }
-    // else if (request.getStatusCode() >= 400) {
-    //     // do error stuff
-    // }
 
     connection.getResponse().setClientSocket(connection.getFd());
     connection.getResponse().setVersion(connection.getRequest().getVersion());
