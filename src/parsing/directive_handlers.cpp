@@ -140,11 +140,11 @@ void s_client_max_body_size(vector<string> &s, pServerBlock &block) {
 	// check if the string is in the allowed set
 	for (size_t i = 0; i < str.length(); i++) {
 		if (allowedSet.find(str[i]) == string::npos)
-			throw invalid_argument("client_max_body_size: non allowed character: " + str[i]);
+			throw invalid_argument("client_max_body_size: non allowed character: " + string(1, str[i]));
 	}
 
 	// check the count of letters
-	int nonDigitCount = count_if(input.begin(), input.end(), [](char ch) {
+	int nonDigitCount = count_if(str.begin(), str.end(), [](char ch) {
         return !isdigit(static_cast<unsigned char>(ch));
     });
 	if (nonDigitCount > 1) {
@@ -155,22 +155,22 @@ void s_client_max_body_size(vector<string> &s, pServerBlock &block) {
 	if (nonDigitCount == 1) {
 		char lastChar = str[str.length() - 1];
 		if (validEnds.find(lastChar) == string::npos) {
-			throw invalid_argument("client_max_body_size: invalid last character: " + lastChar);
+			throw invalid_argument("client_max_body_size: invalid last character: " + string(1, lastChar));
 		}
 		tempBodySize = stoll(str.substr(0, str.length() - 1));
 		if (lastChar == 'k' || lastChar == 'K') {
 			if (str.length() > 8) {
-				throw invalid_argument("client_max_body_size: out of range number: " + tempBodySize);
+				throw invalid_argument("client_max_body_size: out of range number: " + str);
 			}
 			tempBodySize *= oneKiloByte;
 		} else if (lastChar == 'm' || lastChar == 'M') {
 			if (str.length() > 5) {
-				throw invalid_argument("client_max_body_size: out of range number: " + tempBodySize);
+				throw invalid_argument("client_max_body_size: out of range number: " + str);
 			}
 			tempBodySize *= oneMegaByte;
 		} else if (lastChar == 'g' || lastChar == 'G') {
 			if (str.length() > 2) {
-				throw invalid_argument("client_max_body_size: out of range number: " + tempBodySize);
+				throw invalid_argument("client_max_body_size: out of range number: " + str);
 			}
 			tempBodySize *= oneGigaByte;
 		}
@@ -178,12 +178,13 @@ void s_client_max_body_size(vector<string> &s, pServerBlock &block) {
 		tempBodySize = stoll(str);
 	}
 	if (tempBodySize < 0 || tempBodySize > oneGigaByte) {
-		throw invalid_argument("client_max_body_size: out of range number: " + tempBodySize);
+		throw invalid_argument("client_max_body_size: out of range number: " + formatNumberPrint(tempBodySize));
 	}
 	unsigned int bodySize = static_cast<unsigned int>(tempBodySize);
 	if (bodySize == 0) {
-		throw invalid_argument("client_max_body_size: invalid number: " + tempBodySize);
+		throw invalid_argument("client_max_body_size: invalid number: " + formatNumberPrint(tempBodySize));
 	}
+	cout << "PARSER: CLIENT_MAX_BODY_SIZE: " << formatNumberPrint(bodySize) << endl;
 	block.set_client_max_body_size(bodySize);
 }
 
