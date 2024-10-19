@@ -12,7 +12,7 @@ class pServerBlock {
 		int _port;
 		map<int, string> _error_pages;
 		vector<string> _server_names;
-		string _client_max_body_size;
+		unsigned int _client_max_body_size;
 		string _root;
 		string _index;
 		vector<Location> _locations;
@@ -23,7 +23,7 @@ class pServerBlock {
 			int port,
 			string root,
 			string index,
-			string client_max_body_size,
+			unsigned int client_max_body_size,
 			vector<string> server_names,
 			map<int, string> error_pages,
 			vector<Location> locations);
@@ -32,7 +32,7 @@ class pServerBlock {
 		string get_host() const;
 		int get_port() const;
 		vector<string> get_server_names() const;
-		string get_client_max_body_size() const;
+		unsigned int get_client_max_body_size() const;
 		string get_root() const;
 		string get_index() const;
 		vector<Location> get_locations() const;
@@ -45,7 +45,7 @@ class pServerBlock {
 		void add_server_name(string server_name);
 		void add_error_page(int code, string page);
 		void set_error_pages(map<int, string> error_pages);
-		void set_client_max_body_size(string client_max_body_size);
+		void set_client_max_body_size(unsigned int client_max_body_size);
 		void set_root(string root);
 		void set_index(string index);
 		void set_locations(vector<Location> locations);

@@ -115,22 +115,76 @@ void s_error_page(vector<string> &s, pServerBlock &block) {
 	block.add_error_page(code, path);
 }
 
-// in bytes
 void s_client_max_body_size(vector<string> &s, pServerBlock &block) {
-	if (block.get_client_max_body_size() != "")
+	int oneByte = 1;
+	int oneStep = 1024;
+	int oneKiloByte = oneStep * oneByte;
+	int oneMegaByte = oneStep * oneKiloByte;
+	int oneGigaByte = oneStep * oneMegaByte;
+	string allowedSet = "0123456789kKmMgG";
+	string validNums = "0123456789";
+	string validEnds = "kKmMgG";
+	long long tempBodySize = 0;
+
+	if (block.get_client_max_body_size() != 0)
 		throw invalid_argument("client_max_body_size: already set");
 	
 	if (s.size() != 2)
 		throw invalid_argument("client_max_body_size: invalid number of arguments");
 
 	string str = s[1].substr(0, s[1].size() - 1);
-	if (str == "0")
+	cout << "PARSER: CLIENT_MAX_BODY_SIZE STRING: " << str << endl;
+	if (str == "0" || str.length() > 10)
 		throw invalid_argument("client_max_body_size: invalid argument");
-	for (size_t i = 0; i < str.size(); i++) {
-		if (!isdigit(str[i]))
-			throw invalid_argument("client_max_body_size: invalid argument");
+
+	// check if the string is in the allowed set
+	for (size_t i = 0; i < str.length(); i++) {
+		if (allowedSet.find(str[i]) == string::npos)
+			throw invalid_argument("client_max_body_size: non allowed character: " + str[i]);
 	}
-	block.set_client_max_body_size(str);
+
+	// check the count of letters
+	int nonDigitCount = count_if(input.begin(), input.end(), [](char ch) {
+        return !isdigit(static_cast<unsigned char>(ch));
+    });
+	if (nonDigitCount > 1) {
+		throw invalid_argument("client_max_body_size: more than one non digit character");
+	}
+
+	// check last character if nondigitcount == 1
+	if (nonDigitCount == 1) {
+		char lastChar = str[str.length() - 1];
+		if (validEnds.find(lastChar) == string::npos) {
+			throw invalid_argument("client_max_body_size: invalid last character: " + lastChar);
+		}
+		tempBodySize = stoll(str.substr(0, str.length() - 1));
+		if (lastChar == 'k' || lastChar == 'K') {
+			if (str.length() > 8) {
+				throw invalid_argument("client_max_body_size: out of range number: " + tempBodySize);
+			}
+			tempBodySize *= oneKiloByte;
+		} else if (lastChar == 'm' || lastChar == 'M') {
+			if (str.length() > 5) {
+				throw invalid_argument("client_max_body_size: out of range number: " + tempBodySize);
+			}
+			tempBodySize *= oneMegaByte;
+		} else if (lastChar == 'g' || lastChar == 'G') {
+			if (str.length() > 2) {
+				throw invalid_argument("client_max_body_size: out of range number: " + tempBodySize);
+			}
+			tempBodySize *= oneGigaByte;
+		}
+	} else {
+		tempBodySize = stoll(str);
+	}
+	if (tempBodySize < 0 || tempBodySize > oneGigaByte) {
+		throw invalid_argument("client_max_body_size: out of range number: " + tempBodySize);
+	}
+	unsigned int bodySize = static_cast<unsigned int>(tempBodySize);
+	if (bodySize == 0) {
+		throw invalid_argument("client_max_body_size: invalid number: " + tempBodySize);
+	}
+	block.set_client_max_body_size(bodySize);
 }
 
 void s_root(vector<string> &s, pServerBlock &block) {
