@@ -103,7 +103,7 @@ void  Request::reset() {
 void handleRequest(Connection& connection) {
 	if (connection.getRequest().getMethod() == "GET") {
 		cout << BLU << "Get method" << RESET << endl;
-		getMethod(connection);
+		request_path_handler(connection);
 	}
 	else if (connection.getRequest().getMethod() == "DELETE") {
         cout << BLU << "Delete method" << endl;

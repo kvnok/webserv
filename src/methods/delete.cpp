@@ -41,14 +41,14 @@ void deleteMethod(Connection& connection) {
 		if (mustBeInStorage(connection.getRequest().getPath()))
 		{
 			//cout << "File not in storage" << endl;
-			connection.getRequest().setPath("www/fileNotDeleted.html");
+			connection.getRequest().setStatusCode(404);
 			return ;
 		}
 		else
 		{
 			//cout << "Delete method from curl" << endl;
 			file = "." + connection.getRequest().getPath();
-			connection.getRequest().setPath("www/fileDeleted.html");
+			connection.getRequest().setStatusCode(200);
 		}
 	}
 	else{
@@ -57,11 +57,14 @@ void deleteMethod(Connection& connection) {
 		file = "./www/storage/" + file;
 		if (!pathExist(file)) {
 			//cout << BOLD << "File: " << file << " not found." << RESET << endl;
-			connection.getRequest().setPath("www/fileNotDeleted.html");
+			connection.getRequest().setStatusCode(404);
 			return ;
 		}
 	}
 	//cout << RED << "File: " << file << " deleted successfully." << RESET << endl;
 	removeFileFromStorage(file); // Function to delete the file
-	connection.getRequest().setPath("www/fileDeleted.html");
+	connection.getRequest().setStatusCode(200);
+	map<int, string> err_pages = connection.getServer().getErrorPages();
+	int statusCode = connection.getRequest().getStatusCode();
+	connection.getRequest().setPath(err_pages[statusCode]);
 }
