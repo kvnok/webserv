@@ -4,23 +4,6 @@
 #include <filesystem>
 #include "CGI.hpp"
 
-static unordered_map<string, string> parse_form_data(const string &body) {
-    unordered_map<string, string> form_data;
-    istringstream ss(body);
-    string token;
-
-    while (getline(ss, token, '&')) {
-        size_t equal_pos = token.find('=');
-        if (equal_pos != string::npos) {
-            string key = token.substr(0, equal_pos);
-            string value = token.substr(equal_pos + 1);
-            form_data[key] = value;
-        }
-    }
-    return form_data;
-}
-
-
 static void printRequestHeaders(const map<string, string> &headers) {
     for (const auto &header : headers) {
         cout << header.first << ": " << header.second << endl;
@@ -84,7 +67,7 @@ static void execScript(char *args[], int pipefd[2], Request &request)
     }
     else
     {
-        string  buf = request.getCGIPath();
+        string  buf = request.getPath();
         string script_path = buf.c_str(); // we probably need to change this with Jan's code
         close(pipefd[0]);
         char *args1[] = {python_cgi, (char*)script_path.c_str(), args[0], args[1], nullptr};
@@ -154,46 +137,37 @@ void postMethod(Connection& connection) {
     if (connection.getRequest().getPath() == "deleteFile.html") { // isCGI = true?
         deleteMethod(connection); // find a better way
         return ;
+        // we are going to delete this part, also need to delete it in the html file.
     }
-    if (connection.getRequest().getCGIPath().empty()) {
-        cout << "CGI Path was empty" << endl;
-        connection.getRequest().setCGIPath(connection.getRequest().getPath()); // hacky?
-    }
-    fullPath = storage + extract_file_name(connection.getRequest().getCGIPath());
+    fullPath = storage + extract_file_name(connection.getRequest().getPath());
     // if (!check_permissions(fullPath)) {
     //     request.setPath("www/fileNotUploaded.html");
     //     return ;
     // }
     if (fileExists(fullPath)) {
-        connection.getRequest().setPath("www/fileExists.html");
+        connection.getRequest().setStatusCode(409);
         return ;
     }
-    if (writeFile(storage, fullPath, connection.getRequest().getBody()))
-        connection.getRequest().setPath("www/fileUploaded.html");
-    else
-        connection.getRequest().setPath("www/fileNotUploaded.html");
-    /////////////////////////////////////////////////////////////////////////////////////////
-    // char *args[] = {                                          /** Jan this is what we need for running the script **/
-    //     (char *)request.fileName.c_str(),
-    //     (char *)request.fileContent().c_str(),
-    //     (char *)storage.c_str(), // we have that already
-    //     nullptr
-    // };
-    // of Course i need the path to the script which means what i showed you in from the html file
-    /////////////////////////////////////////////////////////////////////////////////////////
-    //else
-    int ret = 0;
-    string path = connection.getRequest().getCGIPath().c_str();
-    char *args[] = {(char *) path.c_str(), (char *)storage.c_str(), nullptr};
-    int fd = run_script(args, connection.getRequest()); // this fd should be added to the poll
-    char buffer[1024]; // why 1024?
-    ssize_t bytesRead;
-    while ((bytesRead = read(fd, buffer, sizeof(buffer) - 1)) > 0) {
-        buffer[bytesRead] = '\0';
-        cout << RED << buffer << RESET << endl;
-        if (strstr(buffer, "Error:") != nullptr)
-            connection.getRequest().setBody(buffer);
+    if (!connection.getRequest().getBody().empty()) {
+        if (writeFile(storage, fullPath, connection.getRequest().getBody()))
+            connection.getRequest().setStatusCode(201);
         else
-            connection.getRequest().setPath("www/fileUploaded.html");
+            connection.getRequest().setStatusCode(404);
+    }
+    else {
+        int ret = 0;
+        string path = connection.getRequest().getPath().c_str();
+        char *args[] = {(char *) path.c_str(), (char *)storage.c_str(), nullptr};
+        int fd = run_script(args, connection.getRequest()); // this fd should be added to the poll
+        char buffer[1024]; // why 1024?
+        ssize_t bytesRead;
+        while ((bytesRead = read(fd, buffer, sizeof(buffer) - 1)) > 0) {
+            buffer[bytesRead] = '\0';
+            cout << RED << buffer << RESET << endl;
+            if (strstr(buffer, "Error:") != nullptr)
+                connection.getRequest().setBody(buffer);
+            else
+                connection.getRequest().setStatusCode(201);
+        }
     }
 }

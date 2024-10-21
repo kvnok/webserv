@@ -3,7 +3,7 @@
 #include "autoindex.hpp"
 #include "Connection.hpp"
 
-Response::Response() : _version(""), _statusCode(0), _body(""), _clientSocket(0) {}; // maybe not set statuscode and clientsocket to -1?
+Response::Response() : _version(""), _statusCode(200), _body(""), _clientSocket(0) {}; // maybe not set statuscode and clientsocket to -1?
 Response::Response(int const clientSocket, int const statusCode, string const version) : _version(version), _statusCode(statusCode), _body(""), _clientSocket(clientSocket) { }
 Response::Response(const Response& other) { *this = other; }
 Response::~Response() { }
@@ -36,7 +36,12 @@ void	Response::setHeaders(string const content, string const path, string const 
     else if (extension == "ico")
         this->addHeader("Content-Type", "image/x-icon");
     this->addHeader("Content-Length", to_string(content.size()));
-    this->addHeader("Connection", connection); //need to find out when we need to use "close" to close connection
+    if (connection.empty())
+        this->addHeader("Connection", "keep-alive");
+    else
+        this->addHeader("Connection", connection);
+    //are there other situations we need to send "close" as connection status to the client?
+
     //bare minimum of headers, can add more, but not needed. maybe whith more complex requests and the corresponding responsed.
 }
 
@@ -60,7 +65,7 @@ ssize_t	Response::sendResponse() const {
 
 void    Response::reset() {
     this->_version = "";
-    this->_statusCode = 0;
+    this->_statusCode = 200;
     this->_header.clear();
     this->_body = "";
 }
@@ -68,13 +73,14 @@ void    Response::reset() {
 void	createResponse(Connection& connection) {
     Response& response = connection.getResponse();
     Request& request = connection.getRequest();
-    string path = connection.getRequest().getPath();
     string content;
     
+    if (request.getStatusCode() != 200)
+        request.setPath(connection.getServer().getErrorPages()[request.getStatusCode()]);   
     if (request.getIsAutoindex() == true) {
         // cout << BLU << "CALLING AUTOINDEX" << RESET << endl;
         // cout << GRN << "ai: |" << path << "|" << RESET << endl;
-        content = do_autoindex(path);
+        content = do_autoindex(request.getPath());
     }
     else if (request.getIsCGI() == true) {
         // I just want to see if this is called and if it works
@@ -108,20 +114,19 @@ void	createResponse(Connection& connection) {
 		// connection.getRequest().setBody(buffer);
     }
     else {
-        ifstream file(path);
-        if (!file.is_open())
-            response.setStatusCode(404);
-        if (response.getStatusCode() == 404 && !file.is_open()) {
-            content = fourZeroFourBody();
-            path = "404.html";
+        ifstream file("." + request.getPath());
+        if (!file.is_open()) {
+            cout << "could not open the file" << endl;
             response.setStatusCode(404);
         }
-        else {
+        if (response.getStatusCode() == 404 && !file.is_open()) {
+            content = fourZeroFourBody();
+            request.setPath("404.html");
             content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
         }
     }
     response.setBody(content);
-    response.setHeaders(content, path, "keep-alive");
+    response.setHeaders(content, request.getPath(), request.getHeaderValue("Connection"));
     response.sendResponse();
     // sending a response in chunks => read how much is send/how much you want to send
     // update bytesWritten, loop untill everything is send.
