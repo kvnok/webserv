@@ -80,7 +80,6 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 		request.setStatusCode(404);
 		// path = folder + "/" + err_pages[404];
 		// setting the path of a error page will happen in response;
-		cout << "HERE" << endl;
 		return;
 	}
 	// print_the_loc(loc);
@@ -114,7 +113,7 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 	else if (!file.empty()) { // check for file
 		if (loc.get_is_cgi() == true)
 		{
-			cout << "identified that its an CGI" << endl;
+			//cout << "identified that its an CGI" << endl;
 			// dont set it to true, check if it is indeed a valid cgi path, then set it to true.
 			request.setIsCGI(true);
 			request.setCGIExtension(loc.get_cgi_extension());
@@ -130,10 +129,11 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 		//TODO: is it correct that we dont close the stream if 'is_dir' is true?
 	}
 
-	int statusCode = request.getStatusCode();
-	if (statusCode != 200 && (statusCode < 300 || statusCode >= 400)) {
-		path = err_pages[statusCode];
-	}
+	// int statusCode = request.getStatusCode();
+	// // if (statusCode != 200 && (statusCode < 300 || statusCode >= 400)) {
+	// // 	path = err_pages[statusCode];
+	// // }
+	//this will be done in the response;
 }
 
 void ok_print_server_block(ServerBlock &serverBlock) {

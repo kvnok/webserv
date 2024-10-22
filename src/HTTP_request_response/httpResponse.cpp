@@ -84,7 +84,7 @@ void	createResponse(Connection& connection) {
     else if (request.getIsCGI() == true) {
         // I just want to see if this is called and if it works
         // feel free to change this
-        content = request.getBody();
+
         		//cout << "Test CGI" << endl;	
 		// If the path is a CGI script, we need to execute it
 		// Prepare the path to the script
@@ -110,7 +110,9 @@ void	createResponse(Connection& connection) {
 		// 	// cout << buffer;
 		// }
 		// // maybe I dont know
-		// connection.getRequest().setBody(buffer);
+		// request.setBody(buffer);
+        content = request.getBody();
+        // actual this should be content = run_cgi() or something. the path is correct for now.
     }
     else {
         // should this be handled as a fd? so should it be in poll first? same goes with other usage of ifstream
