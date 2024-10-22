@@ -14,8 +14,8 @@ class Connection {
 		int				_fd;
 		cState			_nextState;
 		vector<char>	_buffer;
-		size_t			_bRead;
-		size_t			_bWritten;
+		size_t			_bRead; //not using
+		size_t			_bWritten; //not using
 		Request			_request;
 		ServerBlock		_server;
 		Response		_response;

@@ -61,6 +61,7 @@ ssize_t	Response::sendResponse() const {
 	response += this->_body;
 	
 	return (send(this->_clientSocket, response.c_str(), response.size(), 0));
+    //we could split the response line, headers and body, this way we can count how much bytes we send and if we send them all. we can use this if we need to send in chunks.
 }
 
 void    Response::reset() {
@@ -74,12 +75,10 @@ void	createResponse(Connection& connection) {
     Response& response = connection.getResponse();
     Request& request = connection.getRequest();
     string content;
-    
+
     if (request.getStatusCode() != 200)
-        request.setPath(connection.getServer().getErrorPages()[request.getStatusCode()]);   
+        request.setPath(connection.getServer().getErrorPages()[request.getStatusCode()]);
     if (request.getIsAutoindex() == true) {
-        // cout << BLU << "CALLING AUTOINDEX" << RESET << endl;
-        // cout << GRN << "ai: |" << path << "|" << RESET << endl;
         content = do_autoindex(request.getPath());
     }
     else if (request.getIsCGI() == true) {
@@ -114,15 +113,19 @@ void	createResponse(Connection& connection) {
 		// connection.getRequest().setBody(buffer);
     }
     else {
-        ifstream file("." + request.getPath());
+        // should this be handled as a fd? so should it be in poll first? same goes with other usage of ifstream
+        ifstream file(request.getPath());
         if (!file.is_open()) {
             cout << "could not open the file" << endl;
             response.setStatusCode(404);
         }
         if (response.getStatusCode() == 404 && !file.is_open()) {
             content = fourZeroFourBody();
-            request.setPath("404.html");
+            request.setPath("404.html"); // is this hacky? 
+        }
+        else {
             content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+            file.close();
         }
     }
     response.setBody(content);
@@ -130,4 +133,6 @@ void	createResponse(Connection& connection) {
     response.sendResponse();
     // sending a response in chunks => read how much is send/how much you want to send
     // update bytesWritten, loop untill everything is send.
+
+    //path = err_pages[statusCode]; can use this if i can acces server
 }

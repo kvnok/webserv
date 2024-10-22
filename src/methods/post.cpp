@@ -134,8 +134,8 @@ void postMethod(Connection& connection) {
     string storage = "www/storage/";
     string fullPath;
 
-    if (connection.getRequest().getPath() == "deleteFile.html") { // isCGI = true?
-        deleteMethod(connection); // find a better way
+    if (connection.getRequest().getPath() == "deleteFile.html") {
+        deleteMethod(connection);
         return ;
         // we are going to delete this part, also need to delete it in the html file.
     }
