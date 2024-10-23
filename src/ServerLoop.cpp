@@ -37,9 +37,13 @@ void    Servers::writeResponse(Connection& connection) {
 }
 
 void    Servers::executeRequest(Connection& connection) {
-    if (connection.getRequest().getStatusCode() == 200)
-        handleRequest(connection);
+    handleRequest(connection);
     connection.setNextState(WRITE);
+}
+
+void	Servers::checkRequest(Connection& connection) {
+    request_path_handler(connection);
+    connection.setNextState(EXECUTE);
 }
 
 void    Servers::readRequest(Connection& connection) {
@@ -71,7 +75,7 @@ void    Servers::readRequest(Connection& connection) {
     if (connection.getRequest().getReadState() == DONE) {
         connection.getBuffer().clear();
         connection.getBuffer().resize(0);
-        connection.setNextState(EXECUTE);
+        connection.setNextState(CHECK);
     }
 }
 
@@ -80,17 +84,15 @@ void    Servers::handleExistingConnection(Connection& connection, size_t& i) {
         case READ:
             readRequest(connection);
             break ;
+        case CHECK:
+            checkRequest(connection);
+            break ;
         case EXECUTE:
-            // in execute, when we need to use an extra fd, we create the fd, set the state to cgi.
             executeRequest(connection);
             break ;
         case WRITE:
             writeResponse(connection);
             break ;
-       // case CGI:
-            //handleCgi(connection, i);
-            //in handleCgi, we get the body that we need to respond, or the path
-            //set the state of the cgi fd to close, and set the state of the client fd to write.
         case CLEANUP:
             connection.reset();
             break;

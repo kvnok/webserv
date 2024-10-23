@@ -7,15 +7,15 @@
 
 using namespace std;
 
-enum cState {READ, EXECUTE, WRITE, CLEANUP, CLOSE};
+enum cState {READ, CHECK, EXECUTE, PAUZE, WRITE, CLEANUP, CLOSE};
 
 class Connection {
 	private:
 		int				_fd;
 		cState			_nextState;
 		vector<char>	_buffer;
-		size_t			_bRead; //not using
-		size_t			_bWritten; //not using
+		// size_t			_bRead; //not using
+		// size_t			_bWritten; //not using
 		Request			_request;
 		ServerBlock		_server;
 		Response		_response;
@@ -33,10 +33,10 @@ class Connection {
 		void	setNextState(const cState nextState);
 		void	setBuffer(const vector<char> buffer);
 		void	setServer(const ServerBlock server);
-	
 		void	addToBuffer(const vector<char> buffer);
-		void	addBytesRead(const size_t bRead);
-		void	addBytesWritten(const size_t bWritten);
+
+		// void	addBytesRead(const size_t bRead);
+		// void	addBytesWritten(const size_t bWritten);
 
 		void	clearBuffer();
 
@@ -45,8 +45,8 @@ class Connection {
 		ServerBlock		getServer();
 		Response&		getResponse();
 		cState			getNextState() const;
-		size_t			getBytesRead() const;
-		size_t			getBytesWritten() const;
+		// size_t			getBytesRead() const;
+		// size_t			getBytesWritten() const;
 		vector<char>	getBuffer() const;
 
 		void			reset();

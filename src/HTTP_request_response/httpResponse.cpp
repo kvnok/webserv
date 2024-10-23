@@ -1,6 +1,5 @@
 #include "httpResponse.hpp"
 #include "httpStatus.hpp"
-#include "autoindex.hpp"
 #include "Connection.hpp"
 
 Response::Response() : _version(""), _statusCode(200), _body(""), _clientSocket(0) {}; // maybe not set statuscode and clientsocket to -1?
@@ -74,64 +73,8 @@ void    Response::reset() {
 void	createResponse(Connection& connection) {
     Response& response = connection.getResponse();
     Request& request = connection.getRequest();
-    string content;
 
-    if (request.getStatusCode() != 200)
-        request.setPath(connection.getServer().getErrorPages()[request.getStatusCode()]);
-    if (request.getIsAutoindex() == true) {
-        content = do_autoindex(request.getPath());
-    }
-    else if (request.getIsCGI() == true) {
-        // I just want to see if this is called and if it works
-        // feel free to change this
-
-        		//cout << "Test CGI" << endl;	
-		// If the path is a CGI script, we need to execute it
-		// Prepare the path to the script
-		// string scriptPath = "var/cgi-bin/get_time.cgi"; // Adjust if necessary	
-		// // Prepare arguments for the script execution
-		// char *args[] = {
-		// 	const_cast<char*>("/usr/bin/python3"),    // Path to the interpreter
-		// 	const_cast<char*>(scriptPath.c_str()),     // The script path
-		// 	nullptr                                     // Null terminator
-		// };
-
-		// ///////////////////////////
-		// // Hey JG remember here is the first fd that we need for polling
-		// // We can store this fd in the connection class
-		// int fdForPolling = run_script(args, connection.getRequest());
-		
-		// // connection.setFdForPolling(fdForPolling); maybe we can do it here.
-		// char buffer[1024];
-		// ssize_t bytesRead;	
-		// // cout << "Output from child process:" << endl;
-		// while ((bytesRead = read(fdForPolling, buffer, sizeof(buffer) - 1)) > 0) {
-		// 	buffer[bytesRead] = '\0';
-		// 	// cout << buffer;
-		// }
-		// // maybe I dont know
-		// request.setBody(buffer);
-        content = request.getBody();
-        // actual this should be content = run_cgi() or something. the path is correct for now.
-    }
-    else {
-        // should this be handled as a fd? so should it be in poll first? same goes with other usage of ifstream
-        ifstream file(request.getPath());
-        if (!file.is_open()) {
-            cout << "could not open the file" << endl;
-            response.setStatusCode(404);
-        }
-        if (response.getStatusCode() == 404 && !file.is_open()) {
-            content = fourZeroFourBody();
-            request.setPath("404.html"); // is this hacky? 
-        }
-        else {
-            content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-            file.close();
-        }
-    }
-    response.setBody(content);
-    response.setHeaders(content, request.getPath(), request.getHeaderValue("Connection"));
+    response.setHeaders(response.getBody(), request.getPath(), request.getHeaderValue("Connection"));
     response.sendResponse();
     // sending a response in chunks => read how much is send/how much you want to send
     // update bytesWritten, loop untill everything is send.

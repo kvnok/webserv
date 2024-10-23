@@ -3,6 +3,7 @@
 #include "httpStatus.hpp"
 #include "httpResponse.hpp"
 #include "Servers.hpp"
+#include "autoindex.hpp"
 #include "Connection.hpp"
 
 Request::Request()
@@ -101,17 +102,43 @@ void  Request::reset() {
 }
 
 void handleRequest(Connection& connection) {
-	if (connection.getRequest().getMethod() == "GET") {
+	Response&	response = connection.getResponse();
+	Request&	request = connection.getRequest();
+	string		content = "";
+
+	if (request.getStatusCode() != 200) {
+		response.setStatusCode(request.getStatusCode());
+		request.setPath(connection.getServer().getErrorPages()[request.getStatusCode()]);
+	}
+	// in the function down below, set response status code, instead of request.
+	// and the path should be updated to
+	else if (connection.getRequest().getMethod() == "GET") {
 		cout << BLU << "Get method" << RESET << endl;
-		request_path_handler(connection);
+		if (request.getIsAutoindex() == true) {
+			content = do_autoindex(request.getPath());
+		}
+		else if (request.getIsCGI() == true) {
+			content = request.getBody();
+		}
 	}
 	else if (connection.getRequest().getMethod() == "DELETE") {
         cout << BLU << "Delete method" << endl;
         deleteMethod(connection);
 	}
-	else if (connection.getRequest().getMethod() == "POST")
-	{
+	else if (connection.getRequest().getMethod() == "POST") {
 		cout << BLU << "Post method" << RESET << endl;
 		postMethod(connection);
 	}
+	if (response.getStatusCode() != 200) {
+		ifstream file(request.getPath());
+        if (!file.is_open())
+            response.setStatusCode(404);
+        else {
+            content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+            file.close();
+        }
+	}
+	if (content.empty())
+		content = fourZeroFourBody();
+	response.setBody(content);
 }
