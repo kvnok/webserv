@@ -3,6 +3,7 @@
 #include "httpStatus.hpp"
 #include "httpResponse.hpp"
 #include "Servers.hpp"
+#include "autoindex.hpp"
 #include "Connection.hpp"
 
 Request::Request()
@@ -10,15 +11,14 @@ Request::Request()
 	  _path(""),
 	  _version(""),
 	  _body(""),
+	  _contentLength(0),
 	  _statusCode(200),
 	  _readState(START),
 	  _multipartFlag(false),
 	  _isAutoindex(false),
 	  _isCGI(false),
-	  _CGIextension(""),
-	  _cgiBody(""),
-	  _cgiPath(""),
-	  _cgiExecutor(""),
+	  _CGIExtension(""),
+	  _CGIPath(""),
 	  _isRedirect(false)
 { }
 Request::Request(const Request& other) { *this = other; }
@@ -31,16 +31,14 @@ Request&	Request::operator=(const Request& other) {
 		this->_version = other._version;
 		this->_header = other._header;
 		this->_body = other._body;
+		this->_contentLength = other._contentLength;
 		this->_statusCode = other._statusCode;
 		this->_readState = other._readState;
 		this->_multipartFlag = other._multipartFlag;
-		this->_parts = other._parts;
 		this->_isAutoindex = other._isAutoindex;
 		this->_isCGI = other._isCGI;
-		this->_CGIextension = other._CGIextension;
-		this->_cgiBody = other._cgiBody;
-		this->_cgiPath = other._cgiPath;
-		this->_cgiExecutor = other._cgiExecutor;
+		this->_CGIExtension = other._CGIExtension;
+		this->_CGIPath = other._CGIPath;
 		this->_isRedirect = other._isRedirect;
 	}
 	return (*this);
@@ -51,35 +49,31 @@ void	Request::setPath(string const path) { this->_path = path; }
 void	Request::setVersion(string const version) { this->_version = version; }
 void	Request::setBody(string body) { this->_body = body; }
 void	Request::addToBody(string const bodyPart) { this->_body.append(bodyPart); }
+void	Request::setContentLength(unsigned long const cLength) { this->_contentLength = cLength; }
 void	Request::addHeader(string const key, string const value) { this->_header[key] = value; }
 void	Request::setHeader(map<string, string> const header) { this->_header = header; }
 void	Request::setStatusCode(int const statusCode) { this->_statusCode = statusCode; }
 void	Request::setReadState(readState const state) { this->_readState = state; }
 void	Request::setMultipartFlag(bool const flag) { this->_multipartFlag = flag; }
-void	Request::setParts(vector<Part> const parts) { this->_parts = parts; }
 void	Request::setIsAutoindex(bool const isAutoindex) { this->_isAutoindex = isAutoindex; }
 void	Request::setIsCGI(bool const isCGI) { this->_isCGI = isCGI; }
-void	Request::setCGIextension(string const CGIextension) { this->_CGIextension = CGIextension; }
-void	Request::setCGIBody(string const cgiBody) { this->_cgiBody = cgiBody; }
-void	Request::setCGIPath(string const cgiPath) { this->_cgiPath = cgiPath; }
-void	Request::setCGIExecutor(string const cgiExecutor) { this->_cgiExecutor = cgiExecutor; }
+void	Request::setCGIExtension(string const CGIExtension) { this->_CGIExtension = CGIExtension; }
+void	Request::setCGIPath(string const CGIPath) { this->_CGIPath = CGIPath; }
 void	Request::setIsRedirect(bool const isRedirect) { this->_isRedirect = isRedirect; }
 
 string	            Request::getMethod() const { return (this->_method); }
 string	            Request::getPath() const { return (this->_path); }
 string	            Request::getVersion() const { return (this->_version); }
 string	            Request::getBody() const { return (this->_body); }
+unsigned long		Request::getContentLength() const { return (this->_contentLength); }
 int                 Request::getStatusCode() const { return (this->_statusCode); }
 map<string, string> Request::getHeaders() const { return (this->_header); }
 readState			Request::getReadState() const { return (this->_readState); }
 bool				Request::getMultipartFlag() const { return (this->_multipartFlag); }
-vector<Part>		Request::getParts() const { return (this->_parts); }
 bool				Request::getIsAutoindex() const { return (this->_isAutoindex); }
 bool				Request::getIsCGI() const { return (this->_isCGI); }
-string				Request::getCGIextension() const { return (this->_CGIextension); }
-string				Request::getCGIBody() const { return (this->_cgiBody); }
-string				Request::getCGIPath() const { return (this->_cgiPath); }
-string				Request::getCGIExecutor() const { return (this->_cgiExecutor); }
+string				Request::getCGIExtension() const { return (this->_CGIExtension); }
+string				Request::getCGIPath() const { return (this->_CGIPath); }
 bool				Request::getIsRedirect() const { return (this->_isRedirect); }
 
 string				Request::getHeaderValue(const string& key) const{
@@ -96,31 +90,89 @@ void  Request::reset() {
 	this->_version = "";
 	this->_header.clear();
 	this->_body = "";
+	this->_contentLength = 0;
 	this->_statusCode = 200;
 	this->_readState = START;
 	this->_multipartFlag = false;
-	this->_parts.clear();
 	this->_isAutoindex = false;
 	this->_isCGI = false;
-	this->_CGIextension = "";
-	this->_cgiBody = "";
-	this->_cgiPath = "";
-	this->_cgiExecutor = "";
+	this->_CGIExtension = "";
+	this->_CGIPath = "";
 	this->_isRedirect = false;
 }
 
+string content_from_cgi(Request &request)
+{
+	string scriptPath = request.getPath().c_str(); // at the moment the path is wrong
+	string content = "";
+		// Prepare arguments for the script execution
+		char *args[] = {
+			const_cast<char*>("/usr/bin/python3"),    // Path to the interpreter
+			const_cast<char*>(scriptPath.c_str()),     // The script path
+			nullptr                                     // Null terminator
+		};
+		int fdForPolling = run_script(args, request);
+		
+        char buffer[1024]; // change size of buffer
+        ssize_t bytesRead;
+        while ((bytesRead = read(fdForPolling, buffer, sizeof(buffer) - 1)) > 0) {
+            buffer[bytesRead] = '\0';
+            content += buffer;
+        }
+        close(fdForPolling); // close the fd for now
+		return content;
+}
+
 void handleRequest(Connection& connection) {
-	if (connection.getRequest().getMethod() == "GET") {
+	Response&	response = connection.getResponse();
+	Request&	request = connection.getRequest();
+	string		content = "";
+
+	cout << "path in handle request: " << request.getPath() << " " << request.getStatusCode() << " " << request.getMethod() << endl;
+	if (request.getStatusCode() != 200) {
+		response.setStatusCode(request.getStatusCode());
+		request.setPath(connection.getServer().getErrorPages()[request.getStatusCode()]);
+	}
+	// in the function down below, set response status code, instead of request.
+	// and the path should be updated to
+	else if (connection.getRequest().getMethod() == "GET") {
 		cout << BLU << "Get method" << RESET << endl;
 		request_path_handler(connection);
+		if (request.getIsAutoindex() == true) {
+			content = do_autoindex(request.getPath());
+		}
+		else if (request.getIsCGI() == true) {
+			
+			content = content_from_cgi(request);
+		}
+		else {
+			ifstream file(request.getPath());
+        	if (!file.is_open())
+        	    response.setStatusCode(404);
+        	else {
+        	    content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+        	    file.close();
+        	}
+		}
 	}
 	else if (connection.getRequest().getMethod() == "DELETE") {
         cout << BLU << "Delete method" << endl;
         deleteMethod(connection);
 	}
-	else if (connection.getRequest().getMethod() == "POST")
-	{
+	else if (connection.getRequest().getMethod() == "POST") {
 		cout << BLU << "Post method" << RESET << endl;
 		postMethod(connection);
 	}
+	if (response.getStatusCode() != 200) {
+		ifstream file(request.getPath());
+        if (!file.is_open())
+            response.setStatusCode(404);
+        else {
+            content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+            file.close();
+        }
+	}
+	if (content.empty())
+		content = fourZeroFourBody();
+	response.setBody(content);
 }

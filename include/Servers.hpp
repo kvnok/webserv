@@ -25,6 +25,7 @@ class Servers
 		void	handleExistingConnection(Connection& connection, size_t& i);
 		void	readRequest(Connection& connection);
 		void	executeRequest(Connection& connection);
+		void	checkRequest(Connection& connection);
 		void	writeResponse(Connection& connection);
 		void	closeConnection(Connection& connection, size_t& i);
 		vector<ServerBlock> &get_serverBlocks();

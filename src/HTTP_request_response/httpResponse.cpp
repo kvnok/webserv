@@ -1,10 +1,25 @@
 #include "httpResponse.hpp"
 #include "httpStatus.hpp"
-#include "autoindex.hpp"
 #include "Connection.hpp"
 
-Response::Response() : _version(""), _statusCode(0), _body(""), _clientSocket(0) {}; // maybe not set statuscode and clientsocket to -1?
-Response::Response(int const clientSocket, int const statusCode, string const version) : _version(version), _statusCode(statusCode), _body(""), _clientSocket(clientSocket) { }
+Response::Response() {
+    _version = "";
+    _statusCode = 200;
+    _body = "";
+    _clientSocket = 0; // is this a good idea?
+    _bytesWritten = 0;
+    _writeState = WSTART;
+}
+
+Response::Response(int const clientSocket, int const statusCode, string const version) {
+    _version = version;
+    _statusCode = statusCode;
+    _body = "";
+    _clientSocket = clientSocket;
+    _bytesWritten = 0;
+    _writeState = WSTART;
+}
+
 Response::Response(const Response& other) { *this = other; }
 Response::~Response() { }
 
@@ -15,6 +30,8 @@ Response&	Response::operator=(const Response& other) {
         this->_header = other._header;
         this->_body = other._body;
         this->_clientSocket = other._clientSocket;
+        this->_bytesWritten = other._bytesWritten;
+        this->_writeState = other._writeState;
 	}
 	return (*this);
 }
@@ -23,10 +40,14 @@ void    Response::setVersion(string const version) { this->_version = version; }
 void	Response::setBody(string const body) { this->_body = body; }
 void	Response::setStatusCode(int const statusCode) { this->_statusCode = statusCode; }
 void    Response::setClientSocket(int const clientSocket) { this->_clientSocket = clientSocket; }
+void    Response::addBytesWritten(size_t const bWritten) { this->_bytesWritten += bWritten; }
+void    Response::setWriteState(wState const wState) { this->_writeState = wState; }
 void	Response::addHeader(string const key, string const value) { this->_header[key] = value; }
 
-void	Response::setHeaders(string const content, string const path, string const connection) {
+void	Response::setHeaders(Response& response, Request& request) {
 	string extension;
+    string connection = request.getHeaderValue("Connection");
+    string path = request.getPath();
 
 	extension = path.substr(path.find_last_of(".") + 1);
 	if (extension == "html")
@@ -35,8 +56,13 @@ void	Response::setHeaders(string const content, string const path, string const 
         this->addHeader("Content-Type", "text/css");
     else if (extension == "ico")
         this->addHeader("Content-Type", "image/x-icon");
-    this->addHeader("Content-Length", to_string(content.size()));
-    this->addHeader("Connection", connection); //need to find out when we need to use "close" to close connection
+    this->addHeader("Content-Length", to_string(response.getBody().size()));
+    if (connection.empty())
+        this->addHeader("Connection", "keep-alive");
+    else
+        this->addHeader("Connection", connection);
+    //are there other situations we need to send "close" as connection status to the client?
+
     //bare minimum of headers, can add more, but not needed. maybe whith more complex requests and the corresponding responsed.
 }
 
@@ -45,6 +71,8 @@ int					Response::getStatusCode() const { return (this->_statusCode); }
 map<string, string> Response::getHeaders() const { return (this->_header); } //not using right now
 string				Response::getBody() const { return (this->_body); } //not using right now
 int                 Response::getClientSocket() const { return (this->_clientSocket); } //not using right now
+size_t              Response::getBrytesWritten() const { return (this->_bytesWritten); }
+wState              Response::getWriteState() const { return (this->_writeState); }
 
 ssize_t	Response::sendResponse() const {
 	string	response;
@@ -56,73 +84,44 @@ ssize_t	Response::sendResponse() const {
 	response += this->_body;
 	
 	return (send(this->_clientSocket, response.c_str(), response.size(), 0));
+    //we could split the response line, headers and body, this way we can count how much bytes we send and if we send them all. we can use this if we need to send in chunks.
 }
 
 void    Response::reset() {
     this->_version = "";
-    this->_statusCode = 0;
+    this->_statusCode = 200;
+    this->_writeState = WSTART;
+    this->_bytesWritten = 0;
     this->_header.clear();
     this->_body = "";
+    // clientSocket?
 }
 
 void	createResponse(Connection& connection) {
     Response& response = connection.getResponse();
     Request& request = connection.getRequest();
-    string path = connection.getRequest().getPath();
-    string content;
-    
-    if (request.getIsAutoindex() == true) {
-        // cout << BLU << "CALLING AUTOINDEX" << RESET << endl;
-        // cout << GRN << "ai: |" << path << "|" << RESET << endl;
-        content = do_autoindex(path);
-    }
-    else if (request.getIsCGI() == true) {
-        // I just want to see if this is called and if it works
-        // feel free to change this
-        content = request.getBody();
-        		//cout << "Test CGI" << endl;	
-		// If the path is a CGI script, we need to execute it
-		// Prepare the path to the script
-		// string scriptPath = "var/cgi-bin/get_time.cgi"; // Adjust if necessary	
-		// // Prepare arguments for the script execution
-		// char *args[] = {
-		// 	const_cast<char*>("/usr/bin/python3"),    // Path to the interpreter
-		// 	const_cast<char*>(scriptPath.c_str()),     // The script path
-		// 	nullptr                                     // Null terminator
-		// };
 
-		// ///////////////////////////
-		// // Hey JG remember here is the first fd that we need for polling
-		// // We can store this fd in the connection class
-		// int fdForPolling = run_script(args, connection.getRequest());
-		
-		// // connection.setFdForPolling(fdForPolling); maybe we can do it here.
-		// char buffer[1024];
-		// ssize_t bytesRead;	
-		// // cout << "Output from child process:" << endl;
-		// while ((bytesRead = read(fdForPolling, buffer, sizeof(buffer) - 1)) > 0) {
-		// 	buffer[bytesRead] = '\0';
-		// 	// cout << buffer;
-		// }
-		// // maybe I dont know
-		// connection.getRequest().setBody(buffer);
-    }
-    else {
-        ifstream file(path);
-        if (!file.is_open())
-            response.setStatusCode(404);
-        if (response.getStatusCode() == 404 && !file.is_open()) {
-            content = fourZeroFourBody();
-            path = "404.html";
-            response.setStatusCode(404);
-        }
-        else {
-            content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-        }
-    }
-    response.setBody(content);
-    response.setHeaders(content, path, "keep-alive");
+    response.setHeaders(response, request);
     response.sendResponse();
     // sending a response in chunks => read how much is send/how much you want to send
     // update bytesWritten, loop untill everything is send.
+
+    //path = err_pages[statusCode]; can use this if i can acces server
 }
+
+// void    createResponse(Connection& connection) {
+//     Response& response = connection.getResponse();
+//     Request& request = connection.getRequest();
+
+//     switch (response.getWriteState()) {
+//         case WSTART:
+//             response.setHeaders(response, request);
+//             break ;
+//         case WRITING:
+//             response.sendResponse(); // handle properly.
+//             break ;
+//         case WDONE:
+//             response.reset(); //needed here? maybe delete this state
+//             break ;
+//     }
+// }

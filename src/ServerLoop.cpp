@@ -26,11 +26,11 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
 void    Servers::writeResponse(Connection& connection) {
     Request &request = connection.getRequest();
 
+    // move this to createResponse
     connection.getResponse().setClientSocket(connection.getFd());
     connection.getResponse().setVersion(connection.getRequest().getVersion());
     connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
     createResponse(connection);
-    // if all bytes have been written, so only set to close when the whole response has been written and send
     if (connection.getRequest().getHeaderValue("Connection") == "close")
         connection.setNextState(CLOSE);
     else
@@ -81,16 +81,11 @@ void    Servers::handleExistingConnection(Connection& connection, size_t& i) {
             readRequest(connection);
             break ;
         case EXECUTE:
-            // in execute, when we need to use an extra fd, we create the fd, set the state to cgi.
             executeRequest(connection);
             break ;
         case WRITE:
             writeResponse(connection);
             break ;
-       // case CGI:
-            //handleCgi(connection, i);
-            //in handleCgi, we get the body that we need to respond, or the path
-            //set the state of the cgi fd to close, and set the state of the client fd to write.
         case CLEANUP:
             connection.reset();
             break;
@@ -113,8 +108,12 @@ void    Servers::start() {
             else {
                 size_t  client_index = i - this->_serverBlocks.size();
 
-                if ((this->_fds[i].revents & POLLIN))
+                if ((this->_fds[i].revents & POLLIN)) {
+                    if (this->_connections[client_index].getNextState() == EXECUTE && \
+                        this->_connections[client_index].getRequest().getStatusCode() == 200)
+                        this->_connections[client_index].getRequest().setStatusCode(400); // fd is ready to read, but we are 'done' reading, so the request is invalid
                     handleExistingConnection(this->_connections[client_index], i);
+                }
                 else if ((this->_fds[i].revents & POLLOUT))
                     handleExistingConnection(this->_connections[client_index], i);
             }
