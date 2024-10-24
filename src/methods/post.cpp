@@ -2,28 +2,12 @@
 #include "httpRequest.hpp"
 #include "Connection.hpp"
 #include <filesystem>
-// static unordered_map<string, string> parse_form_data(const string &body) {
-//     unordered_map<string, string> form_data;
-//     istringstream ss(body);
-//     string token;
 
-//     while (getline(ss, token, '&')) {
-//         size_t equal_pos = token.find('=');
-//         if (equal_pos != string::npos) {
-//             string key = token.substr(0, equal_pos);
-//             string value = token.substr(equal_pos + 1);
-//             form_data[key] = value;
-//         }
-//     }
-//     return form_data;
-// }
-
-
-// static void printRequestHeaders(const map<string, string> &headers) {
-//     for (const auto &header : headers) {
-//         cout << header.first << ": " << header.second << endl;
-//     }
-// }
+static void printRequestHeaders(const map<string, string> &headers) {
+    for (const auto &header : headers) {
+        cout << header.first << ": " << header.second << endl;
+    }
+}
 
 static bool fileExists(string &path) {
     if (filesystem::exists(path))
@@ -83,12 +67,12 @@ void execScript(char *args[], int pipefd[2], Request &request)
     }
     else
     {
-        cout << "POST script" << endl;
-        char *script_path = (char *)"var/cgi-bin/upload_file_in_a_folder.cgi";  // Adjust path we probably need to change this with Jan's code
+        string  buf = request.getPath();
+        string script_path = buf.c_str(); // we probably need to change this with Jan's code
         close(pipefd[0]);
         for (int i = 0; i < 2; i++)
             cout << args[i] << endl;
-        char *args1[] = {python_cgi, script_path, args[0], args[1], nullptr};
+        char *args1[] = {python_cgi, (char *)script_path.c_str(), args[0], args[1], nullptr};
         dup2(pipefd[1], STDOUT_FILENO);
         close(pipefd[1]);
         
@@ -132,61 +116,66 @@ int run_script(char *args[], Request &request) {
 static string extract_file_name(const string &path) {
     size_t posSlash = path.find_last_of('/');
     string file;
-    // if (posSlash == string::npos)
-    //     file = path;
-    // else
+    if (posSlash == string::npos)
+        file = path;
+    else
         file = path.substr(posSlash + 1);
     return file;
 }
 
-bool check_permissions(const string &path) {
-    struct stat sb;
-    
-
-    if (stat(path.c_str(), &sb) == 0 && sb.st_mode & S_IRUSR && !S_ISDIR(sb.st_mode))
-        return true;
-    return false;
+int check_permissions(const string &path) {
+    int status_code = 201;
+    cout << BLU << path << RESET << endl;
+    if (access(path.c_str(), F_OK) == -1 || filesystem::is_directory(path)) {
+		cerr << "The file does not exist." << endl;
+        status_code = 404;
+	}
+	if (access(path.c_str(), R_OK) == -1) {
+		cerr << "The file does not have read permission." << endl;
+        status_code = 401;
+    }
+    cout << "Status code: " << status_code << endl;
+    return status_code;
 }
 
-void postMethod(Connection& connection) {
-    string uploadedFile;
-    string storage = "www/storage/";
-    string fullPath;
 
-    if (connection.getRequest().getPath() == "deleteFile.html") { // isCGI = true?
-        deleteMethod(connection); // find a better way
-        return ;
-    }
+void postMethod(Connection& connection) {
+    string  uploadedFile;
+    string  storage = "www/storage/";
+    string  fullPath;
+    int     status_code = 201;
+
+    if (connection.getRequest().getStatusCode() != status_code)
+        connection.getRequest().setStatusCode(status_code);
+
+    cout << RED << connection.getRequest().getStatusCode() << RESET << endl;
     if (connection.getRequest().getCGIPath().empty()) {
         cout << "CGI Path was empty" << endl;
         connection.getRequest().setCGIPath(connection.getRequest().getPath()); // hacky?
     }
-    fullPath = storage + extract_file_name(connection.getRequest().getCGIPath());
-    if (check_permissions(fullPath)) {   // where we want to add the check for the permissions
-        cout << "Permission denied" << endl;
-        connection.getRequest().setPath("var/error/403.html");
-        // connection.getRequest().setStatusCode(403); // == request.setPath(var/error/403.html)
-        return ;
-    }
+    cout << RED << "Full path: " << connection.getRequest().getPath() << RESET << endl;
+    fullPath = storage + extract_file_name(connection.getRequest().getPath());
     if (fileExists(fullPath)) {
-        connection.getRequest().setPath("www/fileExists.html");
+        connection.getRequest().setStatusCode(409);
         return ;
     }
-    if (!connection.getRequest().getCGIBody().empty())
-    {
-        connection.getRequest().setCGIBody(connection.getRequest().getBody()); // maybe not correct?
-        if (writeFile(storage, fullPath, connection.getRequest().getCGIBody()))
-            connection.getRequest().setPath("www/fileUploaded.html");
+    if (!connection.getRequest().getBody().empty()) {
+        if (writeFile(storage, fullPath, connection.getRequest().getBody()))
+            connection.getRequest().setStatusCode(201);
         else
-            connection.getRequest().setPath("www/fileNotUploaded.html");
+            connection.getRequest().setStatusCode(404);
     }
-    else
-    {
+    else {
         int ret = 0;
-        string path = connection.getRequest().getCGIPath().c_str();
+        string path = connection.getRequest().getPath().c_str();
+        status_code = check_permissions(connection.getRequest().getPath());
+        if (status_code != 201) {
+            connection.getRequest().setStatusCode(status_code);
+            return ;
+        }
         char *args[] = {(char *) path.c_str(), (char *)storage.c_str(), nullptr};
-        int fd = run_script(args, connection.getRequest()); // this fd should be added to the poll
-        char buffer[1024]; // why 1024?
+        int fd = run_script(args, connection.getRequest());
+        char buffer[connection.getServer().getMaxBody()];
         ssize_t bytesRead;
         while ((bytesRead = read(fd, buffer, sizeof(buffer) - 1)) > 0) {
             buffer[bytesRead] = '\0';
@@ -194,9 +183,9 @@ void postMethod(Connection& connection) {
             if (strstr(buffer, "Error:") != nullptr)
                 connection.getRequest().setBody(buffer);
             else
-                connection.getRequest().setPath("www/fileUploaded.html");
+                connection.getRequest().setStatusCode(201);
         }
     }
-    connection.getRequest().setStatusCode(400);
+    connection.getRequest().setStatusCode(201);
     // return fd
 }

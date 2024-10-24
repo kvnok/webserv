@@ -28,7 +28,7 @@ class ServerBlock
 		string _listen;
 		string _host;
 		vector<string> _server_names;
-		string _client_max_body_size;
+		unsigned int	_client_max_body_size;
 		string _index;
 		map<int, string> _error_pages;
 		string _root;
@@ -51,7 +51,7 @@ class ServerBlock
 		string getListen();
 		int getPort();
 		vector<string> getServerName();
-		string getMaxBody();
+		unsigned int	getMaxBody();
 		string getIndex();
 		map<int, string> getErrorPages();
 		string getRoot();
