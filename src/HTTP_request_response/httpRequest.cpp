@@ -112,6 +112,9 @@ void  Request::reset() {
 void handleRequest(Connection& connection) {
 	if (connection.getRequest().getMethod() == "GET") {
 		cout << BLU << "Get method" << RESET << endl;
+		if (check_is_CGI(connection)) {
+			connection.getRequest().setIsCGI(true);
+		}
 		request_path_handler(connection);
 	}
 	else if (connection.getRequest().getMethod() == "DELETE") {

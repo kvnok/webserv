@@ -46,7 +46,7 @@ class Response {
 void	createResponse(Connection& connection);
 
 void	postMethod(Connection& connection);
-void	getMethod(Connection &connection);
+// void	getMethod(Connection &connection);
 int		run_script(char *args[], Request &request);
 void	deleteMethod(Connection& connection);
 

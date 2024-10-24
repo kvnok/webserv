@@ -77,35 +77,27 @@ void	createResponse(Connection& connection) {
         content = do_autoindex(path);
     }
     else if (request.getIsCGI() == true) {
-        // I just want to see if this is called and if it works
-        // feel free to change this
-        content = request.getBody();
-        		//cout << "Test CGI" << endl;	
-		// If the path is a CGI script, we need to execute it
-		// Prepare the path to the script
-		// string scriptPath = "var/cgi-bin/get_time.cgi"; // Adjust if necessary	
-		// // Prepare arguments for the script execution
-		// char *args[] = {
-		// 	const_cast<char*>("/usr/bin/python3"),    // Path to the interpreter
-		// 	const_cast<char*>(scriptPath.c_str()),     // The script path
-		// 	nullptr                                     // Null terminator
-		// };
+
+		string scriptPath = path.c_str(); // at the moment the path is wrong	
+		// Prepare arguments for the script execution
+		char *args[] = {
+			const_cast<char*>("/usr/bin/python3"),    // Path to the interpreter
+			const_cast<char*>(scriptPath.c_str()),     // The script path
+			nullptr                                     // Null terminator
+		};
 
 		// ///////////////////////////
 		// // Hey JG remember here is the first fd that we need for polling
 		// // We can store this fd in the connection class
-		// int fdForPolling = run_script(args, connection.getRequest());
+		int fdForPolling = run_script(args, connection.getRequest());
 		
-		// // connection.setFdForPolling(fdForPolling); maybe we can do it here.
-		// char buffer[1024];
-		// ssize_t bytesRead;	
-		// // cout << "Output from child process:" << endl;
-		// while ((bytesRead = read(fdForPolling, buffer, sizeof(buffer) - 1)) > 0) {
-		// 	buffer[bytesRead] = '\0';
-		// 	// cout << buffer;
-		// }
-		// // maybe I dont know
-		// connection.getRequest().setBody(buffer);
+        char buffer[1024]; // change size of buffer
+        ssize_t bytesRead;
+        while ((bytesRead = read(fdForPolling, buffer, sizeof(buffer) - 1)) > 0) {
+            buffer[bytesRead] = '\0';
+            content += buffer;
+        }
+        close(fdForPolling); // close the fd for now
     }
     else {
         ifstream file(path);

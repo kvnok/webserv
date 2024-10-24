@@ -2,30 +2,28 @@
 #include "httpRequest.hpp"
 #include "Connection.hpp"
 #include <filesystem>
-#include "CGI.hpp"
+// static unordered_map<string, string> parse_form_data(const string &body) {
+//     unordered_map<string, string> form_data;
+//     istringstream ss(body);
+//     string token;
 
-static unordered_map<string, string> parse_form_data(const string &body) {
-    unordered_map<string, string> form_data;
-    istringstream ss(body);
-    string token;
-
-    while (getline(ss, token, '&')) {
-        size_t equal_pos = token.find('=');
-        if (equal_pos != string::npos) {
-            string key = token.substr(0, equal_pos);
-            string value = token.substr(equal_pos + 1);
-            form_data[key] = value;
-        }
-    }
-    return form_data;
-}
+//     while (getline(ss, token, '&')) {
+//         size_t equal_pos = token.find('=');
+//         if (equal_pos != string::npos) {
+//             string key = token.substr(0, equal_pos);
+//             string value = token.substr(equal_pos + 1);
+//             form_data[key] = value;
+//         }
+//     }
+//     return form_data;
+// }
 
 
-static void printRequestHeaders(const map<string, string> &headers) {
-    for (const auto &header : headers) {
-        cout << header.first << ": " << header.second << endl;
-    }
-}
+// static void printRequestHeaders(const map<string, string> &headers) {
+//     for (const auto &header : headers) {
+//         cout << header.first << ": " << header.second << endl;
+//     }
+// }
 
 static bool fileExists(string &path) {
     if (filesystem::exists(path))
