@@ -2,8 +2,24 @@
 #include "httpStatus.hpp"
 #include "Connection.hpp"
 
-Response::Response() : _version(""), _statusCode(200), _body(""), _clientSocket(0) {}; // maybe not set statuscode and clientsocket to -1?
-Response::Response(int const clientSocket, int const statusCode, string const version) : _version(version), _statusCode(statusCode), _body(""), _clientSocket(clientSocket) { }
+Response::Response() {
+    _version = "";
+    _statusCode = 200;
+    _body = "";
+    _clientSocket = 0; // is this a good idea?
+    _bytesWritten = 0;
+    _writeState = START;
+}
+
+Response::Response(int const clientSocket, int const statusCode, string const version) {
+    _version = version;
+    _statusCode = statusCode;
+    _body = "";
+    _clientSocket = clientSocket;
+    _bytesWritten = 0;
+    _writeState = START;
+}
+
 Response::Response(const Response& other) { *this = other; }
 Response::~Response() { }
 
@@ -14,6 +30,8 @@ Response&	Response::operator=(const Response& other) {
         this->_header = other._header;
         this->_body = other._body;
         this->_clientSocket = other._clientSocket;
+        this->_bytesWritten = other._bytesWritten;
+        this->_writeState = other._writeState;
 	}
 	return (*this);
 }
@@ -22,10 +40,14 @@ void    Response::setVersion(string const version) { this->_version = version; }
 void	Response::setBody(string const body) { this->_body = body; }
 void	Response::setStatusCode(int const statusCode) { this->_statusCode = statusCode; }
 void    Response::setClientSocket(int const clientSocket) { this->_clientSocket = clientSocket; }
+void    Response::addBytesWritten(size_t const bWritten) { this->_bytesWritten += bWritten; }
+void    Response::setWriteState(wState const wState) { this->_writeState = wState; }
 void	Response::addHeader(string const key, string const value) { this->_header[key] = value; }
 
-void	Response::setHeaders(string const content, string const path, string const connection) {
+void	Response::setHeaders(Response& response, Request& request) {
 	string extension;
+    string connection = request.getHeaderValue("Connection");
+    string path = request.getPath();
 
 	extension = path.substr(path.find_last_of(".") + 1);
 	if (extension == "html")
@@ -34,7 +56,7 @@ void	Response::setHeaders(string const content, string const path, string const 
         this->addHeader("Content-Type", "text/css");
     else if (extension == "ico")
         this->addHeader("Content-Type", "image/x-icon");
-    this->addHeader("Content-Length", to_string(content.size()));
+    this->addHeader("Content-Length", to_string(response.getBody().size()));
     if (connection.empty())
         this->addHeader("Connection", "keep-alive");
     else
@@ -49,6 +71,8 @@ int					Response::getStatusCode() const { return (this->_statusCode); }
 map<string, string> Response::getHeaders() const { return (this->_header); } //not using right now
 string				Response::getBody() const { return (this->_body); } //not using right now
 int                 Response::getClientSocket() const { return (this->_clientSocket); } //not using right now
+size_t              Response::getBrytesWritten() const { return (this->_bytesWritten); }
+wState              Response::getWriteState() const { return (this->_writeState); }
 
 ssize_t	Response::sendResponse() const {
 	string	response;
@@ -66,18 +90,38 @@ ssize_t	Response::sendResponse() const {
 void    Response::reset() {
     this->_version = "";
     this->_statusCode = 200;
+    this->_writeState = START;
+    this->_bytesWritten = 0;
     this->_header.clear();
     this->_body = "";
+    // clientSocket?
 }
 
 void	createResponse(Connection& connection) {
     Response& response = connection.getResponse();
     Request& request = connection.getRequest();
 
-    response.setHeaders(response.getBody(), request.getPath(), request.getHeaderValue("Connection"));
+    response.setHeaders(response, request);
     response.sendResponse();
     // sending a response in chunks => read how much is send/how much you want to send
     // update bytesWritten, loop untill everything is send.
 
     //path = err_pages[statusCode]; can use this if i can acces server
+}
+
+void    createResponse(Connection& connection) {
+    Response& response = connection.getResponse();
+    Request& request = connection.getRequest();
+
+    switch (response.getWriteState()) {
+        case START:
+            response.setHeaders(response, request);
+            break ;
+        case WRITING:
+            response.sendResponse(); // handle properly.
+            break ;
+        case DONE:
+            response.reset(); //needed here? maybe delete this state
+            break ;
+    }
 }

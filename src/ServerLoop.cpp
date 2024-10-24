@@ -26,6 +26,7 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
 void    Servers::writeResponse(Connection& connection) {
     Request &request = connection.getRequest();
 
+    // move this to createResponse
     connection.getResponse().setClientSocket(connection.getFd());
     connection.getResponse().setVersion(connection.getRequest().getVersion());
     connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
