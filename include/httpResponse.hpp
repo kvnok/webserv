@@ -11,8 +11,6 @@ using namespace std;
 
 class Connection;
 
-enum wState {SET, WRITING, FINISHED};
-
 class Response {
 	private:
 		string				_version;
@@ -21,7 +19,6 @@ class Response {
 		string				_body;
 		int					_clientSocket;
 		size_t				_bytesWritten;
-		wState				_writeState;
 	public:
 		Response();
 		Response(int const clientSocket, int const statusCode, string const version);
@@ -34,8 +31,7 @@ class Response {
 		void				setBody(string const body);
 		void				setStatusCode(int const statusCode);
 		void				setClientSocket(int const clientSocket);
-		void				addBytesWritten(size_t const bWrtitten);
-		void				setWriteState(wState const wState);
+//		void				addBytesWritten(size_t const bWrtitten);
 		void				addHeader(string const key, string const value);
 		void				setHeaders(string const content, string const connection, string const path);
 
@@ -44,8 +40,7 @@ class Response {
 		map<string, string>	getHeaders() const;
 		string				getBody() const;
 		int					getClientSocket() const;
-		wState				getWriteState() const;
-		size_t				getBrytesWritten() const;
+//		size_t				getBrytesWritten() const;
 
 		ssize_t				sendResponse() const;
 		void				setResponse(Response& response, Request& request, int cSocket);

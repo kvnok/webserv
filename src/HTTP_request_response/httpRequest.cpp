@@ -154,16 +154,14 @@ void handleRequest(Connection& connection) {
 	else if (connection.getRequest().getMethod() == "DELETE") {
         cout << BLU << "Delete method" << endl;
         deleteMethod(connection);
-		request.setPath(connection.getServer().getErrorPages()[request.getStatusCode()]);
+		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
 	}
 	else if (connection.getRequest().getMethod() == "POST") {
 		cout << BLU << "Post method" << RESET << endl;
 		postMethod(connection);
-		request.setPath(connection.getServer().getErrorPages()[request.getStatusCode()]);
+		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
 	}
-	response.setStatusCode(connection.getRequest().getStatusCode());
-	if (response.getStatusCode() != 200) {
-		ifstream file(request.getPath());
+	connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
 	if (connection.getResponse().getStatusCode() != 200) {
 		ifstream file(connection.getRequest().getPath());
         if (!file.is_open())

@@ -74,9 +74,6 @@ void postMethod(Connection& connection) {
 
     if (connection.getRequest().getStatusCode() != status_code)
         connection.getRequest().setStatusCode(status_code);
-
-    cout << RED << connection.getRequest().getStatusCode() << RESET << endl;
-    cout << RED << "Full path: " << connection.getRequest().getPath() << RESET << endl;
     fullPath = storage + extract_file_name(connection.getRequest().getPath());
     if (fileExists(fullPath)) {
         connection.getRequest().setStatusCode(409);
@@ -102,7 +99,6 @@ void postMethod(Connection& connection) {
         ssize_t bytesRead;
         while ((bytesRead = read(fd, buffer, sizeof(buffer) - 1)) > 0) {
             buffer[bytesRead] = '\0';
-            cout << RED << buffer << RESET << endl;
             if (strstr(buffer, "Error:") != nullptr)
                 connection.getRequest().setBody(buffer);
             else

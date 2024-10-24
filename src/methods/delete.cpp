@@ -35,35 +35,21 @@ int mustBeInStorage(const string& path) {
 }
 
 void deleteMethod(Connection& connection) {
+	//should use status codes in these functions.
 	string file = "";
-	if (connection.getRequest().getMethod() == "DELETE") {
-		//cout << RED << "Delete with curl not working" << RESET << endl;
-		if (mustBeInStorage(connection.getRequest().getPath()))
-		{
-			//cout << "File not in storage" << endl;
-			connection.getRequest().setStatusCode(404);
-			return ;
-		}
-		else
-		{
-			//cout << "Delete method from curl" << endl;
-			file = "." + connection.getRequest().getPath();
-			connection.getRequest().setStatusCode(200);
-		}
+	if (mustBeInStorage(connection.getRequest().getPath()))
+	{
+		//cout << "File not in storage" << endl;
+		connection.getRequest().setStatusCode(404);
+		return ;
 	}
-	else{
-		//cout << "Delete method from Browser" << endl;
-		file = create_file_name(connection.getRequest().getBody());
-		file = "./www/storage/" + file;
-		if (!pathExist(file)) {
-			//cout << BOLD << "File: " << file << " not found." << RESET << endl;
-			connection.getRequest().setStatusCode(404);
-			return ;
-		}
+	else
+	{
+		//cout << "Delete method from curl" << endl;
+		file = "." + connection.getRequest().getPath();
 	}
 	//cout << RED << "File: " << file << " deleted successfully." << RESET << endl;
 	removeFileFromStorage(file); // Function to delete the file
-	connection.getRequest().setStatusCode(200);
 	map<int, string> err_pages = connection.getServer().getErrorPages();
 	int statusCode = connection.getRequest().getStatusCode();
 	connection.getRequest().setPath(err_pages[statusCode]);

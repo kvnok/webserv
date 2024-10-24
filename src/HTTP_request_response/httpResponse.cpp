@@ -8,7 +8,6 @@ Response::Response() {
     _body = "";
     _clientSocket = 0; // is this a good idea?
     _bytesWritten = 0;
-    _writeState = SET;
 }
 
 Response::Response(int const clientSocket, int const statusCode, string const version) {
@@ -17,7 +16,6 @@ Response::Response(int const clientSocket, int const statusCode, string const ve
     _body = "";
     _clientSocket = clientSocket;
     _bytesWritten = 0;
-    _writeState = SET;
 }
 
 Response::Response(const Response& other) { *this = other; }
@@ -31,7 +29,6 @@ Response&	Response::operator=(const Response& other) {
         this->_body = other._body;
         this->_clientSocket = other._clientSocket;
         this->_bytesWritten = other._bytesWritten;
-        this->_writeState = other._writeState;
 	}
 	return (*this);
 }
@@ -40,8 +37,7 @@ void    Response::setVersion(string const version) { this->_version = version; }
 void	Response::setBody(string const body) { this->_body = body; }
 void	Response::setStatusCode(int const statusCode) { this->_statusCode = statusCode; }
 void    Response::setClientSocket(int const clientSocket) { this->_clientSocket = clientSocket; }
-void    Response::addBytesWritten(size_t const bWritten) { this->_bytesWritten += bWritten; }
-void    Response::setWriteState(wState const wState) { this->_writeState = wState; }
+//void    Response::addBytesWritten(size_t const bWritten) { this->_bytesWritten += bWritten; }
 void	Response::addHeader(string const key, string const value) { this->_header[key] = value; }
 
 void	Response::setHeaders(string const content, string const connection, string const path) {
@@ -67,8 +63,7 @@ int					Response::getStatusCode() const { return (this->_statusCode); }
 map<string, string> Response::getHeaders() const { return (this->_header); } //not using right now
 string				Response::getBody() const { return (this->_body); } //not using right now
 int                 Response::getClientSocket() const { return (this->_clientSocket); } //not using right now
-size_t              Response::getBrytesWritten() const { return (this->_bytesWritten); }
-wState              Response::getWriteState() const { return (this->_writeState); }
+//size_t              Response::getBrytesWritten() const { return (this->_bytesWritten); }
 
 ssize_t	Response::sendResponse() const {
 	string	response;
@@ -86,13 +81,12 @@ void    Response::setResponse(Response& response, Request& request, int cSocket)
     response.setClientSocket(cSocket);
     response.setVersion(request.getVersion());
     response.setHeaders(response.getBody(), request.getHeaderValue("Connection"), request.getPath());
-    response.setWriteState(WRITING);
+    //move back to create Response;
 }
 
 void    Response::reset() {
     this->_version = "";
     this->_statusCode = 200;
-    this->_writeState = SET;
     this->_bytesWritten = 0;
     this->_header.clear();
     this->_body = "";
@@ -102,19 +96,10 @@ void    Response::reset() {
 void    createResponse(Connection& connection) {
     Response& response = connection.getResponse();
 
-    switch (response.getWriteState()) {
-        case SET:
-            response.setResponse(response, connection.getRequest(), connection.getFd());
-            break ;
-        case WRITING:
-            response.sendResponse();
-            response.setWriteState(FINISHED);
-            break ;
-        case FINISHED:
-            if (connection.getRequest().getHeaderValue("Connection") == "close")
-                connection.setNextState(CLOSE);
-            else
-                connection.setNextState(CLEANUP);
-            break ;
-    }
+    response.setResponse(response, connection.getRequest(), connection.getFd());
+    response.sendResponse(); // return value needed?
+    if (connection.getRequest().getHeaderValue("Connection") == "close")
+        connection.setNextState(CLOSE);
+    else
+        connection.setNextState(CLEANUP);
 }
