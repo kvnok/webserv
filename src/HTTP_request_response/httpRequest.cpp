@@ -101,11 +101,34 @@ void  Request::reset() {
 	this->_isRedirect = false;
 }
 
+string content_from_cgi(Request &request)
+{
+	string scriptPath = request.getPath().c_str(); // at the moment the path is wrong
+	string content = "";
+		// Prepare arguments for the script execution
+		char *args[] = {
+			const_cast<char*>("/usr/bin/python3"),    // Path to the interpreter
+			const_cast<char*>(scriptPath.c_str()),     // The script path
+			nullptr                                     // Null terminator
+		};
+		int fdForPolling = run_script(args, request);
+		
+        char buffer[1024]; // change size of buffer
+        ssize_t bytesRead;
+        while ((bytesRead = read(fdForPolling, buffer, sizeof(buffer) - 1)) > 0) {
+            buffer[bytesRead] = '\0';
+            content += buffer;
+        }
+        close(fdForPolling); // close the fd for now
+		return content;
+}
+
 void handleRequest(Connection& connection) {
 	Response&	response = connection.getResponse();
 	Request&	request = connection.getRequest();
 	string		content = "";
 
+	cout << "path in handle request: " << request.getPath() << " " << request.getStatusCode() << " " << request.getMethod() << endl;
 	if (request.getStatusCode() != 200) {
 		response.setStatusCode(request.getStatusCode());
 		request.setPath(connection.getServer().getErrorPages()[request.getStatusCode()]);
@@ -114,11 +137,22 @@ void handleRequest(Connection& connection) {
 	// and the path should be updated to
 	else if (connection.getRequest().getMethod() == "GET") {
 		cout << BLU << "Get method" << RESET << endl;
+		request_path_handler(connection);
 		if (request.getIsAutoindex() == true) {
 			content = do_autoindex(request.getPath());
 		}
 		else if (request.getIsCGI() == true) {
-			content = request.getBody();
+			
+			content = content_from_cgi(request);
+		}
+		else {
+			ifstream file(request.getPath());
+        	if (!file.is_open())
+        	    response.setStatusCode(404);
+        	else {
+        	    content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+        	    file.close();
+        	}
 		}
 	}
 	else if (connection.getRequest().getMethod() == "DELETE") {

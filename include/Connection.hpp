@@ -7,7 +7,7 @@
 
 using namespace std;
 
-enum cState {READ, CHECK, EXECUTE, PAUZE, WRITE, CLEANUP, CLOSE};
+enum cState {READ, EXECUTE, PAUZE, WRITE, CLEANUP, CLOSE};
 
 class Connection {
 	private:

@@ -184,9 +184,9 @@ void request_path_handler(Connection& connection) {
 	Request& request = connection.getRequest();
 	ServerBlock serverBlock = connection.getServer();
 	string path = request.getPath();
-	if (request.getStatusCode() != 200)
-		cout << YEL << "WE SHOULDNT CHANGE THE STATUS CODE!!!!" << RESET << endl;
-	request.setStatusCode(200); // why set the status code to 200 without checks?
+	// if (request.getStatusCode() != 200)
+	// 	cout << YEL << "WE SHOULDNT CHANGE THE STATUS CODE!!!!" << RESET << endl;
+	// request.setStatusCode(200); // why set the status code to 200 without checks?
 	string folder;
 	string file;
 	parse_path(path, folder, file);

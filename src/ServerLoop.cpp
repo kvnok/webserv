@@ -42,11 +42,6 @@ void    Servers::executeRequest(Connection& connection) {
     connection.setNextState(WRITE);
 }
 
-void	Servers::checkRequest(Connection& connection) {
-    request_path_handler(connection);
-    connection.setNextState(EXECUTE);
-}
-
 void    Servers::readRequest(Connection& connection) {
     vector<char> buffer(BUFFER_SIZE);
     ssize_t bytes = recv(connection.getFd(), buffer.data(), buffer.size(), 0);
@@ -76,7 +71,7 @@ void    Servers::readRequest(Connection& connection) {
     if (connection.getRequest().getReadState() == DONE) {
         connection.getBuffer().clear();
         connection.getBuffer().resize(0);
-        connection.setNextState(CHECK);
+        connection.setNextState(EXECUTE);
     }
 }
 
@@ -84,9 +79,6 @@ void    Servers::handleExistingConnection(Connection& connection, size_t& i) {
     switch (connection.getNextState()) {
         case READ:
             readRequest(connection);
-            break ;
-        case CHECK:
-            checkRequest(connection);
             break ;
         case EXECUTE:
             executeRequest(connection);

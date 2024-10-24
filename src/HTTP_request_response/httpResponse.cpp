@@ -8,7 +8,7 @@ Response::Response() {
     _body = "";
     _clientSocket = 0; // is this a good idea?
     _bytesWritten = 0;
-    _writeState = START;
+    _writeState = WSTART;
 }
 
 Response::Response(int const clientSocket, int const statusCode, string const version) {
@@ -17,7 +17,7 @@ Response::Response(int const clientSocket, int const statusCode, string const ve
     _body = "";
     _clientSocket = clientSocket;
     _bytesWritten = 0;
-    _writeState = START;
+    _writeState = WSTART;
 }
 
 Response::Response(const Response& other) { *this = other; }
@@ -90,7 +90,7 @@ ssize_t	Response::sendResponse() const {
 void    Response::reset() {
     this->_version = "";
     this->_statusCode = 200;
-    this->_writeState = START;
+    this->_writeState = WSTART;
     this->_bytesWritten = 0;
     this->_header.clear();
     this->_body = "";
@@ -109,19 +109,19 @@ void	createResponse(Connection& connection) {
     //path = err_pages[statusCode]; can use this if i can acces server
 }
 
-void    createResponse(Connection& connection) {
-    Response& response = connection.getResponse();
-    Request& request = connection.getRequest();
+// void    createResponse(Connection& connection) {
+//     Response& response = connection.getResponse();
+//     Request& request = connection.getRequest();
 
-    switch (response.getWriteState()) {
-        case START:
-            response.setHeaders(response, request);
-            break ;
-        case WRITING:
-            response.sendResponse(); // handle properly.
-            break ;
-        case DONE:
-            response.reset(); //needed here? maybe delete this state
-            break ;
-    }
-}
+//     switch (response.getWriteState()) {
+//         case WSTART:
+//             response.setHeaders(response, request);
+//             break ;
+//         case WRITING:
+//             response.sendResponse(); // handle properly.
+//             break ;
+//         case WDONE:
+//             response.reset(); //needed here? maybe delete this state
+//             break ;
+//     }
+// }

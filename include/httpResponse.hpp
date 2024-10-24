@@ -11,7 +11,7 @@ using namespace std;
 
 class Connection;
 
-enum wState {START, WRITING, DONE};
+enum wState {WSTART, WRITING, WDONE};
 
 class Response {
 	private:
