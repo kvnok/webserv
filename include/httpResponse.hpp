@@ -11,7 +11,7 @@ using namespace std;
 
 class Connection;
 
-enum wState {WSTART, WRITING, WDONE};
+enum wState {SET, WRITING, FINISHED};
 
 class Response {
 	private:
@@ -37,7 +37,7 @@ class Response {
 		void				addBytesWritten(size_t const bWrtitten);
 		void				setWriteState(wState const wState);
 		void				addHeader(string const key, string const value);
-		void				setHeaders(Response& response, Request& request);
+		void				setHeaders(string const content, string const connection, string const path);
 
 		string				getVersion() const;
 		int					getStatusCode() const;
@@ -48,13 +48,13 @@ class Response {
 		size_t				getBrytesWritten() const;
 
 		ssize_t				sendResponse() const;
+		void				setResponse(Response& response, Request& request, int cSocket);
 		void				reset();
 };
 
 void	createResponse(Connection& connection);
 
 void	postMethod(Connection& connection);
-void	getMethod(Connection &connection);
 int		run_script(char *args[], Request &request);
 void	deleteMethod(Connection& connection);
 

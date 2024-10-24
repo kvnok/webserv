@@ -24,17 +24,8 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
 }
 
 void    Servers::writeResponse(Connection& connection) {
-    Request &request = connection.getRequest();
-
-    // move this to createResponse
-    connection.getResponse().setClientSocket(connection.getFd());
-    connection.getResponse().setVersion(connection.getRequest().getVersion());
-    connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
     createResponse(connection);
-    if (connection.getRequest().getHeaderValue("Connection") == "close")
-        connection.setNextState(CLOSE);
-    else
-        connection.setNextState(CLEANUP);
+    return ;
 }
 
 void    Servers::executeRequest(Connection& connection) {
@@ -82,6 +73,8 @@ void    Servers::handleExistingConnection(Connection& connection, size_t& i) {
             break ;
         case EXECUTE:
             executeRequest(connection);
+            break ;
+        case PAUZE:
             break ;
         case WRITE:
             writeResponse(connection);

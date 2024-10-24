@@ -124,36 +124,32 @@ string content_from_cgi(Request &request)
 }
 
 void handleRequest(Connection& connection) {
-	Response&	response = connection.getResponse();
-	Request&	request = connection.getRequest();
 	string		content = "";
 
-	cout << "path in handle request: " << request.getPath() << " " << request.getStatusCode() << " " << request.getMethod() << endl;
-	if (request.getStatusCode() != 200) {
-		response.setStatusCode(request.getStatusCode());
-		request.setPath(connection.getServer().getErrorPages()[request.getStatusCode()]);
+	if (connection.getRequest().getStatusCode() != 200) {
+	 	connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
+		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
 	}
-	// in the function down below, set response status code, instead of request.
-	// and the path should be updated to
 	else if (connection.getRequest().getMethod() == "GET") {
 		cout << BLU << "Get method" << RESET << endl;
 		request_path_handler(connection);
-		if (request.getIsAutoindex() == true) {
-			content = do_autoindex(request.getPath());
+		if (connection.getRequest().getIsAutoindex() == true) {
+			content = do_autoindex(connection.getRequest().getPath());
 		}
-		else if (request.getIsCGI() == true) {
+		else if (connection.getRequest().getIsCGI() == true) {
 			
-			content = content_from_cgi(request);
+			content = content_from_cgi(connection.getRequest());
 		}
 		else {
-			ifstream file(request.getPath());
+			ifstream file(connection.getRequest().getPath());
         	if (!file.is_open())
-        	    response.setStatusCode(404);
+        	    connection.getResponse().setStatusCode(404);
         	else {
         	    content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
         	    file.close();
         	}
 		}
+		connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
 	}
 	else if (connection.getRequest().getMethod() == "DELETE") {
         cout << BLU << "Delete method" << endl;
@@ -163,10 +159,10 @@ void handleRequest(Connection& connection) {
 		cout << BLU << "Post method" << RESET << endl;
 		postMethod(connection);
 	}
-	if (response.getStatusCode() != 200) {
-		ifstream file(request.getPath());
+	if (connection.getResponse().getStatusCode() != 200) {
+		ifstream file(connection.getRequest().getPath());
         if (!file.is_open())
-            response.setStatusCode(404);
+            connection.getResponse().setStatusCode(404);
         else {
             content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
             file.close();
@@ -174,5 +170,5 @@ void handleRequest(Connection& connection) {
 	}
 	if (content.empty())
 		content = fourZeroFourBody();
-	response.setBody(content);
+	connection.getResponse().setBody(content);
 }
