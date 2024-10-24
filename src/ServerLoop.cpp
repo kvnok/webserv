@@ -100,7 +100,6 @@ void    Servers::start() {
             }
             else {
                 size_t  client_index = i - this->_serverBlocks.size();
-
                 if ((this->_fds[i].revents & POLLIN)) {
                     if (this->_connections[client_index].getNextState() == EXECUTE && \
                         this->_connections[client_index].getRequest().getStatusCode() == 200)
