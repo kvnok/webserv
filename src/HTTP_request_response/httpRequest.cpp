@@ -126,41 +126,47 @@ string content_from_cgi(Request &request)
 void handleRequest(Connection& connection) {
 	string		content = "";
 
-	if (connection.getRequest().getStatusCode() != 200) {
-	 	connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
+	if (connection.getRequest().getStatusCode() != 200)
 		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
-	}
 	else if (connection.getRequest().getMethod() == "GET") {
-		cout << BLU << "Get method" << RESET << endl;
+		cout << "before: " << connection.getRequest().getPath() << endl;
 		request_path_handler(connection);
-		if (connection.getRequest().getIsAutoindex() == true) {
-			content = do_autoindex(connection.getRequest().getPath());
+		cout << "after: " << connection.getRequest().getPath() << endl;
+		if (connection.getRequest().getStatusCode() == 200) {
+			if (connection.getRequest().getIsAutoindex() == true) {
+				content = do_autoindex(connection.getRequest().getPath());
+			}
+			else if (connection.getRequest().getIsCGI() == true) {
+
+				content = content_from_cgi(connection.getRequest());
+			}
+			else {
+				ifstream file(connection.getRequest().getPath());
+        		if (!file.is_open())
+        		    connection.getResponse().setStatusCode(404);
+        		else {
+        		    content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+        		    file.close();
+        		}
+			}
 		}
-		else if (connection.getRequest().getIsCGI() == true) {
-			
-			content = content_from_cgi(connection.getRequest());
-		}
-		else {
-			ifstream file(connection.getRequest().getPath());
-        	if (!file.is_open())
-        	    connection.getResponse().setStatusCode(404);
-        	else {
-        	    content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-        	    file.close();
-        	}
-		}
-		connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
 	}
 	else if (connection.getRequest().getMethod() == "DELETE") {
-        cout << BLU << "Delete method" << endl;
-        deleteMethod(connection);
+		// we also need a 'path_handler' for DELETE requets;
+        cout << connection.getRequest().getPath() << endl;
+		checkDeletePath(connection);
+		if (connection.getRequest().getStatusCode() == 200)
+			deleteMethod(connection);
 		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
 	}
 	else if (connection.getRequest().getMethod() == "POST") {
-		cout << BLU << "Post method" << RESET << endl;
-		postMethod(connection);
+		// we also need a 'path_handler' for POST requets;
+		//checkPostPath(connection);
+		if (connection.getRequest().getStatusCode() == 200)
+			postMethod(connection);
 		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
 	}
+	// we have either a filled body, or a status code and corresponding status code path
 	connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
 	if (connection.getResponse().getStatusCode() != 200) {
 		ifstream file(connection.getRequest().getPath());

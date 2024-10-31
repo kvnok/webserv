@@ -103,5 +103,11 @@ bool	hasAllHeaders(const vector<char> data);
 
 void	handleRequest(Connection& connection);
 
+void	postMethod(Connection& connection);
+int		run_script(char *args[], Request &request);
+void	deleteMethod(Connection& connection);
+void	checkDeletePath(Connection& connection);
+
+
 //https://www.ibm.com/docs/en/app-connect/11.0.0?topic=messages-http-headers
 //resource headers
