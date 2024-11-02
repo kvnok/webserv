@@ -58,20 +58,20 @@ static void check_permissions(Request& request) {
 
 void postMethod(Connection& connection) {
     string  uploadedFile;
-    string  storage = "www/storage/";
+    string  storage = "www/storage/"; // hardcoded, needs to change.
     string  fullPath = storage + extract_file_name(connection.getRequest().getPath());
 
-    cout << "name of posted file: " << connection.getRequest().getPath() << endl;
     if (filesystem::exists(fullPath)) {
         connection.getRequest().setStatusCode(409);
         return ;
     }
-    //if (!connection.getRequest().getBody().empty()) {
-        if (writeFile(storage, fullPath, connection.getRequest().getBody()))
-            connection.getRequest().setStatusCode(201);
-        else
-            connection.getRequest().setStatusCode(404);
-    //}
+    if (writeFile(storage, fullPath, connection.getRequest().getBody()))
+        connection.getRequest().setStatusCode(201);
+    else
+        connection.getRequest().setStatusCode(404);
+    // return fd
+}
+
     // else {
     //     check_permissions(connection.getRequest());
     //     if (connection.getRequest().getStatusCode() != 200)
@@ -90,6 +90,3 @@ void postMethod(Connection& connection) {
     //             connection.getRequest().setStatusCode(201);
     //     }
     // }
-    connection.getRequest().setStatusCode(201);
-    // return fd
-}

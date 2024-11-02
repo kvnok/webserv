@@ -20,7 +20,7 @@ static bool	parseHeaders(istringstream &headerStream, string line, Request& requ
 		}
 		string key(line.begin(), splitPos);
 		string value(splitPos + toFind.size(), line.end() - 1); // -1 to get rid of the \r at the end of the string
-		//cout << YEL << key << ": " << value << RESET << endl;
+		cout << YEL << key << ": " << value << RESET << endl;
 		if (!key.empty() && !value.empty())
 			request.addHeader(key, value);
 		else {
@@ -83,10 +83,10 @@ static bool	parseRequestLine(const string line, Request& request) {
 		return (false);
 	}
 	request.setMethod(requestLine[0]);
-	// cout << "Method: " << requestLine[0] << endl;
 	request.setPath(requestLine[1]);
-	// cout << "Path: " << requestLine[1] << endl;
 	request.setVersion(requestLine[2]);
+	// cout << "Method: " << requestLine[0] << endl;
+	//cout << "Path: " << requestLine[1] << endl;
 	// cout << "Version: " << requestLine[2] << endl;
 	if (!validateMethod(request.getMethod(), request) || !validateVersion(request.getVersion(), request) \
 		|| !validatePath(request.getPath(), request))
@@ -226,7 +226,7 @@ void	checkContentLengthBody(Connection& connection) {
 	if (connection.getBuffer().size() == readLength) { //need catch error if length stay's to short or to long
 		vector<char> buf = connection.getBuffer();
 		connection.getRequest().setBody(string(buf.begin(), buf.end()));
-		// cout << RED << "BODY: " << string(buf.begin(), buf.end()) << RESET << endl;
+		cout << RED << "BODY: " << string(buf.begin(), buf.end()) << RESET << endl;
 		if (connection.getRequest().getMultipartFlag())
 			parseBodyParts(connection.getRequest());
 		connection.getRequest().setReadState(DONE);

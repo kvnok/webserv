@@ -126,6 +126,18 @@ string content_from_cgi(Request &request)
 void handleRequest(Connection& connection) {
 	string		content = "";
 
+	//this is the new structure
+	// you can assume that the path is checked in the config file, and i will add a file name for if it is a post 
+	// path = connection.getRequest().getPath();
+	// if (isCGI)
+	// 	doCGI(path);
+	// else if (get)
+	// 	doGET(path)
+	// else if (post)
+	// 	doPOST(path) //path will be the destination folder;
+	// else if (delete)
+	// 	doDELETE(path);
+
 	if (connection.getRequest().getStatusCode() != 200)
 		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
 	else if (connection.getRequest().getMethod() == "GET") {

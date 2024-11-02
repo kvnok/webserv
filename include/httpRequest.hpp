@@ -43,6 +43,8 @@ class Request {
 		string					_version;
 		map<string, string>		_header;
 		string					_body;
+	//	string					_file; //for post, maybe for other things?
+	//	string					_otherPath;
 		unsigned long			_contentLength;
 		int						_statusCode;
 		readState				_readState;
@@ -50,7 +52,7 @@ class Request {
 		bool 					_isAutoindex;
 		bool					_isCGI;
 		string					_CGIExtension;
-		string					_CGIPath;
+		string					_CGIPath; //maybe i could use this, need to find out if it could also be a non cgi with an extra path.
 		bool					_isRedirect;
 	public:
 		Request();

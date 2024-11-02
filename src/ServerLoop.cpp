@@ -72,10 +72,10 @@ void    Servers::handleExistingConnection(Connection& connection, size_t& i) {
             readRequest(connection);
             break ;
         case EXECUTE:
-            executeRequest(connection);
+            executeRequest(connection); // maybe change to CGI, GET, POST, DELETE and add a HANDLER for path_handler()
             break ;
         case PAUZE:
-            break ;
+            break ; //this could be used for waiting, if the fd of a child or other file is used
         case WRITE:
             writeResponse(connection);
             break ;
