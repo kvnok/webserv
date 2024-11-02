@@ -250,6 +250,11 @@ void	checkHeaders(const vector<char> requestData, Request& request) {
 	}
 	if (request.getHeaderValue("Content-Type").find("multipart/form-data") != string::npos)
 		request.setMultipartFlag(true);
+	if (request.getMethod() == "POST" && !request.getMultipartFlag()) {
+		request.setStatusCode(400);
+		request.setReadState(DONE);
+		return ;
+	}
 	if (request.getHeaderValue("Transfer-Encoding") == "chunked") {
 		if (!request.getHeaderValue("Content-Length").empty()) {
 			request.setStatusCode(400); //only one of those headers should be present

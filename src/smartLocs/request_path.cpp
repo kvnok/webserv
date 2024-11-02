@@ -63,12 +63,6 @@ void check_baseline(Request &request, string &file, string &path, ServerBlock se
 		}
 		//TODO: is it correct that we dont close the stream if 'is_dir' is true?
 	}
-
-	// int statusCode = request.getStatusCode();
-	// if (statusCode != 200 && (statusCode < 300 || statusCode >= 400)) {
-	// 	path = err_pages[statusCode];
-	// }
-	// Moved this to response, since in every case we need to get the path of the status code this way.
 }
 
 void check_locs(Connection& connection, Request &request, string &folder, string &file, string &path, map<int, string> err_pages, smartLocs sLocs) {
@@ -128,12 +122,6 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 		}
 		//TODO: is it correct that we dont close the stream if 'is_dir' is true?
 	}
-
-	// int statusCode = request.getStatusCode();
-	// // if (statusCode != 200 && (statusCode < 300 || statusCode >= 400)) {
-	// // 	path = err_pages[statusCode];
-	// // }
-	//this will be done in the response;
 }
 
 void ok_print_server_block(ServerBlock &serverBlock) {

@@ -49,5 +49,5 @@ void	deleteMethod(Connection& connection) {
 		connection.getRequest().setStatusCode(404);
 	else
 		connection.getRequest().setStatusCode(204);
-	connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
+	// status code 204, is 'no content' so curl will not show anything.
 }

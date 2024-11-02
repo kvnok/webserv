@@ -129,17 +129,12 @@ void handleRequest(Connection& connection) {
 	if (connection.getRequest().getStatusCode() != 200)
 		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
 	else if (connection.getRequest().getMethod() == "GET") {
-		cout << "before: " << connection.getRequest().getPath() << endl;
 		request_path_handler(connection);
-		cout << "after: " << connection.getRequest().getPath() << endl;
 		if (connection.getRequest().getStatusCode() == 200) {
-			if (connection.getRequest().getIsAutoindex() == true) {
+			if (connection.getRequest().getIsAutoindex() == true)
 				content = do_autoindex(connection.getRequest().getPath());
-			}
-			else if (connection.getRequest().getIsCGI() == true) {
-
+			else if (connection.getRequest().getIsCGI() == true)
 				content = content_from_cgi(connection.getRequest());
-			}
 			else {
 				ifstream file(connection.getRequest().getPath());
         		if (!file.is_open())
@@ -153,7 +148,6 @@ void handleRequest(Connection& connection) {
 	}
 	else if (connection.getRequest().getMethod() == "DELETE") {
 		// we also need a 'path_handler' for DELETE requets;
-        cout << connection.getRequest().getPath() << endl;
 		checkDeletePath(connection);
 		if (connection.getRequest().getStatusCode() == 200)
 			deleteMethod(connection);
