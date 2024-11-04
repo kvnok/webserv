@@ -18,7 +18,7 @@ Request::Request()
 	  _isAutoindex(false),
 	  _isCGI(false),
 	  _CGIExtension(""),
-	  _CGIPath(""),
+	  _fileName(""),
 	  _isRedirect(false)
 { }
 Request::Request(const Request& other) { *this = other; }
@@ -38,7 +38,7 @@ Request&	Request::operator=(const Request& other) {
 		this->_isAutoindex = other._isAutoindex;
 		this->_isCGI = other._isCGI;
 		this->_CGIExtension = other._CGIExtension;
-		this->_CGIPath = other._CGIPath;
+		this->_fileName = other._fileName;
 		this->_isRedirect = other._isRedirect;
 	}
 	return (*this);
@@ -58,7 +58,7 @@ void	Request::setMultipartFlag(bool const flag) { this->_multipartFlag = flag; }
 void	Request::setIsAutoindex(bool const isAutoindex) { this->_isAutoindex = isAutoindex; }
 void	Request::setIsCGI(bool const isCGI) { this->_isCGI = isCGI; }
 void	Request::setCGIExtension(string const CGIExtension) { this->_CGIExtension = CGIExtension; }
-void	Request::setCGIPath(string const CGIPath) { this->_CGIPath = CGIPath; }
+void	Request::setFileName(string const fileName) { this->_fileName = fileName; }
 void	Request::setIsRedirect(bool const isRedirect) { this->_isRedirect = isRedirect; }
 
 string	            Request::getMethod() const { return (this->_method); }
@@ -73,7 +73,7 @@ bool				Request::getMultipartFlag() const { return (this->_multipartFlag); }
 bool				Request::getIsAutoindex() const { return (this->_isAutoindex); }
 bool				Request::getIsCGI() const { return (this->_isCGI); }
 string				Request::getCGIExtension() const { return (this->_CGIExtension); }
-string				Request::getCGIPath() const { return (this->_CGIPath); }
+string				Request::getFileName() const { return (this->_fileName); }
 bool				Request::getIsRedirect() const { return (this->_isRedirect); }
 
 string				Request::getHeaderValue(const string& key) const{
@@ -97,7 +97,7 @@ void  Request::reset() {
 	this->_isAutoindex = false;
 	this->_isCGI = false;
 	this->_CGIExtension = "";
-	this->_CGIPath = "";
+	this->_fileName = "";
 	this->_isRedirect = false;
 }
 
@@ -124,49 +124,60 @@ string content_from_cgi(Request &request)
 }
 
 void handleRequest(Connection& connection) {
-	Response&	response = connection.getResponse();
-	Request&	request = connection.getRequest();
 	string		content = "";
 
-	cout << "path in handle request: " << request.getPath() << " " << request.getStatusCode() << " " << request.getMethod() << endl;
-	if (request.getStatusCode() != 200) {
-		response.setStatusCode(request.getStatusCode());
-		request.setPath(connection.getServer().getErrorPages()[request.getStatusCode()]);
-	}
-	// in the function down below, set response status code, instead of request.
-	// and the path should be updated to
+	//this is the new structure
+	// you can assume that the path is checked in the config file, and i will add a file name for if it is a post 
+	// path = connection.getRequest().getPath();
+	// if (isCGI)
+	// 	doCGI(path);
+	// else if (get)
+	// 	doGET(path)
+	// else if (post)
+	// 	doPOST(path) //path will be the destination folder;
+	// else if (delete)
+	// 	doDELETE(path);
+
+	if (connection.getRequest().getStatusCode() != 200)
+		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
 	else if (connection.getRequest().getMethod() == "GET") {
-		cout << BLU << "Get method" << RESET << endl;
 		request_path_handler(connection);
-		if (request.getIsAutoindex() == true) {
-			content = do_autoindex(request.getPath());
-		}
-		else if (request.getIsCGI() == true) {
-			
-			content = content_from_cgi(request);
-		}
-		else {
-			ifstream file(request.getPath());
-        	if (!file.is_open())
-        	    response.setStatusCode(404);
-        	else {
-        	    content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-        	    file.close();
-        	}
+		if (connection.getRequest().getStatusCode() == 200) {
+			if (connection.getRequest().getIsAutoindex() == true)
+				content = do_autoindex(connection.getRequest().getPath());
+			else if (connection.getRequest().getIsCGI() == true)
+				content = content_from_cgi(connection.getRequest());
+			else {
+				ifstream file(connection.getRequest().getPath());
+        		if (!file.is_open())
+        		    connection.getResponse().setStatusCode(404);
+        		else {
+        		    content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+        		    file.close();
+        		}
+			}
 		}
 	}
 	else if (connection.getRequest().getMethod() == "DELETE") {
-        cout << BLU << "Delete method" << endl;
-        deleteMethod(connection);
+		// we also need a 'path_handler' for DELETE requets;
+		checkDeletePath(connection);
+		if (connection.getRequest().getStatusCode() == 200)
+			deleteMethod(connection);
+		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
 	}
 	else if (connection.getRequest().getMethod() == "POST") {
-		cout << BLU << "Post method" << RESET << endl;
-		postMethod(connection);
+		// we also need a 'path_handler' for POST requets;
+		//checkPostPath(connection);
+		if (connection.getRequest().getStatusCode() == 200)
+			postMethod(connection);
+		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
 	}
-	if (response.getStatusCode() != 200) {
-		ifstream file(request.getPath());
+	// we have either a filled body, or a status code and corresponding status code path
+	connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
+	if (connection.getResponse().getStatusCode() != 200) {
+		ifstream file(connection.getRequest().getPath());
         if (!file.is_open())
-            response.setStatusCode(404);
+            connection.getResponse().setStatusCode(404);
         else {
             content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
             file.close();
@@ -174,5 +185,5 @@ void handleRequest(Connection& connection) {
 	}
 	if (content.empty())
 		content = fourZeroFourBody();
-	response.setBody(content);
+	connection.getResponse().setBody(content);
 }

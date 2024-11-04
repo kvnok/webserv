@@ -11,8 +11,6 @@ using namespace std;
 
 class Connection;
 
-enum wState {WSTART, WRITING, WDONE};
-
 class Response {
 	private:
 		string				_version;
@@ -21,7 +19,6 @@ class Response {
 		string				_body;
 		int					_clientSocket;
 		size_t				_bytesWritten;
-		wState				_writeState;
 	public:
 		Response();
 		Response(int const clientSocket, int const statusCode, string const version);
@@ -34,29 +31,23 @@ class Response {
 		void				setBody(string const body);
 		void				setStatusCode(int const statusCode);
 		void				setClientSocket(int const clientSocket);
-		void				addBytesWritten(size_t const bWrtitten);
-		void				setWriteState(wState const wState);
+//		void				addBytesWritten(size_t const bWrtitten);
 		void				addHeader(string const key, string const value);
-		void				setHeaders(Response& response, Request& request);
+		void				setHeaders(string const content, string const connection, string const path);
 
 		string				getVersion() const;
 		int					getStatusCode() const;
 		map<string, string>	getHeaders() const;
 		string				getBody() const;
 		int					getClientSocket() const;
-		wState				getWriteState() const;
-		size_t				getBrytesWritten() const;
+//		size_t				getBrytesWritten() const;
 
 		ssize_t				sendResponse() const;
+		void				setResponse(Response& response, Request& request, int cSocket);
 		void				reset();
 };
 
 void	createResponse(Connection& connection);
-
-void	postMethod(Connection& connection);
-void	getMethod(Connection &connection);
-int		run_script(char *args[], Request &request);
-void	deleteMethod(Connection& connection);
 
 // add fucntions outside class
 //	  - get file with body, open and read, create headers, fill response class

@@ -43,6 +43,8 @@ class Request {
 		string					_version;
 		map<string, string>		_header;
 		string					_body;
+	//	string					_file; //for post, maybe for other things?
+	//	string					_otherPath;
 		unsigned long			_contentLength;
 		int						_statusCode;
 		readState				_readState;
@@ -50,7 +52,7 @@ class Request {
 		bool 					_isAutoindex;
 		bool					_isCGI;
 		string					_CGIExtension;
-		string					_CGIPath;
+		string					_fileName; //maybe i could use this, need to find out if it could also be a non cgi with an extra path.
 		bool					_isRedirect;
 	public:
 		Request();
@@ -72,7 +74,7 @@ class Request {
 		void 	setIsAutoindex(bool const isAutoindex);
 		void 	setIsCGI(bool const isCGI);
 		void 	setCGIExtension(string const CGIExtension);
-		void	setCGIPath(string const CGIPath);
+		void	setFileName(string const fileName);
 		void 	setIsRedirect(bool const isRedirect);
 
 		string				getMethod() const;
@@ -88,7 +90,7 @@ class Request {
 		bool				getIsAutoindex() const;
 		bool				getIsCGI() const;
 		string				getCGIExtension() const;
-		string				getCGIPath() const;
+		string				getFileName() const;
 		bool				getIsRedirect() const;
 		// ------------------------
 
@@ -102,6 +104,12 @@ void	parseBodyParts(Request& request);
 bool	hasAllHeaders(const vector<char> data);
 
 void	handleRequest(Connection& connection);
+
+void	postMethod(Connection& connection);
+int		run_script(char *args[], Request &request);
+void	deleteMethod(Connection& connection);
+void	checkDeletePath(Connection& connection);
+
 
 //https://www.ibm.com/docs/en/app-connect/11.0.0?topic=messages-http-headers
 //resource headers

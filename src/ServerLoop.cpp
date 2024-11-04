@@ -24,17 +24,8 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
 }
 
 void    Servers::writeResponse(Connection& connection) {
-    Request &request = connection.getRequest();
-
-    // move this to createResponse
-    connection.getResponse().setClientSocket(connection.getFd());
-    connection.getResponse().setVersion(connection.getRequest().getVersion());
-    connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
     createResponse(connection);
-    if (connection.getRequest().getHeaderValue("Connection") == "close")
-        connection.setNextState(CLOSE);
-    else
-        connection.setNextState(CLEANUP);
+    return ;
 }
 
 void    Servers::executeRequest(Connection& connection) {
@@ -81,8 +72,10 @@ void    Servers::handleExistingConnection(Connection& connection, size_t& i) {
             readRequest(connection);
             break ;
         case EXECUTE:
-            executeRequest(connection);
+            executeRequest(connection); // maybe change to CGI, GET, POST, DELETE and add a HANDLER for path_handler()
             break ;
+        case PAUZE:
+            break ; //this could be used for waiting, if the fd of a child or other file is used
         case WRITE:
             writeResponse(connection);
             break ;
@@ -107,7 +100,6 @@ void    Servers::start() {
             }
             else {
                 size_t  client_index = i - this->_serverBlocks.size();
-
                 if ((this->_fds[i].revents & POLLIN)) {
                     if (this->_connections[client_index].getNextState() == EXECUTE && \
                         this->_connections[client_index].getRequest().getStatusCode() == 200)
