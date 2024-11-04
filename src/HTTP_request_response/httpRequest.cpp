@@ -18,7 +18,7 @@ Request::Request()
 	  _isAutoindex(false),
 	  _isCGI(false),
 	  _CGIExtension(""),
-	  _CGIPath(""),
+	  _fileName(""),
 	  _isRedirect(false)
 { }
 Request::Request(const Request& other) { *this = other; }
@@ -38,7 +38,7 @@ Request&	Request::operator=(const Request& other) {
 		this->_isAutoindex = other._isAutoindex;
 		this->_isCGI = other._isCGI;
 		this->_CGIExtension = other._CGIExtension;
-		this->_CGIPath = other._CGIPath;
+		this->_fileName = other._fileName;
 		this->_isRedirect = other._isRedirect;
 	}
 	return (*this);
@@ -58,7 +58,7 @@ void	Request::setMultipartFlag(bool const flag) { this->_multipartFlag = flag; }
 void	Request::setIsAutoindex(bool const isAutoindex) { this->_isAutoindex = isAutoindex; }
 void	Request::setIsCGI(bool const isCGI) { this->_isCGI = isCGI; }
 void	Request::setCGIExtension(string const CGIExtension) { this->_CGIExtension = CGIExtension; }
-void	Request::setCGIPath(string const CGIPath) { this->_CGIPath = CGIPath; }
+void	Request::setFileName(string const fileName) { this->_fileName = fileName; }
 void	Request::setIsRedirect(bool const isRedirect) { this->_isRedirect = isRedirect; }
 
 string	            Request::getMethod() const { return (this->_method); }
@@ -73,7 +73,7 @@ bool				Request::getMultipartFlag() const { return (this->_multipartFlag); }
 bool				Request::getIsAutoindex() const { return (this->_isAutoindex); }
 bool				Request::getIsCGI() const { return (this->_isCGI); }
 string				Request::getCGIExtension() const { return (this->_CGIExtension); }
-string				Request::getCGIPath() const { return (this->_CGIPath); }
+string				Request::getFileName() const { return (this->_fileName); }
 bool				Request::getIsRedirect() const { return (this->_isRedirect); }
 
 string				Request::getHeaderValue(const string& key) const{
@@ -97,7 +97,7 @@ void  Request::reset() {
 	this->_isAutoindex = false;
 	this->_isCGI = false;
 	this->_CGIExtension = "";
-	this->_CGIPath = "";
+	this->_fileName = "";
 	this->_isRedirect = false;
 }
 

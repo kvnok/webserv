@@ -14,19 +14,19 @@ static bool	parseHeaders(istringstream &headerStream, string line, Request& requ
 		totLen += len;
 		string	toFind = ": ";
 		auto splitPos = search(line.begin(), line.end(), toFind.begin(), toFind.end());
-		if (line.back() != '\r' || splitPos == line.end()) {
+		auto end = find(line.begin(), line.end(), '\r');
+		if (splitPos == line.end() || end == line.end()) {
 			request.setStatusCode(400);
 			return (false);
 		}
 		string key(line.begin(), splitPos);
-		string value(splitPos + toFind.size(), line.end() - 1); // -1 to get rid of the \r at the end of the string
-		cout << YEL << key << ": " << value << RESET << endl;
-		if (!key.empty() && !value.empty())
-			request.addHeader(key, value);
-		else {
+		string value(splitPos + toFind.size(), end);
+		//cout << YEL << key << ": " << value << "$" << RESET << endl;
+		if (key.empty() || value.empty()) {
 			request.setStatusCode(400);
 			return (false);
 		}
+		request.addHeader(key, value);
 	}
 	return (true);
 }
@@ -125,22 +125,23 @@ static	void	parsePart(string content, Request& request) {
 		start = end + nl.size();
 	}
 	string body(hbPos + hbLim.size(), content.end() - 2);
+	// "name=" is used and should only be used, for indicating the field. so in this case, the part is a 'file',
+	//so we can get the content of the file (== body) and the filename (== "filename=...")
 	if (headers["Content-Disposition"].find("name=\"file\";") != string::npos) {
 		request.setBody(body);
 		//cout << YEL << request.getBody() << RESET << endl;
 	}
-	if (headers["Content-Disposition"].find("name=\"cgi_upload\"") != string::npos)
-		request.setCGIPath(body);
 	string value = headers["Content-Disposition"];
 	string toFind = "filename=\"";
 	auto i = search(value.begin(), value.end(), toFind.begin(), toFind.end());
 	if (i != value.end()) {
 		auto j = find(i + toFind.size(), value.end(), '\"');
 		if (j < value.end()) {
-			request.setPath(string(i + toFind.size(), j));
-			//cout << RED << request.getPath() << RESET << endl;
+			request.setFileName(string(i + toFind.size(), j));
+			//cout << RED << request.getFileName() << RESET << endl;
 		}
 	}
+	//TODO: revist this part, need to do this better
 	return ;
 }
 

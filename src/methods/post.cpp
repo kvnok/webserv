@@ -33,16 +33,6 @@ static bool writeFile(const string& storage, const string& fullPath, const strin
     return (true);
 }
 
-static string extract_file_name(const string &path) {
-    size_t posSlash = path.find_last_of('/');
-    string file;
-    if (posSlash == string::npos)
-        file = path;
-    else
-        file = path.substr(posSlash + 1);
-    return file;
-}
-
 static void check_permissions(Request& request) {
     string path = request.getPath();
     if (access(path.c_str(), F_OK) == -1 || filesystem::is_directory(path)) {
@@ -58,8 +48,10 @@ static void check_permissions(Request& request) {
 
 void postMethod(Connection& connection) {
     string  uploadedFile;
-    string  storage = "www/storage/"; // hardcoded, needs to change.
-    string  fullPath = storage + extract_file_name(connection.getRequest().getPath());
+    string  storage = "www/storage/"; // hardcoded, needs to change. 
+    // we can add a content-disposition in html, where "name=DestinationPath", and the body then is "the actual destionation path"
+    // but if that var is empty, we can add this "www/storage/"" as a default
+    string  fullPath = storage + connection.getRequest().getFileName();
 
     if (filesystem::exists(fullPath)) {
         connection.getRequest().setStatusCode(409);

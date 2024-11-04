@@ -52,7 +52,7 @@ class Request {
 		bool 					_isAutoindex;
 		bool					_isCGI;
 		string					_CGIExtension;
-		string					_CGIPath; //maybe i could use this, need to find out if it could also be a non cgi with an extra path.
+		string					_fileName; //maybe i could use this, need to find out if it could also be a non cgi with an extra path.
 		bool					_isRedirect;
 	public:
 		Request();
@@ -74,7 +74,7 @@ class Request {
 		void 	setIsAutoindex(bool const isAutoindex);
 		void 	setIsCGI(bool const isCGI);
 		void 	setCGIExtension(string const CGIExtension);
-		void	setCGIPath(string const CGIPath);
+		void	setFileName(string const fileName);
 		void 	setIsRedirect(bool const isRedirect);
 
 		string				getMethod() const;
@@ -90,7 +90,7 @@ class Request {
 		bool				getIsAutoindex() const;
 		bool				getIsCGI() const;
 		string				getCGIExtension() const;
-		string				getCGIPath() const;
+		string				getFileName() const;
 		bool				getIsRedirect() const;
 		// ------------------------
 
