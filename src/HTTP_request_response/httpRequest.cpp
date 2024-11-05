@@ -157,22 +157,23 @@ void handleRequest(Connection& connection) {
         		}
 			}
 		}
+		else
+			connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
 	}
 	else if (connection.getRequest().getMethod() == "DELETE") {
-		// we also need a 'path_handler' for DELETE requets;
-		checkDeletePath(connection);
+		request_path_handler(connection);
 		if (connection.getRequest().getStatusCode() == 200)
 			deleteMethod(connection);
 		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
 	}
 	else if (connection.getRequest().getMethod() == "POST") {
-		// we also need a 'path_handler' for POST requets;
-		//checkPostPath(connection);
+		request_path_handler(connection);
+		//cout << connection.getRequest().getPath() << endl; // destination folder
+		//cout << connection.getRequest().getFileName() << endl; // file name
 		if (connection.getRequest().getStatusCode() == 200)
 			postMethod(connection);
 		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
 	}
-	// we have either a filled body, or a status code and corresponding status code path
 	connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
 	if (connection.getResponse().getStatusCode() != 200) {
 		ifstream file(connection.getRequest().getPath());

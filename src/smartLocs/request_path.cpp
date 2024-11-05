@@ -36,6 +36,8 @@ void check_baseline(Request &request, string &file, string &path, ServerBlock se
 	string root = server.getRoot();
 	string root_and_file = root + "/" + file;
 	root_and_file = regex_replace(root_and_file, regex("//+"), "/");
+	cout << root_and_file << endl;
+
 
 	if (file.empty()) { // no file, check for index
 		string root_and_index = root + "/" + server.getIndex();
@@ -45,22 +47,20 @@ void check_baseline(Request &request, string &file, string &path, ServerBlock se
 			path = root_and_index;
 			stream.close();
 		}
-		else { // can't open index
+		else // can't open index
 			request.setStatusCode(404);
-		}
 		//TODO: is it correct that we dont close the stream if 'is_dir' is true?
 	}
 	else if (!file.empty()) { // check for file
 		ifstream stream(root_and_file);
 		// check if file is a folder
 
-		if (stream.is_open() && is_directory(root_and_file) == false) {
+		if (stream.is_open() && (is_directory(root_and_file) == false || (is_directory(root_and_file) && request.getMethod() == "POST"))) {
 			path = root_and_file;
 			stream.close();
 		}
-		else { // can't open file part of the path
+		else // can't open file part of the path
 			request.setStatusCode(404);
-		}
 		//TODO: is it correct that we dont close the stream if 'is_dir' is true?
 	}
 }
@@ -78,9 +78,16 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 	}
 	// print_the_loc(loc);
 
+	vector<string> deny = loc.get_deny();
+	if (find(deny.begin(), deny.end(), request.getMethod()) != deny.end()) {
+		request.setStatusCode(403);
+		return ;
+	}
+
 	string root = loc.get_root();
 	string root_and_file = root + "/" + file;
 	root_and_file = regex_replace(root_and_file, regex("//+"), "/");
+	cout << root_and_file << endl;
 
 	if (file.empty()) { // no file, check for index
 		if (loc.get_index() != "")
@@ -92,17 +99,15 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 				path = root_and_index;
 				stream.close();
 			}
-			else { // can't open index;
+			else // can't open index;
 				request.setStatusCode(404);
-			}
 		}
 		else if (loc.get_autoindex() == true) {
 			request.setIsAutoindex(true);
 			path = root;
 		}
-		else { // no index, no autoindex
+		else // no index, no autoindex
 			request.setStatusCode(404);
-		}
 	}
 	else if (!file.empty()) { // check for file
 		if (loc.get_is_cgi() == true)
@@ -117,9 +122,8 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 			path = root_and_file;
 			stream.close();
 		}
-		else { // can't open file part of the path
+		else // can't open file part of the path
 			request.setStatusCode(404);
-		}
 		//TODO: is it correct that we dont close the stream if 'is_dir' is true?
 	}
 }
@@ -132,15 +136,12 @@ void ok_print_server_block(ServerBlock &serverBlock) {
 }
 
 bool is_this_a_redirect(string &folder, string &file, smartLocs sLocs) {
-	if (folder != "" && file != "") {
+	if (folder != "" && file != "")
 		return false;
-	}
-	if ((folder == "" || folder == "/") && file == "") {
+	if ((folder == "" || folder == "/") && file == "")
 		return false;
-	}
-	if (file != "") {
+	if (file != "")
 		return false;
-	}
 	Loc loc;
 	try {
 		loc = sLocs.get_loc(folder);
@@ -148,9 +149,8 @@ bool is_this_a_redirect(string &folder, string &file, smartLocs sLocs) {
 	catch (invalid_argument &e) {
 		return false;
 	}
-	if (loc.get_is_redirect() == false) {
+	if (loc.get_is_redirect() == false)
 		return false;
-	}
 	return true;
 }
 
