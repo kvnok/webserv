@@ -99,7 +99,8 @@ void    Servers::start() {
                     handleNewConnection(i);
             }
             else {
-                size_t  client_index = i - this->_serverBlocks.size();
+                size_t  client_index = i - this->_serverBlocks.size(); 
+                // need a different way to do this, since we need the fd and index of that fd(for files in the exectution part)
                 if ((this->_fds[i].revents & POLLIN)) {
                     if (this->_connections[client_index].getNextState() == EXECUTE && \
                         this->_connections[client_index].getRequest().getStatusCode() == 200)
