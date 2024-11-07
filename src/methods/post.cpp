@@ -67,24 +67,4 @@ void postMethod(Connection& connection) {
         connection.getRequest().setStatusCode(201);
     else
         connection.getRequest().setStatusCode(404);
-    // return fd
 }
-
-    // else {
-    //     check_permissions(connection.getRequest());
-    //     if (connection.getRequest().getStatusCode() != 200)
-    //         return ;
-    //     int ret = 0;
-    //     string path = connection.getRequest().getPath().c_str();
-    //     char *args[] = {(char *) path.c_str(), (char *)storage.c_str(), nullptr};
-    //     int fd = run_script(args, connection.getRequest());
-    //     char buffer[connection.getServer().getMaxBody()];
-    //     ssize_t bytesRead;
-    //     while ((bytesRead = read(fd, buffer, sizeof(buffer) - 1)) > 0) {
-    //         buffer[bytesRead] = '\0';
-    //         if (strstr(buffer, "Error:") != nullptr)
-    //             connection.getRequest().setBody(buffer);
-    //         else
-    //             connection.getRequest().setStatusCode(201);
-    //     }
-    // }

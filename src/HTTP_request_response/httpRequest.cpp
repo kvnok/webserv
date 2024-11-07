@@ -101,42 +101,60 @@ void  Request::reset() {
 	this->_isRedirect = false;
 }
 
-string content_from_cgi(Request &request)
-{
-	string scriptPath = request.getPath().c_str(); // at the moment the path is wrong
-	string content = "";
-		// Prepare arguments for the script execution
-		char *args[] = {
-			const_cast<char*>("/usr/bin/python3"),    // Path to the interpreter
-			const_cast<char*>(scriptPath.c_str()),     // The script path
-			nullptr                                     // Null terminator
-		};
-		int fdForPolling = run_script(args, request);
-		
-        char buffer[1024]; // change size of buffer
-        ssize_t bytesRead;
-        while ((bytesRead = read(fdForPolling, buffer, sizeof(buffer) - 1)) > 0) {
-            buffer[bytesRead] = '\0';
-            content += buffer;
-        }
-        close(fdForPolling); // close the fd for now
-		return content;
+void	readRequest(Connection& connection) {
+    vector<char> buffer(BUFFER_SIZE);
+    ssize_t bytes = recv(connection.getFd(), buffer.data(), buffer.size(), 0);
+    if (bytes < 0) {
+        //stil need to check if something needs to be done here
+        return ;
+    }
+    else if (bytes == 0) {
+        connection.setNextState(CLOSE);
+        return ;
+    }
+    buffer.resize(bytes);
+    //cout << YEL << string(buffer.begin(), buffer.end()) << RESET << endl;
+    connection.addToBuffer(buffer);
+    if (connection.getRequest().getReadState() == START)
+        hasAllHeaders(connection.getBuffer(), connection.getRequest());
+    if (connection.getRequest().getReadState() == HEADERS) {
+        checkHeaders(connection.getBuffer(), connection.getRequest());
+        connection.clearBuffer();
+    }
+    if (connection.getRequest().getReadState() == CHUNKED_BODY)
+        checkChunkedBody(connection);
+    if (connection.getRequest().getReadState() == CONTENT_LENGTH_BODY)
+        checkContentLengthBody(connection);
+    if (connection.getRequest().getReadState() == DONE) {
+        connection.getBuffer().clear();
+        connection.getBuffer().resize(0);
+        connection.setNextState(PATH);
+    }
 }
 
+void	handleRequest(Connection& connection) {
+	if (connection.getRequest().getStatusCode() == 200) 
+		request_path_handler(connection);
+	if (connection.getRequest().getStatusCode() != 200)
+		connection.setNextState(STATUSCODE);
+	else if (connection.getRequest().getIsCGI())
+		connection.setNextState(CGI);
+	else if (connection.getRequest().getMethod() == "POST")
+		connection.setNextState(POST);
+	else if (connection.getRequest().getMethod() == "GET")
+		connection.setNextState(GET);
+	else if (connection.getRequest().getMethod() == "DELETE")
+		connection.setNextState(DELETE);
+	else {
+		connection.getRequest().setStatusCode(500); //ALL: agree??
+		connection.setNextState(STATUSCODE);
+	}
+	return ;
+}
+
+/*
 void handleRequest(Connection& connection) {
 	string		content = "";
-
-	//this is the new structure
-	// you can assume that the path is checked in the config file, and i will add a file name for if it is a post 
-	// path = connection.getRequest().getPath();
-	// if (isCGI)
-	// 	doCGI(path);
-	// else if (get)
-	// 	doGET(path)
-	// else if (post)
-	// 	doPOST(path) //path will be the destination folder;
-	// else if (delete)
-	// 	doDELETE(path);
 
 	if (connection.getRequest().getStatusCode() != 200)
 		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
@@ -155,6 +173,7 @@ void handleRequest(Connection& connection) {
         		    content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
         		    file.close();
         		}
+				// this should be done in response, this needs to be 'n' bytes a time, seperated by sends and looping to other fd's
 			}
 		}
 		else
@@ -162,16 +181,24 @@ void handleRequest(Connection& connection) {
 	}
 	else if (connection.getRequest().getMethod() == "DELETE") {
 		request_path_handler(connection);
-		if (connection.getRequest().getStatusCode() == 200)
-			deleteMethod(connection);
+		if (connection.getRequest().getStatusCode() == 200) {
+			if (connection.getRequest().getIsCGI() == true)
+				connection.getRequest().setStatusCode(404); // correct status code?
+			else
+				deleteMethod(connection);
+		}
 		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
 	}
 	else if (connection.getRequest().getMethod() == "POST") {
 		request_path_handler(connection);
 		//cout << connection.getRequest().getPath() << endl; // destination folder
 		//cout << connection.getRequest().getFileName() << endl; // file name
-		if (connection.getRequest().getStatusCode() == 200)
-			postMethod(connection);
+		if (connection.getRequest().getStatusCode() == 200) {
+			if (connection.getRequest().getIsCGI() == true)
+				content = content_from_cgi(connection.getRequest());
+			else
+				postMethod(connection);
+		}
 		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
 	}
 	connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
@@ -188,3 +215,31 @@ void handleRequest(Connection& connection) {
 		content = fourZeroFourBody();
 	connection.getResponse().setBody(content);
 }
+*/
+
+/*
+string content_from_cgi(Request &request)
+{
+	cout << request.getPath() << endl;
+	string scriptPath = request.getPath().c_str(); // at the moment the path is wrong
+	string content = "";
+		// Prepare arguments for the script execution
+		char *args[] = {
+			const_cast<char*>("/usr/bin/python3"),    // Path to the interpreter
+			const_cast<char*>(scriptPath.c_str()),     // The script path
+			nullptr                                     // Null terminator
+		};
+		int fdForPolling = run_script(args, request);
+		
+        char buffer[1024]; // change size of buffer
+        ssize_t bytesRead;
+		//POLLFD
+        while ((bytesRead = read(fdForPolling, buffer, sizeof(buffer) - 1)) > 0) {
+            buffer[bytesRead] = '\0';
+            content += buffer;
+        }
+        close(fdForPolling); // close the fd for now
+		return content;
+}
+
+*/

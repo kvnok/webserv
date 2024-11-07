@@ -23,70 +23,111 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
     return;
 }
 
-void    Servers::writeResponse(Connection& connection) {
+void	Servers::parsePath(Connection& connection) {
+
+    return;
+}
+
+void	Servers::doCGI(Connection& connection) {
+
+    return;
+}
+
+void	Servers::doPost(Connection& connection) {
+
+    return;
+}
+
+void	Servers::doDelete(Connection& connection) {
+
+    return;
+}
+
+void	Servers::doGet(Connection& connection) {
+
+    return;
+}
+
+void	Servers::getStatusCodePage(Connection& connection) {
+    connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
+    return;
+}
+
+void	Servers::prepResponse(Connection& connection) {
+
+    return;
+}
+
+void    Servers::sendResponse(Connection& connection) {
     createResponse(connection);
     return ;
 }
 
-void    Servers::executeRequest(Connection& connection) {
-    handleRequest(connection);
-    connection.setNextState(WRITE);
-}
-
-void    Servers::readRequest(Connection& connection) {
-    vector<char> buffer(BUFFER_SIZE);
-    ssize_t bytes = recv(connection.getFd(), buffer.data(), buffer.size(), 0);
-    if (bytes < 0) {
-        //stil need to check if something needs to be done here
-        return ;
-    }
-    else if (bytes == 0) {
-        connection.setNextState(CLOSE);
-        return ;
-    }
-    buffer.resize(bytes);
-    //cout << YEL << string(buffer.begin(), buffer.end()) << RESET << endl;
-    connection.addToBuffer(buffer);
-    if (connection.getRequest().getReadState() == START) {
-        if (hasAllHeaders(connection.getBuffer()))
-            connection.getRequest().setReadState(HEADERS);
-    }
-    if (connection.getRequest().getReadState() == HEADERS) {
-        checkHeaders(connection.getBuffer(), connection.getRequest());
-        connection.clearBuffer();
-    }
-    if (connection.getRequest().getReadState() == CHUNKED_BODY)
-        checkChunkedBody(connection);
-    if (connection.getRequest().getReadState() == CONTENT_LENGTH_BODY)
-        checkContentLengthBody(connection);
-    if (connection.getRequest().getReadState() == DONE) {
-        connection.getBuffer().clear();
-        connection.getBuffer().resize(0);
-        connection.setNextState(EXECUTE);
-    }
-}
-
 void    Servers::handleExistingConnection(Connection& connection, size_t& i) {
     switch (connection.getNextState()) {
-        case READ:
+        case READ: //done
             readRequest(connection);
             break ;
-        case EXECUTE:
-            executeRequest(connection); // maybe change to CGI, GET, POST, DELETE and add a HANDLER for path_handler()
+        case PATH: //done
+            parsePath(connection);
             break ;
-        case PAUZE:
-            break ; //this could be used for waiting, if the fd of a child or other file is used
-        case WRITE:
-            writeResponse(connection);
+        case CGI:
+            doCGI(connection);
             break ;
-        case CLEANUP:
+        case POST:
+            doPost(connection);
+            break ;
+        case DELETE:
+            doDelete(connection);
+            break ;
+        case GET:
+            doGet(connection);
+            break ;
+        case STATUSCODE:
+            getStatusCodePage(connection);
+            break ;
+        case RESPONSE:
+            prepResponse(connection);
+            break ;
+        case SEND:
+            sendResponse(connection);
+            break ;
+        case CLEANUP: //check for updates
             connection.reset();
             break;
-        case CLOSE:
+        case CLOSE: //done
             closeConnection(connection, i);
             break ;
     }
 }
+
+//alternitive:
+/*
+    handleExistingConnection() {
+        switch (state)
+        case (read)
+
+        case (pathHandler) get correct path, set flags, make ready for 'execution'
+
+        case (CGI) pipe, new fd, wait untill cgi responded with a body for the response/ or make a cgi that also sends the response.
+
+        case (POST) create file, new fd, wait untill body is written to file and fd is close, or statuscode has changed
+
+        case (DELETE) try to delete file, set statuscode
+
+        case (GET) open file, new fd, wait untill fd is closed and body is filled or statuscode has changed
+
+        case (STATUSCODE) only if statuscode is not 200, open file, new fd, wait untill fd is closed and body is filled, else use default function for 404;
+
+        case (PREP_RESPONSE) set headers, statuscodes, and body
+
+        case (SEND_RESPONSE) send response in chunks
+
+        case (CLEANUP) if connection still alive
+
+        case (CLOSE) only if needs to close
+    }
+*/
 
 void    Servers::start() {   
     while (true) {
@@ -95,26 +136,35 @@ void    Servers::start() {
             cerr << "poll failed" << endl;
         for (size_t i = 0; i < this->_fds.size(); i++) {
             if (i < this->_serverBlocks.size()) {
-                if (this->_fds[i].revents & POLLIN) 
+                if (this->_fds[i].revents & POLLIN)
                     handleNewConnection(i);
             }
             else {
-                size_t  client_index = i - this->_serverBlocks.size(); 
-                if ((this->_fds[i].revents & POLLIN)) {
-                    if (this->_connections[client_index].getNextState() == EXECUTE && \
-                        this->_connections[client_index].getRequest().getStatusCode() == 200)
-                        this->_connections[client_index].getRequest().setStatusCode(400); // fd is ready to read, but we are 'done' reading, so the request is invalid
-                    handleExistingConnection(this->_connections[client_index], i);
+                size_t  client_index = i - this->_serverBlocks.size();
+                if ((this->_fds[i].revents & POLLIN) && this->_connections[client_index].getFd() == this->_fds[i].fd) {
+                    if (this->_connections[client_index].getFd() == this->_fds[i].fd) {
+                        if (this->_connections[client_index].getNextState() != READ && \
+                            this->_connections[client_index].getRequest().getStatusCode() == 200) {
+                            this->_connections[client_index].getRequest().setStatusCode(400); // fd is ready to read, but we are 'done' reading, so the request is invalid
+                        } //ALL agree?
+                        handleExistingConnection(this->_connections[client_index], i);
+                    }
+                    else {
+                        // other fd
+                    }
                 }
                 else if ((this->_fds[i].revents & POLLOUT))
-                    handleExistingConnection(this->_connections[client_index], i);
+                    if (this->_connections[client_index].getFd() == this->_fds[i].fd)
+                        handleExistingConnection(this->_connections[client_index], i);
+                    else {
+                        //other fd
+                    }
             }
             if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                 close(this->_fds[i].fd);
                 if (i >= this->_serverBlocks.size()) {
                     this->_fds.erase(this->_fds.begin() + i);
-                    if (i >= this->_serverBlocks.size())
-                        this->_connections.erase(this->_connections.begin() + (i - this->_serverBlocks.size()));
+                    this->_connections.erase(this->_connections.begin() + (i - this->_serverBlocks.size()));
                     i--;
                 }
             }

@@ -24,8 +24,14 @@ class Servers
 		void	handleNewConnection(size_t i);
 		void	handleExistingConnection(Connection& connection, size_t& i);
 		void	readRequest(Connection& connection);
-		void	executeRequest(Connection& connection);
-		void	writeResponse(Connection& connection);
+		void	parsePath(Connection& connection);
+		void	doCGI(Connection& connection);
+		void	doPost(Connection& connection);
+		void	doDelete(Connection& connection);
+		void	doGet(Connection& connection);
+		void	getStatusCodePage(Connection& connection);
+		void	prepResponse(Connection& connection);
+		void	sendResponse(Connection& connection);
 		void	closeConnection(Connection& connection, size_t& i);
 		vector<ServerBlock> &get_serverBlocks();
 		vector<Connection>	&get_connections();
