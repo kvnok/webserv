@@ -227,7 +227,7 @@ void	checkContentLengthBody(Connection& connection) {
 	if (connection.getBuffer().size() == readLength) { //need catch error if length stay's to short or to long
 		vector<char> buf = connection.getBuffer();
 		connection.getRequest().setBody(string(buf.begin(), buf.end()));
-		cout << RED << "BODY: " << string(buf.begin(), buf.end()) << RESET << endl;
+		//cout << RED << "BODY: " << string(buf.begin(), buf.end()) << RESET << endl;
 		if (connection.getRequest().getMultipartFlag())
 			parseBodyParts(connection.getRequest());
 		connection.getRequest().setReadState(DONE);

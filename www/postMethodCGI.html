@@ -8,7 +8,7 @@
 <body>
     <h1>Upload Your File</h1>
     <!-- The form's action points to the CGI script URL -->
-    <form method="post" enctype="multipart/form-data">
+    <form action="CGIStorage" method="post" enctype="multipart/form-data">
         <label for="fileInput">Choose file:</label>
         <input type="file" id="fileInput" name="file" required>
         <button type="submit">Upload</button>

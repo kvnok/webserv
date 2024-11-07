@@ -3,4 +3,5 @@ webserv
 .vscode
 src/autoindex/outfile.html
 www/storage/*
+www/CGIStorage/*
 nopermission.txt

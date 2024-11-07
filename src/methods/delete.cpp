@@ -2,49 +2,33 @@
 #include "httpRequest.hpp"
 #include "Connection.hpp"
 
-bool pathExist(const string& path) {
-    return filesystem::exists(path);
-}
+// string create_file_name(string path) {
+// 	size_t pos = path.find_last_of('=');
+// 	string file = "";
+// 	if (pos < path.size()) {
+// 		file = path.substr(pos + 1);
+// 		//cout << "File: " << file << endl;
+// 	}
+// 	cout << path << " vs " << file << "!" << endl;
+// 	return file;
+// }
 
-string create_file_name(string path) {
-	size_t pos = path.find_last_of('=');
-	string file = "";
-	if (pos < path.size()) {
-		file = path.substr(pos + 1);
-		//cout << "File: " << file << endl;
-	}
-	cout << path << " vs " << file << "!" << endl;
-	return file;
-}
-
-void removeFileFromStorage(const string& file) {
-	if (remove(file.c_str()) != 0) {
-		cerr << "Error deleting file" << endl;
-	} else {
-		//cout << "File successfully deleted." << endl;
-	}
-}
-
-int mustBeInStorage(const string& path) {
-	int pos = path.find("storage");
-	if (pos == -1)
-		return 1;
-	return 0;
-}
-
-void	checkDeletePath(Connection& connection) {
-	return ;
-}
+// void removeFileFromStorage(const string& file) {
+// 	if (remove(file.c_str()) != 0) {
+// 		cerr << "Error deleting file" << endl;
+// 	} else {
+// 		//cout << "File successfully deleted." << endl;
+// 	}
+// }
 
 void	deleteMethod(Connection& connection) {
-	//should use status codes in these functions.
-	string file = "";
-	if (mustBeInStorage(connection.getRequest().getPath())) {
+	string file = connection.getRequest().getPath();
+	if (!filesystem::exists(file)) {
 		connection.getRequest().setStatusCode(404);
 		return ;
 	}
-	else
-		file = "." + connection.getRequest().getPath();
+	//we should assume that all check have been done in the path_handler.
+	//so the path we have here, should be of a file in a folder where we are allowed to delete, (config file should allow DELETE, or we should create a location rule for delete)
 	if (remove(file.c_str()) != 0)
 		connection.getRequest().setStatusCode(404);
 	else

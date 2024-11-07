@@ -46,12 +46,18 @@ static void check_permissions(Request& request) {
     return ;
 }
 
+
+		//201 Created: For a successful upload, respond with 201 Created.
+		//400 Bad Request: If the request format is invalid or required headers are missing, return 400.
+		//403 Forbidden: If the target directory isn’t allowed for uploads according to the config file, return 403.
+		//409 Conflict: If a file with the same name already exists and overwriting is not permitted, return 409.
+		//413 Payload Too Large: If the file exceeds the allowed size, return 413.
+
 void postMethod(Connection& connection) {
     string  uploadedFile;
-    string  storage = "www/storage/"; // hardcoded, needs to change. 
-    // we can add a content-disposition in html, where "name=DestinationPath", and the body then is "the actual destionation path"
-    // but if that var is empty, we can add this "www/storage/"" as a default
-    string  fullPath = storage + connection.getRequest().getFileName();
+    string  storage = connection.getRequest().getPath();
+    string  file = connection.getRequest().getFileName();
+    string  fullPath = storage + '/' + file;
 
     if (filesystem::exists(fullPath)) {
         connection.getRequest().setStatusCode(409);

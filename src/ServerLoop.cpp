@@ -88,7 +88,7 @@ void    Servers::handleExistingConnection(Connection& connection, size_t& i) {
     }
 }
 
-void    Servers::start() {
+void    Servers::start() {   
     while (true) {
         int ret = poll(this->_fds.data(), this->_fds.size(), 0);
         if (ret == -1)
@@ -99,7 +99,7 @@ void    Servers::start() {
                     handleNewConnection(i);
             }
             else {
-                size_t  client_index = i - this->_serverBlocks.size();
+                size_t  client_index = i - this->_serverBlocks.size(); 
                 if ((this->_fds[i].revents & POLLIN)) {
                     if (this->_connections[client_index].getNextState() == EXECUTE && \
                         this->_connections[client_index].getRequest().getStatusCode() == 200)
@@ -111,10 +111,12 @@ void    Servers::start() {
             }
             if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                 close(this->_fds[i].fd);
-                this->_fds.erase(this->_fds.begin() + i);
-                if (i >= this->_serverBlocks.size())
-                    this->_connections.erase(this->_connections.begin() + (i - this->_serverBlocks.size()));
-                i--;
+                if (i >= this->_serverBlocks.size()) {
+                    this->_fds.erase(this->_fds.begin() + i);
+                    if (i >= this->_serverBlocks.size())
+                        this->_connections.erase(this->_connections.begin() + (i - this->_serverBlocks.size()));
+                    i--;
+                }
             }
         }
     }
