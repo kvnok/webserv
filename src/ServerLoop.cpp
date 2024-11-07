@@ -88,22 +88,18 @@ void    Servers::handleExistingConnection(Connection& connection, size_t& i) {
     }
 }
 
-void    Servers::start() {
-    // idea = check if _fds.fd is equal to the fd stored in this->_connections[] or this->_serverblock[].
-    // this way we could also more easily add the fd for files.
+void    Servers::start() {   
     while (true) {
         int ret = poll(this->_fds.data(), this->_fds.size(), 0);
         if (ret == -1)
             cerr << "poll failed" << endl;
         for (size_t i = 0; i < this->_fds.size(); i++) {
-            if (
             if (i < this->_serverBlocks.size()) {
                 if (this->_fds[i].revents & POLLIN) 
                     handleNewConnection(i);
             }
             else {
                 size_t  client_index = i - this->_serverBlocks.size(); 
-                // need a different way to do this, since we need the fd and index of that fd(for files in the exectution part)
                 if ((this->_fds[i].revents & POLLIN)) {
                     if (this->_connections[client_index].getNextState() == EXECUTE && \
                         this->_connections[client_index].getRequest().getStatusCode() == 200)
@@ -114,12 +110,13 @@ void    Servers::start() {
                     handleExistingConnection(this->_connections[client_index], i);
             }
             if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-                //if this happens to a fd of a server, we also mess up the 'order' or fd's and indices;
                 close(this->_fds[i].fd);
-                this->_fds.erase(this->_fds.begin() + i);
-                if (i >= this->_serverBlocks.size())
-                    this->_connections.erase(this->_connections.begin() + (i - this->_serverBlocks.size()));
-                i--;
+                if (i >= this->_serverBlocks.size()) {
+                    this->_fds.erase(this->_fds.begin() + i);
+                    if (i >= this->_serverBlocks.size())
+                        this->_connections.erase(this->_connections.begin() + (i - this->_serverBlocks.size()));
+                    i--;
+                }
             }
         }
     }
