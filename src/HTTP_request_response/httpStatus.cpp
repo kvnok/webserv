@@ -5,17 +5,17 @@ const string	getHtmlPath(int statusCode) {
 	return ("var/error/" + to_string(statusCode) + ".html");
 }
 
-const string	fourZeroFourBody() {
+const string	lastResortBody() {
 	string	body;
 
 	body = "<!DOCTYPE html>\n";
 	body += "<html>\n";
 	body += "    <head>\n";
-	body += "        <title>404 Error Page</title>\n";
+	body += "        <title>500 Error Page</title>\n";
 	body += "    </head>\n";
 	body += "    <body>\n";
-	body += "        <h1>404</h1>\n";
-	body += "        <p>Not Found</p>\n";
+	body += "        <h1>500</h1>\n";
+	body += "        <p>Internal Server Error</p>\n";
 	body +=	"    </body>\n";
 	body += "</html>\n";
 	return (body);

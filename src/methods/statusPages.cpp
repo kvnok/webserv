@@ -16,7 +16,7 @@ void	extractStatusCodePage(Connection& connection) {
         file.close();
     }
 	if (content.empty()) {
-		statusCode = 404;
+		statusCode = 500;
 		connection.getRequest().setPath(connection.getServer().getErrorPages()[statusCode]);
 		ifstream file(connection.getRequest().getPath());
    		if (file.is_open()) {
@@ -24,7 +24,7 @@ void	extractStatusCodePage(Connection& connection) {
         	file.close();
 		}
 		if (content.empty())
-			content = fourZeroFourBody();
+			content = lastResortBody();
 	}
 	connection.getResponse().setBody(content);
 	connection.setNextState(RESPONSE);
