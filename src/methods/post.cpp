@@ -1,4 +1,3 @@
-#include "httpResponse.hpp"
 #include "httpRequest.hpp"
 #include "Connection.hpp"
 #include <filesystem>
@@ -61,10 +60,13 @@ void postMethod(Connection& connection) {
 
     if (filesystem::exists(fullPath)) {
         connection.getRequest().setStatusCode(409);
+        connection.setNextState(STATUSCODE);
         return ;
     }
     if (writeFile(storage, fullPath, connection.getRequest().getBody()))
         connection.getRequest().setStatusCode(201);
     else
         connection.getRequest().setStatusCode(404);
+    connection.setNextState(STATUSCODE);
+    return ;
 }

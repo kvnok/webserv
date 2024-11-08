@@ -7,7 +7,7 @@
 
 using namespace std;
 
-enum cState {READ, PATH, CGI, POST, DELETE, GET, STATUSCODE, RESPONSE, SEND, CLEANUP, CLOSE};
+enum cState {READ, PATH, SCRIPT, POST, DELETE, GET, STATUSCODE, RESPONSE, SEND, CLEANUP, CLOSE};
 
 class Connection {
 	private:
@@ -52,4 +52,10 @@ class Connection {
 		void			reset();
 };
 
-void request_path_handler(Connection& connection);
+void	request_path_handler(Connection& connection);
+void	deleteMethod(Connection& connection);
+void	postMethod(Connection& connection);
+void	getMethod(Connection& connection);
+void	extractStatusCodePage(Connection& connection);
+int		run_script(char *args[], Request &request);
+string	content_from_cgi(Request &request); // needs to change;

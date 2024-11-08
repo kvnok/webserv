@@ -24,37 +24,39 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
 }
 
 void	Servers::parsePath(Connection& connection) {
-
+    handleRequest(connection);
     return;
 }
 
 void	Servers::doCGI(Connection& connection) {
-
+    connection.getResponse().setBody(content_from_cgi(connection.getRequest()));
+    connection.setNextState(RESPONSE);
     return;
 }
 
 void	Servers::doPost(Connection& connection) {
-
+    postMethod(connection);
     return;
 }
 
 void	Servers::doDelete(Connection& connection) {
-
+    deleteMethod(connection);
     return;
 }
 
 void	Servers::doGet(Connection& connection) {
-
+    getMethod(connection);
     return;
 }
 
 void	Servers::getStatusCodePage(Connection& connection) {
-    connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
+    extractStatusCodePage(connection);
     return;
 }
 
 void	Servers::prepResponse(Connection& connection) {
-
+    cout << "should be prep func" << endl;
+    connection.setNextState(SEND);
     return;
 }
 
@@ -71,7 +73,7 @@ void    Servers::handleExistingConnection(Connection& connection, size_t& i) {
         case PATH: //done
             parsePath(connection);
             break ;
-        case CGI:
+        case SCRIPT:
             doCGI(connection);
             break ;
         case POST:

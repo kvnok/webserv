@@ -22,8 +22,7 @@ class Servers
 		void	start();
 		void	setFds();
 		void	handleNewConnection(size_t i);
-		void	handleExistingConnection(Connection& connection, size_t& i);
-		void	readRequest(Connection& connection);
+		void	handleExistingConnection(Connection& connection, size_t& i); 
 		void	parsePath(Connection& connection);
 		void	doCGI(Connection& connection);
 		void	doPost(Connection& connection);

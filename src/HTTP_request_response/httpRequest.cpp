@@ -1,9 +1,7 @@
 
 #include "httpRequest.hpp"
-#include "httpStatus.hpp"
 #include "httpResponse.hpp"
 #include "Servers.hpp"
-#include "autoindex.hpp"
 #include "Connection.hpp"
 
 Request::Request()
@@ -138,7 +136,7 @@ void	handleRequest(Connection& connection) {
 	if (connection.getRequest().getStatusCode() != 200)
 		connection.setNextState(STATUSCODE);
 	else if (connection.getRequest().getIsCGI())
-		connection.setNextState(CGI);
+		connection.setNextState(SCRIPT);
 	else if (connection.getRequest().getMethod() == "POST")
 		connection.setNextState(POST);
 	else if (connection.getRequest().getMethod() == "GET")
@@ -154,41 +152,6 @@ void	handleRequest(Connection& connection) {
 
 /*
 void handleRequest(Connection& connection) {
-	string		content = "";
-
-	if (connection.getRequest().getStatusCode() != 200)
-		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
-	else if (connection.getRequest().getMethod() == "GET") {
-		request_path_handler(connection);
-		if (connection.getRequest().getStatusCode() == 200) {
-			if (connection.getRequest().getIsAutoindex() == true)
-				content = do_autoindex(connection.getRequest().getPath());
-			else if (connection.getRequest().getIsCGI() == true)
-				content = content_from_cgi(connection.getRequest());
-			else {
-				ifstream file(connection.getRequest().getPath());
-        		if (!file.is_open())
-        		    connection.getResponse().setStatusCode(404);
-        		else {
-        		    content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-        		    file.close();
-        		}
-				// this should be done in response, this needs to be 'n' bytes a time, seperated by sends and looping to other fd's
-			}
-		}
-		else
-			connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
-	}
-	else if (connection.getRequest().getMethod() == "DELETE") {
-		request_path_handler(connection);
-		if (connection.getRequest().getStatusCode() == 200) {
-			if (connection.getRequest().getIsCGI() == true)
-				connection.getRequest().setStatusCode(404); // correct status code?
-			else
-				deleteMethod(connection);
-		}
-		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
-	}
 	else if (connection.getRequest().getMethod() == "POST") {
 		request_path_handler(connection);
 		//cout << connection.getRequest().getPath() << endl; // destination folder
@@ -202,18 +165,6 @@ void handleRequest(Connection& connection) {
 		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
 	}
 	connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
-	if (connection.getResponse().getStatusCode() != 200) {
-		ifstream file(connection.getRequest().getPath());
-        if (!file.is_open())
-            connection.getResponse().setStatusCode(404);
-        else {
-            content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-            file.close();
-        }
-	}
-	if (content.empty())
-		content = fourZeroFourBody();
-	connection.getResponse().setBody(content);
 }
 */
 
