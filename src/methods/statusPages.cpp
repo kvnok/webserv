@@ -3,6 +3,16 @@
 #include "httpResponse.hpp"
 #include "httpStatus.hpp"
 
+/*
+new set up:
+
+if the status code is not 200, we end up here.
+we get the correct path of the status code, and we open the file, which results in a new fd, which we add to pollfd.
+we wait here untill we receive a body from the class which will handle the new fd.
+once we have that body, we delete the fd, and the class instance.
+we go on to response.
+*/
+
 void	extractStatusCodePage(Connection& connection) {
 	int statusCode =  connection.getRequest().getStatusCode();
 	string content = "";  

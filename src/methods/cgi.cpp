@@ -2,6 +2,17 @@
 #include "Connection.hpp"
 #include "httpResponse.hpp"
 
+/*
+new set up:
+
+if isCgi == true, go to this function.
+in here we will get the fd, and store that fd in pollfd. i will make a new class or something, to access does new fd's.
+through that class we will go to the actual cgi function, the one isly made/is going to make.
+overhere we'll wait untill we have a body from the cgi (also if there is an error)
+once we have the body, we delete the fd from pollfd, delete the class instance we used for that case and go on to response
+
+*/
+
 string content_from_cgi(Request &request)
 {
 	cout << request.getPath() << endl;

@@ -1,6 +1,14 @@
 #include "httpRequest.hpp"
 #include "Connection.hpp"
 
+/*
+new set up:
+
+we go here if it is delete,
+we delete the file
+and we set the status code to 'succes' or 'not succes' and we go on in the statusCodePage function.
+*/
+
 void	deleteMethod(Connection& connection) {
 	string file = connection.getRequest().getPath();
 	if (!filesystem::exists(file)) {

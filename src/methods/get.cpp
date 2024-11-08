@@ -3,6 +3,17 @@
 #include "httpResponse.hpp"
 #include "autoindex.hpp"
 
+/*
+new set up:
+
+if it is a get, we go to this function.
+if it is autodirect we dont need to add anything.
+if not, we need to open the correct file, which will result in getting the fd of that file, which we'll add to pollfd
+we wait here untill we get a body from the class which handles the new file fd, we delete the file fd and its class instance,
+we go on to response
+if the status code is not 200, we go to the statuscodepage function.
+*/
+
 void	getMethod(Connection& connection) {
 	if (connection.getRequest().getIsAutoindex() == true) {
 		connection.getResponse().setBody(do_autoindex(connection.getRequest().getPath()));

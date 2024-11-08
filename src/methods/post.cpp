@@ -2,6 +2,17 @@
 #include "Connection.hpp"
 #include <filesystem>
 
+/*
+new set up:
+
+we go here if it is a post, 
+we can still choose to do this by cgi, but for now we don't.
+if we choose cgi, we can redirect to the cgi page from here, and follow that structe.
+if not, we open the file that we want to write to, so we have a new fd, which will be set in pollfd.
+we wait here untill we receive and flag(or something else) from the class that will handle the writing part of the body to the fd.
+once we have that, we can set the status code to 'succes' or 'not succes' and we go on in the statusCodePage function.
+*/
+
 static bool storageExist(const string& path) {
     return filesystem::exists(path);
 }
