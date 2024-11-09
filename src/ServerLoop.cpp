@@ -16,6 +16,10 @@ void    Servers::handleNewConnection(size_t i) {
 }
 
 void    Servers::closeConnection(Connection& connection, size_t& i) {
+    if (connection.getOtherFD() != -1) {
+        close(connection.getOtherFD());
+        //delete from poll;
+    }
     close(connection.getFd());
     this->_fds.erase(this->_fds.begin() + i);
     this->_connections.erase(this->_connections.begin() + (i - this->_serverBlocks.size()));
@@ -28,25 +32,51 @@ void	Servers::parsePath(Connection& connection) {
     return;
 }
 
-void	Servers::doCGI(Connection& connection) {
-    connection.getResponse().setBody(content_from_cgi(connection.getRequest()));
+void	Servers::prepExec(Connection& connection) {
+    if (connection.getRequest().getIsCGI() == true)
+        cgiMethod(connection);
+    else if (connection.getRequest().getMethod() == "DELETE")
+        deleteMethod(connection);
+    else if (connection.getRequest().getMethod() == "POST")
+        postMethod(connection);
+    else if (connection.getRequest().getMethod() == "GET")
+        getMethod(connection);
+    else {
+        connection.getRequest().setStatusCode(500);
+        connection.setNextState(STATUSCODE);
+    }
+    return;
+}
+
+void    Servers::addFdToPoll(Connection& connection, size_t& i) {
+    this->_fds.push_back({connection.getOtherFD(), POLLIN | POLLOUT, 0});
+    connection.setNextState(EXECFD);
+}
+
+void    Servers::executeMethod(Connection& connection, size_t& i) {
+    if (this->_fds[i].fd == connection.getFd())
+        return ;
+    if (connection.getRequest().getStatusCode() != 200) // create a flag
+        executeStatusCode(connection);
+    else if (connection.getRequest().getIsCGI() == true)
+        executeCGI(connection);
+    else if (connection.getRequest().getMethod() == "POST")
+        executePost(connection);
+    else if (connection.getRequest().getMethod() == "GET")
+        executeGet(connection);
+    else
+        cout << "execute method not found error" << endl;//error?
+    return; 
+}
+
+void    Servers::delFdFromPoll(Connection& connection, size_t& i) {
+    if (this->_fds[i].fd == connection.getFd())
+        return ;
+    close(this->_fds[i].fd);
+    this->_fds.erase(this->_fds.begin() + i);
+    //add flag check
     connection.setNextState(RESPONSE);
-    return;
-}
-
-void	Servers::doPost(Connection& connection) {
-    postMethod(connection);
-    return;
-}
-
-void	Servers::doDelete(Connection& connection) {
-    deleteMethod(connection);
-    return;
-}
-
-void	Servers::doGet(Connection& connection) {
-    getMethod(connection);
-    return;
+    i--;
 }
 
 void	Servers::getStatusCodePage(Connection& connection) {
@@ -55,7 +85,7 @@ void	Servers::getStatusCodePage(Connection& connection) {
 }
 
 void	Servers::prepResponse(Connection& connection) {
-    cout << "should be prep func" << endl;
+    //cout << connection.getResponse().getBody() << endl;
     connection.setNextState(SEND);
     return;
 }
@@ -73,20 +103,20 @@ void    Servers::handleExistingConnection(Connection& connection, size_t& i) {
         case PATH: //done
             parsePath(connection);
             break ;
-        case SCRIPT:
-            doCGI(connection);
-            break ;
-        case POST:
-            doPost(connection);
-            break ;
-        case DELETE:
-            doDelete(connection);
-            break ;
-        case GET:
-            doGet(connection);
+        case PREPEXEC:
+            prepExec(connection);
             break ;
         case STATUSCODE:
             getStatusCodePage(connection);
+            break ;
+        case SETFD:
+            addFdToPoll(connection, i);
+            break ;
+        case EXECFD:
+            executeMethod(connection, i);
+            break ;
+        case DELFD:
+            delFdFromPoll(connection, i);
             break ;
         case RESPONSE:
             prepResponse(connection);
@@ -103,39 +133,11 @@ void    Servers::handleExistingConnection(Connection& connection, size_t& i) {
     }
 }
 
-//alternitive:
-/*
-    handleExistingConnection() {
-        switch (state)
-        case (read)
-
-        case (pathHandler) get correct path, set flags, make ready for 'execution'
-
-        case (CGI) pipe, new fd, wait untill cgi responded with a body for the response/ or make a cgi that also sends the response.
-
-        case (POST) create file, new fd, wait untill body is written to file and fd is close, or statuscode has changed
-
-        case (DELETE) try to delete file, set statuscode
-
-        case (GET) open file, new fd, wait untill fd is closed and body is filled or statuscode has changed
-
-        case (STATUSCODE) only if statuscode is not 200, open file, new fd, wait untill fd is closed and body is filled, else use default function for 404;
-
-        case (PREP_RESPONSE) set headers, statuscodes, and body
-
-        case (SEND_RESPONSE) send response in chunks
-
-        case (CLEANUP) if connection still alive
-
-        case (CLOSE) only if needs to close
-    }
-*/
-
 void    Servers::start() {   
     while (true) {
         int ret = poll(this->_fds.data(), this->_fds.size(), 0);
         if (ret == -1)
-            cerr << "poll failed" << endl;
+            cerr << "poll failed" << endl; //CHECK should we do this, or should we keep trying?
         for (size_t i = 0; i < this->_fds.size(); i++) {
             if (i < this->_serverBlocks.size()) {
                 if (this->_fds[i].revents & POLLIN)
@@ -143,7 +145,8 @@ void    Servers::start() {
             }
             else {
                 size_t  client_index = i - this->_serverBlocks.size();
-                if ((this->_fds[i].revents & POLLIN) && this->_connections[client_index].getFd() == this->_fds[i].fd) {
+                // a function to get the correct connection class (checking this->_fds[i] and the _fd or _writeFD or _readFD of every connection)
+                if ((this->_fds[i].revents & POLLIN)) {
                     if (this->_connections[client_index].getFd() == this->_fds[i].fd) {
                         if (this->_connections[client_index].getNextState() != READ && \
                             this->_connections[client_index].getRequest().getStatusCode() == 200) {
@@ -152,23 +155,47 @@ void    Servers::start() {
                         handleExistingConnection(this->_connections[client_index], i);
                     }
                     else {
-                        // other fd
+                        for (size_t j = 0; j < this->_connections.size(); j++) {
+                            if (this->_connections[j].getOtherFD() == this->_fds[i].fd) {
+                                handleExistingConnection(this->_connections[j], i);
+                                break ;
+                            }
+                        }
                     }
                 }
                 else if ((this->_fds[i].revents & POLLOUT))
                     if (this->_connections[client_index].getFd() == this->_fds[i].fd)
                         handleExistingConnection(this->_connections[client_index], i);
                     else {
-                        //other fd
+                        for (size_t j = 0; j < this->_connections.size(); j++) {
+                            if (this->_connections[j].getOtherFD() == this->_fds[i].fd) {
+                                handleExistingConnection(this->_connections[j], i);
+                                break ;
+                            }
+                        }
                     }
             }
             if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-                close(this->_fds[i].fd);
                 if (i >= this->_serverBlocks.size()) {
+                    close(this->_fds[i].fd);
+                    if (this->_connections[i - this->_serverBlocks.size()].getFd() == this->_fds[i].fd)
+                        this->_connections.erase(this->_connections.begin() + (i - this->_serverBlocks.size()));
                     this->_fds.erase(this->_fds.begin() + i);
-                    this->_connections.erase(this->_connections.begin() + (i - this->_serverBlocks.size()));
                     i--;
                 }
+                // if fd is from client {
+                //     close fd
+                //     close corresponding file/cgi fd's
+                //     remove corresponding fd's from pollfd
+                //     remove client fd from pollfd
+                //     remove client
+                // }
+                // else if fd is from file/cgi {
+                //     close fd
+                //     remove fd from pollfd
+                //     set status code in client
+                // }
+                // what to do for a server fd?
             }
         }
     }

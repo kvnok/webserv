@@ -33,6 +33,7 @@ class Response {
 		void				setBody(string const body);
 		void				setStatusCode(int const statusCode);
 		void				setClientSocket(int const clientSocket);
+		void				addToBody(string const bodyPart);
 		void				addBytesWritten(size_t const bWrtitten);
 		void				addHeader(string const key, string const value);
 		void				setHeaders(string const content, string const connectionState, string const path);

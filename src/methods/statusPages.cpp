@@ -2,40 +2,60 @@
 #include "Connection.hpp"
 #include "httpResponse.hpp"
 #include "httpStatus.hpp"
+#include <fcntl.h>
 
-/*
-new set up:
-
-if the status code is not 200, we end up here.
-we get the correct path of the status code, and we open the file, which results in a new fd, which we add to pollfd.
-we wait here untill we receive a body from the class which will handle the new fd.
-once we have that body, we delete the fd, and the class instance.
-we go on to response.
-*/
+void	executeStatusCode(Connection& connection) {
+	string	buffer(BUFFER_SIZE, '\0');
+	int		fd = connection.getOtherFD();
+	ssize_t bytes = read(fd, &buffer[0], BUFFER_SIZE);
+	if (bytes < 0) {
+		connection.getResponse().setBody("");
+		connection.setBytesRead(0);
+		connection.getRequest().setStatusCode(500);
+		connection.setNextState(DELFD);
+		//set flag for new status code;
+		return ;
+	}
+	else if (bytes == 0) {
+		connection.setNextState(DELFD);
+		return ;
+	}
+	buffer.resize(bytes);
+	connection.getResponse().addToBody(buffer);
+	connection.addBytesRead(bytes);
+	//check if we dont exceed our body limit;
+	return ;
+}
 
 void	extractStatusCodePage(Connection& connection) {
 	int statusCode =  connection.getRequest().getStatusCode();
-	string content = "";  
 	connection.getRequest().setPath(connection.getServer().getErrorPages()[statusCode]);
-	ifstream file(connection.getRequest().getPath());
-    if (!file.is_open()) {
-        connection.getRequest().setStatusCode(404);
-	}
-    else {
-        content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-        file.close();
-    }
-	if (content.empty()) {
-		statusCode = 500;
+	
+	int fd = open(connection.getRequest().getPath().c_str(), O_RDONLY);
+	if (fd == -1) {
+		if (errno == ENOENT) //CHECK (i errno allowed after open, but not after read or write)
+    	    connection.getRequest().setStatusCode(404);
+		else if (errno == EACCES)
+			connection.getRequest().setStatusCode(403);
+		else
+			connection.getRequest().setStatusCode(500);
+		//CHECK do we want to try again , or go the the default right a way?
 		connection.getRequest().setPath(connection.getServer().getErrorPages()[statusCode]);
-		ifstream file(connection.getRequest().getPath());
-   		if (file.is_open()) {
-        	content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-        	file.close();
+		int lastTryFD = open(connection.getRequest().getPath().c_str(), O_RDONLY);
+		if (lastTryFD == -1) {
+			connection.getRequest().setStatusCode(500);
+			string content = lastResortBody();
+			connection.getResponse().setBody(content);
+			connection.setNextState(RESPONSE);
 		}
-		if (content.empty())
-			content = lastResortBody();
+		else {
+			connection.setOtherFD(lastTryFD);
+			connection.setNextState(SETFD);
+		}
 	}
-	connection.getResponse().setBody(content);
-	connection.setNextState(RESPONSE);
+	else {
+		connection.setOtherFD(fd);
+		connection.setNextState(SETFD);
+	}
+	return ;
 }

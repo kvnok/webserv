@@ -2,17 +2,30 @@
 #include "Connection.hpp"
 #include "httpResponse.hpp"
 #include "autoindex.hpp"
+#include <fcntl.h>
 
-/*
-new set up:
-
-if it is a get, we go to this function.
-if it is autodirect we dont need to add anything.
-if not, we need to open the correct file, which will result in getting the fd of that file, which we'll add to pollfd
-we wait here untill we get a body from the class which handles the new file fd, we delete the file fd and its class instance,
-we go on to response
-if the status code is not 200, we go to the statuscodepage function.
-*/
+void	executeGet(Connection& connection) {
+	string	buffer(BUFFER_SIZE, '\0');
+	int		fd = connection.getOtherFD();
+	ssize_t bytes = read(fd, &buffer[0], BUFFER_SIZE);
+	if (bytes < 0) {
+		connection.getResponse().setBody("");
+		connection.setBytesRead(0);
+		connection.getRequest().setStatusCode(500);
+		connection.setNextState(DELFD);
+		//set flag for new status code;
+		return ;
+	}
+	else if (bytes == 0) {
+		connection.setNextState(DELFD);
+		return ;
+	}
+	buffer.resize(bytes);
+	connection.getResponse().addToBody(buffer);
+	connection.addBytesRead(bytes);
+	//check if we dont exceed our body limit;
+	return ;
+}
 
 void	getMethod(Connection& connection) {
 	if (connection.getRequest().getIsAutoindex() == true) {
@@ -20,16 +33,20 @@ void	getMethod(Connection& connection) {
 		connection.setNextState(RESPONSE);
 	}
 	else {
-		ifstream file(connection.getRequest().getPath());
-    	if (!file.is_open()) {
-    	    connection.getResponse().setStatusCode(404);
+		int fd = open(connection.getRequest().getPath().c_str(), O_RDONLY);
+		if (fd == -1) {
+			if (errno == ENOENT) //CHECK (i errno allowed after open, but not after read or write)
+    	    	connection.getRequest().setStatusCode(404);
+			else if (errno == EACCES)
+				connection.getRequest().setStatusCode(403);
+			else
+				connection.getRequest().setStatusCode(500);
 			connection.setNextState(STATUSCODE);
 		}
     	else {
-    	    string content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-    	    file.close();
-			connection.getResponse().setBody(content); //needs to change;
-			connection.setNextState(RESPONSE);
+    	    connection.setOtherFD(fd);
+			connection.setNextState(SETFD);
     	}
 	}
+	return ;
 }

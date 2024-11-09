@@ -40,6 +40,7 @@ void    Response::setVersion(string const version) { this->_version = version; }
 void	Response::setBody(string const body) { this->_body = body; }
 void	Response::setStatusCode(int const statusCode) { this->_statusCode = statusCode; }
 void    Response::setClientSocket(int const clientSocket) { this->_clientSocket = clientSocket; }
+void	Response::addToBody(string const bodyPart) { this->_body.append(bodyPart); }
 void    Response::addBytesWritten(size_t const bWritten) { this->_bytesWritten += bWritten; }
 void	Response::addHeader(string const key, string const value) { this->_header[key] = value; }
 

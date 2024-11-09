@@ -7,8 +7,6 @@
 
 using namespace std;
 
-#define BUFFER_SIZE 1024
-
 class Servers
 {
 	private:
@@ -24,11 +22,11 @@ class Servers
 		void	handleNewConnection(size_t i);
 		void	handleExistingConnection(Connection& connection, size_t& i); 
 		void	parsePath(Connection& connection);
-		void	doCGI(Connection& connection);
-		void	doPost(Connection& connection);
-		void	doDelete(Connection& connection);
-		void	doGet(Connection& connection);
+		void	prepExec(Connection& connection);
 		void	getStatusCodePage(Connection& connection);
+		void	addFdToPoll(Connection& connection, size_t& i);
+		void	executeMethod(Connection& connection, size_t& i);
+		void	delFdFromPoll(Connection& connection, size_t& i);
 		void	prepResponse(Connection& connection);
 		void	sendResponse(Connection& connection);
 		void	closeConnection(Connection& connection, size_t& i);

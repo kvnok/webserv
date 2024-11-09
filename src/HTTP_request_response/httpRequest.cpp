@@ -135,18 +135,8 @@ void	handleRequest(Connection& connection) {
 		request_path_handler(connection);
 	if (connection.getRequest().getStatusCode() != 200)
 		connection.setNextState(STATUSCODE);
-	else if (connection.getRequest().getIsCGI())
-		connection.setNextState(SCRIPT);
-	else if (connection.getRequest().getMethod() == "POST")
-		connection.setNextState(POST);
-	else if (connection.getRequest().getMethod() == "GET")
-		connection.setNextState(GET);
-	else if (connection.getRequest().getMethod() == "DELETE")
-		connection.setNextState(DELETE);
-	else {
-		connection.getRequest().setStatusCode(500); //ALL: agree??
-		connection.setNextState(STATUSCODE);
-	}
+	else
+		connection.setNextState(PREPEXEC);
 	return ;
 }
 

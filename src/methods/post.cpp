@@ -1,83 +1,65 @@
 #include "httpRequest.hpp"
 #include "Connection.hpp"
-#include <filesystem>
+#include <fcntl.h>
 
-/*
-new set up:
+void    executePost(Connection& connection) {
+    int     fd = connection.getOtherFD();
+    string  body = connection.getRequest().getBody();
 
-we go here if it is a post, 
-we can still choose to do this by cgi, but for now we don't.
-if we choose cgi, we can redirect to the cgi page from here, and follow that structe.
-if not, we open the file that we want to write to, so we have a new fd, which will be set in pollfd.
-we wait here untill we receive and flag(or something else) from the class that will handle the writing part of the body to the fd.
-once we have that, we can set the status code to 'succes' or 'not succes' and we go on in the statusCodePage function.
-*/
-
-static bool storageExist(const string& path) {
-    return filesystem::exists(path);
-}
-
-static bool createDirectories(const string& path) {
-    return filesystem::create_directories(path);
-}
-
-static bool writeFile(const string& storage, const string& fullPath, const string& content) {
-    if (!filesystem::exists(storage))
-        filesystem::create_directories(storage);
-    if (filesystem::exists(storage)) {
-        ofstream outFile(fullPath, ios::binary | ios::app);
-        if (!outFile) {
-            cerr << "Failed to open file for writing: " << fullPath << endl;
-            return (false);
-        }
-        outFile << content;
+    if (connection.getBytesWritten() >= body.size()) {
+        connection.setNextState(DELFD);
+        //need to go to 201 case;
     }
-    else {
-        ofstream outFile(fullPath, ios::binary);
-        if (!outFile) {
-            cerr << "Failed to open file for writing: " << fullPath << endl;
-            return (false);
-        }
-        outFile << content;
-    }
-    return (true);
-}
-
-static void check_permissions(Request& request) {
-    string path = request.getPath();
-    if (access(path.c_str(), F_OK) == -1 || filesystem::is_directory(path)) {
-        request.setStatusCode(404);
-        return ;
-	}
-	if (access(path.c_str(), R_OK) == -1) {
-        request.setStatusCode(401);
+    size_t chunkSize = body.size() - connection.getBytesWritten();
+    if (chunkSize > BUFFER_SIZE)
+        chunkSize = BUFFER_SIZE;
+    ssize_t written = write(fd, body.data() + connection.getBytesWritten(), chunkSize);
+    if (written == -1) {
+        cout << "ERROR WRITING" << endl;
+        connection.getRequest().setStatusCode(500);
+        connection.setNextState(DELFD);
+        //flag for new error code;
+        // delete file
         return ;
     }
-    return ;
+    cout << written << endl;
+    connection.addBytesWritten(written);
+    // check if written to much?
+
 }
 
+//201 Created: For a successful upload, respond with 201 Created.
+//400 Bad Request: If the request format is invalid or required headers are missing, return 400.
+//403 Forbidden: If the target directory isn’t allowed for uploads according to the config file, return 403.
+//409 Conflict: If a file with the same name already exists and overwriting is not permitted, return 409.
+//413 Payload Too Large: If the file exceeds the allowed size, return 413.
 
-		//201 Created: For a successful upload, respond with 201 Created.
-		//400 Bad Request: If the request format is invalid or required headers are missing, return 400.
-		//403 Forbidden: If the target directory isn’t allowed for uploads according to the config file, return 403.
-		//409 Conflict: If a file with the same name already exists and overwriting is not permitted, return 409.
-		//413 Payload Too Large: If the file exceeds the allowed size, return 413.
-
-void postMethod(Connection& connection) {
-    string  uploadedFile;
+void    postMethod(Connection& connection) {
     string  storage = connection.getRequest().getPath();
     string  file = connection.getRequest().getFileName();
-    string  fullPath = storage + '/' + file;
 
-    if (filesystem::exists(fullPath)) {
+    //CHECK should we also check if the dir exists, or is this done in config?
+    //CHECK could the 'storage' path also be a file? and what should we do then?
+    if (access(storage.c_str(), W_OK) == -1) { //dir has no writing rights, so 403 forbidden
+        connection.getRequest().setStatusCode(403);
+        connection.setNextState(STATUSCODE);
+        return ;
+    }
+    string  fullPath = storage + '/' + file; //CHECK check if this is correct
+    if (access(fullPath.c_str(), F_OK) == 0) { //file already exists, so conflict status 409
         connection.getRequest().setStatusCode(409);
         connection.setNextState(STATUSCODE);
         return ;
     }
-    if (writeFile(storage, fullPath, connection.getRequest().getBody()))
-        connection.getRequest().setStatusCode(201);
-    else
-        connection.getRequest().setStatusCode(404);
-    connection.setNextState(STATUSCODE);
-    return ;
+    int fd = open(fullPath.c_str(), O_CREAT | O_WRONLY, 0644);
+    if (fd == -1) {
+		connection.getRequest().setStatusCode(500);
+        connection.setNextState(STATUSCODE);
+    }
+    else {
+        connection.getRequest().setPath(fullPath);
+        connection.getRequest().setStatusCode(201); //CHECK if we dont check for 200 after this
+        connection.setOtherFD(fd);
+        connection.setNextState(SETFD);
+    }
 }
