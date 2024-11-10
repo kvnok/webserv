@@ -43,8 +43,6 @@ class Request {
 		string					_version;
 		map<string, string>		_header;
 		string					_body;
-	//	string					_file; //for post, maybe for other things?
-	//	string					_otherPath;
 		unsigned long			_contentLength;
 		int						_statusCode;
 		readState				_readState;
@@ -52,8 +50,9 @@ class Request {
 		bool 					_isAutoindex;
 		bool					_isCGI;
 		string					_CGIExtension;
-		string					_fileName; //maybe i could use this, need to find out if it could also be a non cgi with an extra path.
+		string					_fileName;
 		bool					_isRedirect;
+	
 	public:
 		Request();
 		Request(const Request& other);
@@ -97,17 +96,16 @@ class Request {
 		void				reset();
 };
 
+// parsing
+void	hasAllHeaders(const vector<char> data, Request& request);
 void	checkHeaders(const vector<char> requestData, Request& request);
-void	checkChunkedBody(Connection& connection);
 void	checkContentLengthBody(Connection& connection);
+void	checkChunkedBody(Connection& connection);
 void	parseBodyParts(Request& request);
-bool	hasAllHeaders(const vector<char> data);
 
+// reading and getting path;
+void	readRequest(Connection& connection);
 void	handleRequest(Connection& connection);
-
-void	postMethod(Connection& connection);
-int		run_script(char *args[], Request &request);
-void	deleteMethod(Connection& connection);
 
 //https://www.ibm.com/docs/en/app-connect/11.0.0?topic=messages-http-headers
 //resource headers

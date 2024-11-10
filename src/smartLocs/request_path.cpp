@@ -36,8 +36,6 @@ void check_baseline(Request &request, string &file, string &path, ServerBlock se
 	string root = server.getRoot();
 	string root_and_file = root + "/" + file;
 	root_and_file = regex_replace(root_and_file, regex("//+"), "/");
-	cout << root_and_file << endl;
-
 
 	if (file.empty()) { // no file, check for index
 		string root_and_index = root + "/" + server.getIndex();
@@ -87,7 +85,6 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 	string root = loc.get_root();
 	string root_and_file = root + "/" + file;
 	root_and_file = regex_replace(root_and_file, regex("//+"), "/");
-	cout << root_and_file << endl;
 
 	if (file.empty()) { // no file, check for index
 		if (loc.get_index() != "")

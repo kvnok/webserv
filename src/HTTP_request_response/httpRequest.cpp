@@ -1,9 +1,7 @@
 
 #include "httpRequest.hpp"
-#include "httpStatus.hpp"
 #include "httpResponse.hpp"
 #include "Servers.hpp"
-#include "autoindex.hpp"
 #include "Connection.hpp"
 
 Request::Request()
@@ -101,8 +99,69 @@ void  Request::reset() {
 	this->_isRedirect = false;
 }
 
+void	readRequest(Connection& connection) {
+    vector<char> buffer(BUFFER_SIZE);
+    ssize_t bytes = recv(connection.getFd(), buffer.data(), buffer.size(), 0);
+    if (bytes < 0) {
+        //stil need to check if something needs to be done here
+        return ;
+    }
+    else if (bytes == 0) {
+        connection.setNextState(CLOSE);
+        return ;
+    }
+    buffer.resize(bytes);
+    //cout << YEL << string(buffer.begin(), buffer.end()) << RESET << endl;
+    connection.addToBuffer(buffer);
+    if (connection.getRequest().getReadState() == START)
+        hasAllHeaders(connection.getBuffer(), connection.getRequest());
+    if (connection.getRequest().getReadState() == HEADERS) {
+        checkHeaders(connection.getBuffer(), connection.getRequest());
+        connection.clearBuffer();
+    }
+    if (connection.getRequest().getReadState() == CHUNKED_BODY)
+        checkChunkedBody(connection);
+    if (connection.getRequest().getReadState() == CONTENT_LENGTH_BODY)
+        checkContentLengthBody(connection);
+    if (connection.getRequest().getReadState() == DONE) {
+        connection.getBuffer().clear();
+        connection.getBuffer().resize(0);
+        connection.setNextState(PATH);
+    }
+}
+
+void	handleRequest(Connection& connection) {
+	if (connection.getRequest().getStatusCode() == 200) 
+		request_path_handler(connection);
+	if (connection.getRequest().getStatusCode() != 200)
+		connection.setNextState(STATUSCODE);
+	else
+		connection.setNextState(PREPEXEC);
+	return ;
+}
+
+/*
+void handleRequest(Connection& connection) {
+	else if (connection.getRequest().getMethod() == "POST") {
+		request_path_handler(connection);
+		//cout << connection.getRequest().getPath() << endl; // destination folder
+		//cout << connection.getRequest().getFileName() << endl; // file name
+		if (connection.getRequest().getStatusCode() == 200) {
+			if (connection.getRequest().getIsCGI() == true)
+				content = content_from_cgi(connection.getRequest());
+			else
+				postMethod(connection);
+		}
+		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
+	}
+	connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
+}
+*/
+
+/*
 string content_from_cgi(Request &request)
 {
+	cout << request.getPath() << endl;
 	string scriptPath = request.getPath().c_str(); // at the moment the path is wrong
 	string content = "";
 		// Prepare arguments for the script execution
@@ -115,6 +174,7 @@ string content_from_cgi(Request &request)
 		
         char buffer[1024]; // change size of buffer
         ssize_t bytesRead;
+		//POLLFD
         while ((bytesRead = read(fdForPolling, buffer, sizeof(buffer) - 1)) > 0) {
             buffer[bytesRead] = '\0';
             content += buffer;
@@ -123,68 +183,4 @@ string content_from_cgi(Request &request)
 		return content;
 }
 
-void handleRequest(Connection& connection) {
-	string		content = "";
-
-	//this is the new structure
-	// you can assume that the path is checked in the config file, and i will add a file name for if it is a post 
-	// path = connection.getRequest().getPath();
-	// if (isCGI)
-	// 	doCGI(path);
-	// else if (get)
-	// 	doGET(path)
-	// else if (post)
-	// 	doPOST(path) //path will be the destination folder;
-	// else if (delete)
-	// 	doDELETE(path);
-
-	if (connection.getRequest().getStatusCode() != 200)
-		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
-	else if (connection.getRequest().getMethod() == "GET") {
-		request_path_handler(connection);
-		if (connection.getRequest().getStatusCode() == 200) {
-			if (connection.getRequest().getIsAutoindex() == true)
-				content = do_autoindex(connection.getRequest().getPath());
-			else if (connection.getRequest().getIsCGI() == true)
-				content = content_from_cgi(connection.getRequest());
-			else {
-				ifstream file(connection.getRequest().getPath());
-        		if (!file.is_open())
-        		    connection.getResponse().setStatusCode(404);
-        		else {
-        		    content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-        		    file.close();
-        		}
-			}
-		}
-		else
-			connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
-	}
-	else if (connection.getRequest().getMethod() == "DELETE") {
-		request_path_handler(connection);
-		if (connection.getRequest().getStatusCode() == 200)
-			deleteMethod(connection);
-		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
-	}
-	else if (connection.getRequest().getMethod() == "POST") {
-		request_path_handler(connection);
-		//cout << connection.getRequest().getPath() << endl; // destination folder
-		//cout << connection.getRequest().getFileName() << endl; // file name
-		if (connection.getRequest().getStatusCode() == 200)
-			postMethod(connection);
-		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
-	}
-	connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
-	if (connection.getResponse().getStatusCode() != 200) {
-		ifstream file(connection.getRequest().getPath());
-        if (!file.is_open())
-            connection.getResponse().setStatusCode(404);
-        else {
-            content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-            file.close();
-        }
-	}
-	if (content.empty())
-		content = fourZeroFourBody();
-	connection.getResponse().setBody(content);
-}
+*/

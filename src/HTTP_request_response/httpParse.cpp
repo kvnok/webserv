@@ -121,10 +121,10 @@ static	void	parsePart(string content, Request& request) {
 		auto kvLim = find(start, end, ':');
 		if (start >= end || kvLim >= end)
 			break ; //handle error
-		headers[string(start, kvLim)] = string(kvLim + 2, end);
+		headers[string(start, kvLim)] = string(kvLim + 2, end); //get rid of hardcoded +2
 		start = end + nl.size();
 	}
-	string body(hbPos + hbLim.size(), content.end() - 2);
+	string body(hbPos + hbLim.size(), content.end() - 2); //get rid of hardcoded -2
 	// "name=" is used and should only be used, for indicating the field. so in this case, the part is a 'file',
 	//so we can get the content of the file (== body) and the filename (== "filename=...")
 	if (headers["Content-Disposition"].find("name=\"file\";") != string::npos) {
@@ -280,8 +280,11 @@ void	checkHeaders(const vector<char> requestData, Request& request) {
 	return ;
 }
 
-bool	hasAllHeaders(const vector<char> data) {
+void	hasAllHeaders(const vector<char> data, Request& request) {
 	string toFind = "\r\n\r\n";
 	auto i = search(data.begin(), data.end(), toFind.begin(), toFind.end());
-	return (i != data.end());
+	
+	if (i != data.end())
+		request.setReadState(HEADERS);
+	return ;
 }

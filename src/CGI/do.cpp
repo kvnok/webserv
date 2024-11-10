@@ -50,7 +50,6 @@ void do_cgi(string &ret, string cgi_path, string &status) {
 		status = "Failed to create a pipe.";
 		return ;
 	}
-	
 	ignoreSignals();
 	// Fork a child process
 	pid = fork();
