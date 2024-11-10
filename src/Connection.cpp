@@ -6,6 +6,7 @@ Connection::Connection(const int fd, const ServerBlock serverBlock) {
 	this->_fd = fd;
 	this->_nextState = READ;
 	this->_otherFD = -1;
+	this->_handleStatusCode = false;
 	this->_bRead = 0;
 	this->_bWritten = 0;
 	this->_server = serverBlock;
@@ -18,6 +19,7 @@ Connection& Connection::operator=(const Connection& other) {
 		this->_nextState = other._nextState;
 		this->_buffer = other._buffer;
 		this->_otherFD = other._otherFD;
+		this->_handleStatusCode = other._handleStatusCode;
 		this->_bRead = other._bRead;
 		this->_bWritten = other._bWritten;
 		this->_request = other._request;
@@ -35,6 +37,7 @@ void	Connection::setNextState(const cState nextState) { this->_nextState = nextS
 void	Connection::setBuffer(const vector<char> buffer) { this->_buffer = buffer; }
 void	Connection::setServer(const ServerBlock server) { this->_server = server; }
 void	Connection::setOtherFD(const int otherFD) { this->_otherFD = otherFD; }
+void	Connection::setHandleStatusCode(const bool flag) { this->_handleStatusCode = flag; }
 void	Connection::setBytesRead(const size_t bRead) { this->_bRead = bRead; }
 void	Connection::addBytesRead(const size_t bRead) { this->_bRead += bRead;}
 void	Connection::addBytesWritten(const size_t bWritten) { this->_bWritten += bWritten; }
@@ -51,6 +54,7 @@ cState			Connection::getNextState() const { return (this->_nextState); }
 vector<char>	Connection::getBuffer() const { return (this->_buffer); }
 ServerBlock		Connection::getServer() { return (this->_server); }
 int				Connection::getOtherFD() const { return (this->_otherFD); }
+bool			Connection::getHandleStatusCode() const { return (this->_handleStatusCode); }
 size_t			Connection::getBytesRead() const { return (this->_bRead); }
 size_t			Connection::getBytesWritten() const { return (this->_bWritten); }
 
@@ -79,6 +83,7 @@ void			Connection::reset() {
 		close (this->_otherFD);
 		this->_otherFD = -1;
 	}
+	this->_handleStatusCode = false;
 	this->_bRead = 0;
 	this->_bWritten = 0;
 }

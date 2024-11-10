@@ -7,25 +7,23 @@ void    executePost(Connection& connection) {
     string  body = connection.getRequest().getBody();
 
     if (connection.getBytesWritten() >= body.size()) {
+        connection.setHandleStatusCode(true); // now open 201, and get the body
         connection.setNextState(DELFD);
-        //need to go to 201 case;
     }
     size_t chunkSize = body.size() - connection.getBytesWritten();
     if (chunkSize > BUFFER_SIZE)
         chunkSize = BUFFER_SIZE;
     ssize_t written = write(fd, body.data() + connection.getBytesWritten(), chunkSize);
     if (written == -1) {
-        cout << "ERROR WRITING" << endl;
         connection.getRequest().setStatusCode(500);
+        connection.setHandleStatusCode(true);
         connection.setNextState(DELFD);
-        //flag for new error code;
         // delete file
         return ;
     }
-    cout << written << endl;
     connection.addBytesWritten(written);
     // check if written to much?
-
+    return ;
 }
 
 //201 Created: For a successful upload, respond with 201 Created.
@@ -42,24 +40,29 @@ void    postMethod(Connection& connection) {
     //CHECK could the 'storage' path also be a file? and what should we do then?
     if (access(storage.c_str(), W_OK) == -1) { //dir has no writing rights, so 403 forbidden
         connection.getRequest().setStatusCode(403);
+        connection.setHandleStatusCode(true);
         connection.setNextState(STATUSCODE);
         return ;
     }
     string  fullPath = storage + '/' + file; //CHECK check if this is correct
     if (access(fullPath.c_str(), F_OK) == 0) { //file already exists, so conflict status 409
         connection.getRequest().setStatusCode(409);
+        connection.setHandleStatusCode(true);
         connection.setNextState(STATUSCODE);
         return ;
     }
     int fd = open(fullPath.c_str(), O_CREAT | O_WRONLY, 0644);
     if (fd == -1) {
 		connection.getRequest().setStatusCode(500);
+        connection.setHandleStatusCode(true);
         connection.setNextState(STATUSCODE);
     }
     else {
         connection.getRequest().setPath(fullPath);
-        connection.getRequest().setStatusCode(201); //CHECK if we dont check for 200 after this
+        connection.getRequest().setStatusCode(201);
         connection.setOtherFD(fd);
+        connection.setHandleStatusCode(false); //first write, afterthat get 201 page
         connection.setNextState(SETFD);
     }
+    return ;
 }

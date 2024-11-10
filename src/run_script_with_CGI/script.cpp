@@ -28,7 +28,7 @@ void execScript(char *args[], int pipefd[2], Request &request)
         string script_path = buf.c_str(); // we probably need to change this with Jan's code
         close(pipefd[0]);
         for (int i = 0; i < 2; i++)
-            cout << args[i] << endl;
+            cout << "arg in script: " << args[i] << endl;
         char *args1[] = {python_cgi, (char *)script_path.c_str(), args[0], args[1], nullptr};
         dup2(pipefd[1], STDOUT_FILENO);
         close(pipefd[1]);

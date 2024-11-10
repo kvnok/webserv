@@ -17,6 +17,7 @@ class Connection {
 		cState			_nextState;
 		vector<char>	_buffer;
 		int				_otherFD;
+		bool			_handleStatusCode;
 		size_t			_bRead; //not using
 		size_t			_bWritten; //not using
 		Request			_request;
@@ -35,6 +36,7 @@ class Connection {
 		void	setResponse(Response response);
 		void	setNextState(const cState nextState);
 		void	setOtherFD(const int otherFD);
+		void	setHandleStatusCode(const bool flag);
 		void	setBuffer(const vector<char> buffer);
 		void	setServer(const ServerBlock server);
 		void	addToBuffer(const vector<char> buffer);
@@ -50,6 +52,7 @@ class Connection {
 		Response&		getResponse();
 		cState			getNextState() const;
 		int				getOtherFD() const;
+		bool			getHandleStatusCode() const;
 		size_t			getBytesRead() const;
 		size_t			getBytesWritten() const;
 		vector<char>	getBuffer() const;

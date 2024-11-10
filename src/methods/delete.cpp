@@ -11,10 +11,8 @@ and we set the status code to 'succes' or 'not succes' and we go on in the statu
 
 void	deleteMethod(Connection& connection) {
 	string file = connection.getRequest().getPath();
-	if (!filesystem::exists(file)) {
+	if (!filesystem::exists(file))
 		connection.getRequest().setStatusCode(404);
-		return ;
-	}
 	else {
 		if (remove(file.c_str()) != 0)
 			connection.getRequest().setStatusCode(404);

@@ -12,11 +12,13 @@ void	executeGet(Connection& connection) {
 		connection.getResponse().setBody("");
 		connection.setBytesRead(0);
 		connection.getRequest().setStatusCode(500);
+		connection.setHandleStatusCode(true);
 		connection.setNextState(DELFD);
 		//set flag for new status code;
 		return ;
 	}
 	else if (bytes == 0) {
+		connection.setHandleStatusCode(false);
 		connection.setNextState(DELFD);
 		return ;
 	}
@@ -30,6 +32,7 @@ void	executeGet(Connection& connection) {
 void	getMethod(Connection& connection) {
 	if (connection.getRequest().getIsAutoindex() == true) {
 		connection.getResponse().setBody(do_autoindex(connection.getRequest().getPath()));
+		connection.setHandleStatusCode(false);
 		connection.setNextState(RESPONSE);
 	}
 	else {
@@ -41,10 +44,12 @@ void	getMethod(Connection& connection) {
 				connection.getRequest().setStatusCode(403);
 			else
 				connection.getRequest().setStatusCode(500);
+			connection.setHandleStatusCode(true);
 			connection.setNextState(STATUSCODE);
 		}
     	else {
     	    connection.setOtherFD(fd);
+			connection.setHandleStatusCode(false);
 			connection.setNextState(SETFD);
     	}
 	}

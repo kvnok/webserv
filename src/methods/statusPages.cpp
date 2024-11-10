@@ -12,11 +12,12 @@ void	executeStatusCode(Connection& connection) {
 		connection.getResponse().setBody("");
 		connection.setBytesRead(0);
 		connection.getRequest().setStatusCode(500);
+		connection.setHandleStatusCode(true);
 		connection.setNextState(DELFD);
-		//set flag for new status code;
 		return ;
 	}
 	else if (bytes == 0) {
+		connection.setHandleStatusCode(false);
 		connection.setNextState(DELFD);
 		return ;
 	}
@@ -50,11 +51,13 @@ void	extractStatusCodePage(Connection& connection) {
 		}
 		else {
 			connection.setOtherFD(lastTryFD);
+			connection.setHandleStatusCode(true);
 			connection.setNextState(SETFD);
 		}
 	}
 	else {
 		connection.setOtherFD(fd);
+		connection.setHandleStatusCode(true);
 		connection.setNextState(SETFD);
 	}
 	return ;

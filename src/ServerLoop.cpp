@@ -49,14 +49,16 @@ void	Servers::prepExec(Connection& connection) {
 }
 
 void    Servers::addFdToPoll(Connection& connection, size_t& i) {
+    //need any aditional check before adding the fd to poll?
+    //and check after?
     this->_fds.push_back({connection.getOtherFD(), POLLIN | POLLOUT, 0});
     connection.setNextState(EXECFD);
 }
 
 void    Servers::executeMethod(Connection& connection, size_t& i) {
     if (this->_fds[i].fd == connection.getFd())
-        return ;
-    if (connection.getRequest().getStatusCode() != 200) // create a flag
+        return ; // chatch this here, or should we add this to the 'pollfd loop'
+    if (connection.getHandleStatusCode() == true)
         executeStatusCode(connection);
     else if (connection.getRequest().getIsCGI() == true)
         executeCGI(connection);
@@ -74,8 +76,10 @@ void    Servers::delFdFromPoll(Connection& connection, size_t& i) {
         return ;
     close(this->_fds[i].fd);
     this->_fds.erase(this->_fds.begin() + i);
-    //add flag check
-    connection.setNextState(RESPONSE);
+    if (connection.getHandleStatusCode() == true)
+        connection.setNextState(STATUSCODE);
+    else
+        connection.setNextState(RESPONSE);
     i--;
 }
 

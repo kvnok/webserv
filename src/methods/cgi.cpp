@@ -8,7 +8,7 @@ void	executeCGI(Connection& connection) {
 
 string content_from_cgi(Request &request)
 {
-	cout << request.getPath() << endl;
+	cout << "path in cgi: " << request.getPath() << endl;
 	string scriptPath = request.getPath().c_str(); // at the moment the path is wrong
 	string content = "";
 		// Prepare arguments for the script execution
