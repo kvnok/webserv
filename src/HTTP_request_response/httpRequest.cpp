@@ -130,7 +130,7 @@ void	readRequest(Connection& connection) {
     }
 }
 
-void	handleRequest(Connection& connection) {
+void	parsePath(Connection& connection) {
 	if (connection.getRequest().getStatusCode() == 200) 
 		request_path_handler(connection);
 	if (connection.getRequest().getStatusCode() != 200)

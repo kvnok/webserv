@@ -6,8 +6,8 @@ Response::Response() {
     _version = "";
     _statusCode = 200;
     _body = "";
-    _clientSocket = 0; //ALL check
-    _bytesWritten = 0;
+    _clientSocket = -1;
+    _bytesSend = 0;
     _fullResponse = "";
 }
 
@@ -16,9 +16,9 @@ Response::Response(int const clientSocket, int const statusCode, string const ve
     _statusCode = statusCode;
     _body = "";
     _clientSocket = clientSocket;
-    _bytesWritten = 0;
+    _bytesSend = 0;
     _fullResponse = "";
-}
+} //dont use it
 
 Response::Response(const Response& other) { *this = other; }
 Response::~Response() { }
@@ -30,7 +30,7 @@ Response&	Response::operator=(const Response& other) {
         this->_header = other._header;
         this->_body = other._body;
         this->_clientSocket = other._clientSocket;
-        this->_bytesWritten = other._bytesWritten;
+        this->_bytesSend = other._bytesSend;
         this->_fullResponse = other._fullResponse;
 	}
 	return (*this);
@@ -41,7 +41,7 @@ void	Response::setBody(string const body) { this->_body = body; }
 void	Response::setStatusCode(int const statusCode) { this->_statusCode = statusCode; }
 void    Response::setClientSocket(int const clientSocket) { this->_clientSocket = clientSocket; }
 void	Response::addToBody(string const bodyPart) { this->_body.append(bodyPart); }
-void    Response::addBytesWritten(size_t const bWritten) { this->_bytesWritten += bWritten; }
+void    Response::addBytesSend(size_t const bSend) { this->_bytesSend += bSend; }
 void	Response::addHeader(string const key, string const value) { this->_header[key] = value; }
 
 void	Response::setHeaders(string const content, string const connectionState, string const path) {
@@ -61,6 +61,16 @@ void	Response::setHeaders(string const content, string const connectionState, st
     else
         this->addHeader("Connection", connectionState);
     //are there other situations we need to send "close" as connection status to the client?
+    return ;
+}
+
+void    Response::setFullResponse() {
+	this->_fullResponse = this->_version + " " + to_string(this->_statusCode) + " " + httpStatusMessage(this->_statusCode) + "\r\n";
+	for (auto& pair : this->_header)
+		this->_fullResponse +=  pair.first + ": " + pair.second + "\r\n";
+	this->_fullResponse += "\r\n";
+	this->_fullResponse += this->_body;
+    return ;
 }
 
 string              Response::getVersion() const { return (this->_version); }
@@ -68,50 +78,48 @@ int					Response::getStatusCode() const { return (this->_statusCode); }
 map<string, string> Response::getHeaders() const { return (this->_header); } //not using right now
 string				Response::getBody() const { return (this->_body); } //not using right now
 int                 Response::getClientSocket() const { return (this->_clientSocket); } //not using right now
-size_t              Response::getBrytesWritten() const { return (this->_bytesWritten); }
+size_t              Response::getBytesSend() const { return (this->_bytesSend); }
 string              Response::getFullResponse() const {return (this->_fullResponse); }
-
-ssize_t	Response::sendResponse() const {
-	string	response;
-
-	response = this->_version + " " + to_string(this->_statusCode) + " " + httpStatusMessage(this->_statusCode) + "\r\n";
-	for (auto& pair : this->_header)
-		response +=  pair.first + ": " + pair.second + "\r\n";
-	response += "\r\n";
-	response += this->_body;
-	
-	return (send(this->_clientSocket, response.c_str(), response.size(), 0));
-    //change to use _fullResponse, and send in chunks
-    //we could split the response line, headers and body, this way we can count how much bytes we send and if we send them all. we can use this if we need to send in chunks.
-}
-
-void    Response::setResponse(Response& response, Request& request, int cSocket) {
-    response.setClientSocket(cSocket);
-    response.setVersion(request.getVersion());
-    response.setStatusCode(request.getStatusCode());
-    response.setHeaders(response.getBody(), request.getHeaderValue("Connection"), request.getPath());
-}
 
 void    Response::reset() {
     this->_version = "";
     this->_statusCode = 200;
-    this->_bytesWritten = 0;
+    this->_bytesSend = 0;
     this->_header.clear();
     this->_body = "";
     this->_fullResponse = "";
 }
 
-void    createResponse(Connection& connection) {
-    Response& response = connection.getResponse();
+void    sendResponse(Connection& connection) {
+    Response&   response = connection.getResponse();
+    int         clientSocket = response.getClientSocket();
+    string      fullResponse = response.getFullResponse();   
 
-    response.setResponse(response, connection.getRequest(), connection.getFd());
-    response.sendResponse();
-    if (connection.getRequest().getHeaderValue("Connection") == "close")
-        connection.setNextState(CLOSE);
-    else
-        connection.setNextState(CLEANUP);
+    size_t chunkSize = response.getFullResponse().size() - response.getBytesSend();
+    if (chunkSize > BUFFER_SIZE)
+        chunkSize = BUFFER_SIZE;
+    ssize_t bytes = send(clientSocket, fullResponse.c_str() + response.getBytesSend(), chunkSize, 0);
+    if (bytes == -1) {        
+        cerr << "send error" << endl; //CHECK what to do here?
+        return ;
+    }
+    response.addBytesSend(bytes);
+    if (response.getBytesSend() >= response.getFullResponse().size()) {
+        if (connection.getRequest().getHeaderValue("Connection") == "close")
+            connection.setNextState(CLOSE);
+        else
+            connection.setNextState(CLEANUP);
+    }
 }
 
-// fill in response in other stage. (fill in fullResponse, so we can send it in the next part)
-// if body not available and status code != 204, get lastResort body and set statuscode to 500.
-// once filled we can send it in chunks.
+void    createResponse(Connection& connection) {
+    Response&   response = connection.getResponse();
+    Request&    request = connection.getRequest();
+
+    response.setClientSocket(connection.getFd());
+    response.setVersion(request.getVersion());
+    response.setStatusCode(request.getStatusCode());
+    response.setHeaders(response.getBody(), request.getHeaderValue("Connection"), request.getPath());
+	response.setFullResponse();
+    connection.setNextState(SEND);
+}

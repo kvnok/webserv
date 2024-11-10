@@ -15,7 +15,7 @@ class Connection {
 	private:
 		int				_fd;
 		cState			_nextState;
-		vector<char>	_buffer;
+		vector<char>	_buffer; //could've used a string
 		int				_otherFD;
 		bool			_handleStatusCode;
 		size_t			_bRead; //not using

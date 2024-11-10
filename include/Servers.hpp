@@ -20,15 +20,12 @@ class Servers
 		void	start();
 		void	setFds();
 		void	handleNewConnection(size_t i);
-		void	handleExistingConnection(Connection& connection, size_t& i); 
-		void	parsePath(Connection& connection);
+		void	handleExistingConnection(Connection& connection, size_t& i);
 		void	prepExec(Connection& connection);
 		void	getStatusCodePage(Connection& connection);
 		void	addFdToPoll(Connection& connection, size_t& i);
 		void	executeMethod(Connection& connection, size_t& i);
 		void	delFdFromPoll(Connection& connection, size_t& i);
-		void	prepResponse(Connection& connection);
-		void	sendResponse(Connection& connection);
 		void	closeConnection(Connection& connection, size_t& i);
 		vector<ServerBlock> &get_serverBlocks();
 		vector<Connection>	&get_connections();

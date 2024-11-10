@@ -27,11 +27,6 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
     return;
 }
 
-void	Servers::parsePath(Connection& connection) {
-    handleRequest(connection);
-    return;
-}
-
 void	Servers::prepExec(Connection& connection) {
     if (connection.getRequest().getIsCGI() == true)
         cgiMethod(connection);
@@ -88,23 +83,12 @@ void	Servers::getStatusCodePage(Connection& connection) {
     return;
 }
 
-void	Servers::prepResponse(Connection& connection) {
-    //cout << connection.getResponse().getBody() << endl;
-    connection.setNextState(SEND);
-    return;
-}
-
-void    Servers::sendResponse(Connection& connection) {
-    createResponse(connection);
-    return ;
-}
-
 void    Servers::handleExistingConnection(Connection& connection, size_t& i) {
     switch (connection.getNextState()) {
-        case READ: //done
+        case READ:
             readRequest(connection);
             break ;
-        case PATH: //done
+        case PATH:
             parsePath(connection);
             break ;
         case PREPEXEC:
@@ -123,15 +107,15 @@ void    Servers::handleExistingConnection(Connection& connection, size_t& i) {
             delFdFromPoll(connection, i);
             break ;
         case RESPONSE:
-            prepResponse(connection);
+            createResponse(connection);
             break ;
         case SEND:
             sendResponse(connection);
             break ;
-        case CLEANUP: //check for updates
+        case CLEANUP:
             connection.reset();
             break;
-        case CLOSE: //done
+        case CLOSE:
             closeConnection(connection, i);
             break ;
     }
@@ -187,19 +171,6 @@ void    Servers::start() {
                     this->_fds.erase(this->_fds.begin() + i);
                     i--;
                 }
-                // if fd is from client {
-                //     close fd
-                //     close corresponding file/cgi fd's
-                //     remove corresponding fd's from pollfd
-                //     remove client fd from pollfd
-                //     remove client
-                // }
-                // else if fd is from file/cgi {
-                //     close fd
-                //     remove fd from pollfd
-                //     set status code in client
-                // }
-                // what to do for a server fd?
             }
         }
     }
