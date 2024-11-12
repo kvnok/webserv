@@ -14,11 +14,11 @@ void	executeGet(Connection& connection) {
 		connection.getRequest().setStatusCode(500);
 		connection.setHandleStatusCode(true);
 		connection.setNextState(DELFD);
-		//set flag for new status code;
 		return ;
 	}
 	else if (bytes == 0) {
 		connection.setHandleStatusCode(false);
+		connection.setBytesRead(0);
 		connection.setNextState(DELFD);
 		return ;
 	}

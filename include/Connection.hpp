@@ -15,11 +15,11 @@ class Connection {
 	private:
 		int				_fd;
 		cState			_nextState;
-		vector<char>	_buffer; //could've used a string
+		vector<char>	_buffer; //use string instead of vector?
 		int				_otherFD;
 		bool			_handleStatusCode;
-		size_t			_bRead; //not using
-		size_t			_bWritten; //not using
+		size_t			_bRead;
+		size_t			_bWritten;
 		Request			_request;
 		ServerBlock		_server;
 		Response		_response;
@@ -41,6 +41,7 @@ class Connection {
 		void	setServer(const ServerBlock server);
 		void	addToBuffer(const vector<char> buffer);
 		void	setBytesRead(const size_t bRead);
+		void	setBytesWritten(const size_t bWritten);
 		void	addBytesRead(const size_t bRead);
 		void	addBytesWritten(const size_t bWritten);
 

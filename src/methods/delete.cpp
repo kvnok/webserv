@@ -19,5 +19,6 @@ void	deleteMethod(Connection& connection) {
 		else
 			connection.getRequest().setStatusCode(204);
 	}
+	connection.setHandleStatusCode(true);
 	connection.setNextState(STATUSCODE);
 }

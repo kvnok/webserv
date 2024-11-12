@@ -29,12 +29,13 @@ void	executeStatusCode(Connection& connection) {
 }
 
 void	extractStatusCodePage(Connection& connection) {
+	connection.setHandleStatusCode(false);
 	int statusCode =  connection.getRequest().getStatusCode();
 	connection.getRequest().setPath(connection.getServer().getErrorPages()[statusCode]);
 	
 	int fd = open(connection.getRequest().getPath().c_str(), O_RDONLY);
 	if (fd == -1) {
-		if (errno == ENOENT) //CHECK (i errno allowed after open, but not after read or write)
+		if (errno == ENOENT) //CHECK (is errno allowed after open, but not after read or write)
     	    connection.getRequest().setStatusCode(404);
 		else if (errno == EACCES)
 			connection.getRequest().setStatusCode(403);

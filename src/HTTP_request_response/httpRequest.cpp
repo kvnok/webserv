@@ -19,7 +19,7 @@ Request::Request()
 	  _fileName(""),
 	  _isRedirect(false)
 { }
-Request::Request(const Request& other) { *this = other; }
+//Request::Request(const Request& other) { *this = other; }
 Request::~Request() { }
 
 Request&	Request::operator=(const Request& other) {
@@ -82,7 +82,7 @@ string				Request::getHeaderValue(const string& key) const{
 	return (iterator->second);
 }
 
-void  Request::reset() {
+void	Request::reset() {
 	this->_method = "";
 	this->_path = "";
 	this->_version = "";
@@ -107,7 +107,7 @@ void	readRequest(Connection& connection) {
         return ;
     }
     else if (bytes == 0) {
-        connection.setNextState(CLOSE);
+        connection.setNextState(CLOSE); //correct?
         return ;
     }
     buffer.resize(bytes);
@@ -139,48 +139,3 @@ void	parsePath(Connection& connection) {
 		connection.setNextState(PREPEXEC);
 	return ;
 }
-
-/*
-void handleRequest(Connection& connection) {
-	else if (connection.getRequest().getMethod() == "POST") {
-		request_path_handler(connection);
-		//cout << connection.getRequest().getPath() << endl; // destination folder
-		//cout << connection.getRequest().getFileName() << endl; // file name
-		if (connection.getRequest().getStatusCode() == 200) {
-			if (connection.getRequest().getIsCGI() == true)
-				content = content_from_cgi(connection.getRequest());
-			else
-				postMethod(connection);
-		}
-		connection.getRequest().setPath(connection.getServer().getErrorPages()[connection.getRequest().getStatusCode()]);
-	}
-	connection.getResponse().setStatusCode(connection.getRequest().getStatusCode());
-}
-*/
-
-/*
-string content_from_cgi(Request &request)
-{
-	cout << request.getPath() << endl;
-	string scriptPath = request.getPath().c_str(); // at the moment the path is wrong
-	string content = "";
-		// Prepare arguments for the script execution
-		char *args[] = {
-			const_cast<char*>("/usr/bin/python3"),    // Path to the interpreter
-			const_cast<char*>(scriptPath.c_str()),     // The script path
-			nullptr                                     // Null terminator
-		};
-		int fdForPolling = run_script(args, request);
-		
-        char buffer[1024]; // change size of buffer
-        ssize_t bytesRead;
-		//POLLFD
-        while ((bytesRead = read(fdForPolling, buffer, sizeof(buffer) - 1)) > 0) {
-            buffer[bytesRead] = '\0';
-            content += buffer;
-        }
-        close(fdForPolling); // close the fd for now
-		return content;
-}
-
-*/

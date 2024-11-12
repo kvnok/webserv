@@ -11,16 +11,16 @@ Response::Response() {
     _fullResponse = "";
 }
 
-Response::Response(int const clientSocket, int const statusCode, string const version) {
-    _version = version;
-    _statusCode = statusCode;
-    _body = "";
-    _clientSocket = clientSocket;
-    _bytesSend = 0;
-    _fullResponse = "";
-} //dont use it
+// Response::Response(int const clientSocket, int const statusCode, string const version) {
+//     _version = version;
+//     _statusCode = statusCode;
+//     _body = "";
+//     _clientSocket = clientSocket;
+//     _bytesSend = 0;
+//     _fullResponse = "";
+// } //dont use it
 
-Response::Response(const Response& other) { *this = other; }
+// Response::Response(const Response& other) { *this = other; }
 Response::~Response() { }
 
 Response&	Response::operator=(const Response& other) {
@@ -40,6 +40,7 @@ void    Response::setVersion(string const version) { this->_version = version; }
 void	Response::setBody(string const body) { this->_body = body; }
 void	Response::setStatusCode(int const statusCode) { this->_statusCode = statusCode; }
 void    Response::setClientSocket(int const clientSocket) { this->_clientSocket = clientSocket; }
+void    Response::setBytesSend(size_t const bSend) { this->_bytesSend = bSend; }
 void	Response::addToBody(string const bodyPart) { this->_body.append(bodyPart); }
 void    Response::addBytesSend(size_t const bSend) { this->_bytesSend += bSend; }
 void	Response::addHeader(string const key, string const value) { this->_header[key] = value; }
@@ -84,10 +85,11 @@ string              Response::getFullResponse() const {return (this->_fullRespon
 void    Response::reset() {
     this->_version = "";
     this->_statusCode = 200;
-    this->_bytesSend = 0;
     this->_header.clear();
     this->_body = "";
+    this->_bytesSend = 0;
     this->_fullResponse = "";
+    return ;
 }
 
 void    sendResponse(Connection& connection) {
@@ -95,21 +97,26 @@ void    sendResponse(Connection& connection) {
     int         clientSocket = response.getClientSocket();
     string      fullResponse = response.getFullResponse();   
 
-    size_t chunkSize = response.getFullResponse().size() - response.getBytesSend();
-    if (chunkSize > BUFFER_SIZE)
-        chunkSize = BUFFER_SIZE;
-    ssize_t bytes = send(clientSocket, fullResponse.c_str() + response.getBytesSend(), chunkSize, 0);
-    if (bytes == -1) {        
-        cerr << "send error" << endl; //CHECK what to do here?
-        return ;
-    }
-    response.addBytesSend(bytes);
-    if (response.getBytesSend() >= response.getFullResponse().size()) {
+    cout << "send: " << response.getBytesSend() << " size: " << fullResponse.size() << " to: " << clientSocket << endl;
+    if (response.getBytesSend() >= fullResponse.size()) {
         if (connection.getRequest().getHeaderValue("Connection") == "close")
             connection.setNextState(CLOSE);
         else
             connection.setNextState(CLEANUP);
     }
+    size_t chunkSize = fullResponse.size() - response.getBytesSend();
+    if (chunkSize > BUFFER_SIZE)
+        chunkSize = BUFFER_SIZE;
+    ssize_t bytes = send(clientSocket, fullResponse.c_str() + response.getBytesSend(), chunkSize, 0);
+    if (bytes == -1) {   
+        connection.getRequest().setStatusCode(500);
+        connection.setNextState(DELFD);
+        response.reset();
+        connection.setHandleStatusCode(true);
+        return ;
+    }
+    response.addBytesSend(bytes);
+    return ;
 }
 
 void    createResponse(Connection& connection) {
@@ -122,4 +129,5 @@ void    createResponse(Connection& connection) {
     response.setHeaders(response.getBody(), request.getHeaderValue("Connection"), request.getPath());
 	response.setFullResponse();
     connection.setNextState(SEND);
+    return ;
 }

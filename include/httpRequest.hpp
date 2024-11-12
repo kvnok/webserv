@@ -52,10 +52,10 @@ class Request {
 		string					_CGIExtension;
 		string					_fileName;
 		bool					_isRedirect;
+		Request(const Request& other);
 	
 	public:
 		Request();
-		Request(const Request& other);
 		~Request();
 		Request& operator=(const Request& other);
 

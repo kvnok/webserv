@@ -7,6 +7,7 @@ void    executePost(Connection& connection) {
     string  body = connection.getRequest().getBody();
 
     if (connection.getBytesWritten() >= body.size()) {
+        connection.setBytesWritten(0);
         connection.setHandleStatusCode(true); // now open 201, and get the body
         connection.setNextState(DELFD);
     }
@@ -16,6 +17,7 @@ void    executePost(Connection& connection) {
     ssize_t written = write(fd, body.data() + connection.getBytesWritten(), chunkSize);
     if (written == -1) {
         connection.getRequest().setStatusCode(500);
+        connection.setBytesWritten(0);
         connection.setHandleStatusCode(true);
         connection.setNextState(DELFD);
         // delete file
