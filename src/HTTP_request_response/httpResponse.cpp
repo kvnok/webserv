@@ -97,7 +97,7 @@ void    sendResponse(Connection& connection) {
     int         clientSocket = response.getClientSocket();
     string      fullResponse = response.getFullResponse();   
 
-    cout << "send: " << response.getBytesSend() << " size: " << fullResponse.size() << " to: " << clientSocket << endl;
+    // cout << "send: " << response.getBytesSend() << " size: " << fullResponse.size() << " to: " << clientSocket << endl;
     if (response.getBytesSend() >= fullResponse.size()) {
         if (connection.getRequest().getHeaderValue("Connection") == "close")
             connection.setNextState(CLOSE);

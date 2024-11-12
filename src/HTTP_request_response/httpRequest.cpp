@@ -111,7 +111,7 @@ void	readRequest(Connection& connection) {
         return ;
     }
     buffer.resize(bytes);
-    //cout << YEL << string(buffer.begin(), buffer.end()) << RESET << endl;
+    // cout << YEL << string(buffer.begin(), buffer.end()) << RESET << endl;
     connection.addToBuffer(buffer);
     if (connection.getRequest().getReadState() == START)
         hasAllHeaders(connection.getBuffer(), connection.getRequest());
@@ -133,8 +133,10 @@ void	readRequest(Connection& connection) {
 void	parsePath(Connection& connection) {
 	if (connection.getRequest().getStatusCode() == 200) 
 		request_path_handler(connection);
-	if (connection.getRequest().getStatusCode() != 200)
+	if (connection.getRequest().getStatusCode() != 200) {
+		connection.setHandleStatusCode(true);
 		connection.setNextState(STATUSCODE);
+	}
 	else
 		connection.setNextState(PREPEXEC);
 	return ;

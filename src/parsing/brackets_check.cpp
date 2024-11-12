@@ -2,8 +2,8 @@
 
 void check_brackets(RAWSERV &raw_server) {
 	stack<string> s;
-	for (int i = 0; i < raw_server.size(); i++) {
-		for (int j = 0; j < raw_server[i].size(); j++) {
+	for (int i = 0; i < (int)raw_server.size(); i++) {//CHANGED cast to int
+		for (int j = 0; j < (int)raw_server[i].size(); j++) {//CHANGED cast to int
 			if (raw_server[i][j] == "{") {
 				s.push("{");
 			} else if (raw_server[i][j] == "}") {

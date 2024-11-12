@@ -22,9 +22,8 @@ class Servers
 		void	handleNewConnection(size_t i);
 		void	handleExistingConnection(Connection& connection, size_t& i);
 		void	prepExec(Connection& connection);
-		void	getStatusCodePage(Connection& connection);
-		void	addFdToPoll(Connection& connection, size_t& i);
-		void	executeMethod(Connection& connection, size_t& i);
+		void	addFdToPoll(Connection& connection);
+		void	executeMethod(Connection& connection);
 		void	closeConnection(Connection& connection, size_t& i);
 		void	deleteOtherFd(Connection& connection, size_t& i);
 		vector<ServerBlock> &get_serverBlocks();

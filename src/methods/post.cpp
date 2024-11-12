@@ -6,11 +6,6 @@ void    executePost(Connection& connection) {
     int     fd = connection.getOtherFD();
     string  body = connection.getRequest().getBody();
 
-    if (connection.getBytesWritten() >= body.size()) {
-        connection.setBytesWritten(0);
-        connection.setHandleStatusCode(true); // now open 201, and get the body
-        connection.setNextState(DELFD);
-    }
     size_t chunkSize = body.size() - connection.getBytesWritten();
     if (chunkSize > BUFFER_SIZE)
         chunkSize = BUFFER_SIZE;
@@ -20,11 +15,16 @@ void    executePost(Connection& connection) {
         connection.setBytesWritten(0);
         connection.setHandleStatusCode(true);
         connection.setNextState(DELFD);
-        // delete file
+        remove(connection.getRequest().getPath().c_str()); //CHECK agree?
         return ;
     }
     connection.addBytesWritten(written);
     // check if written to much?
+    if (connection.getBytesWritten() >= body.size()) {
+        connection.setBytesWritten(0);
+        connection.setHandleStatusCode(true); // now open 201, and get the body
+        connection.setNextState(DELFD);
+    }
     return ;
 }
 

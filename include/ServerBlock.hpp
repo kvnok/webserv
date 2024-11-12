@@ -64,7 +64,7 @@ class ServerBlock
 		void setBind();
 		void setListen();
 		// ------------------------- //
-		smartLocs getSmartLocs();
+		smartLocs& getSmartLocs();
 		void setSmartLocs(pServerBlock &block);
 } ;
 

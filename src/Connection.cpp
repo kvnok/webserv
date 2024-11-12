@@ -79,10 +79,6 @@ void			Connection::reset() {
 	this->_buffer.resize(0);
 	this->_request.reset();
 	this->_response.reset();
-	if (this->_otherFD != -1) {
-		cout << "this should not happen" << endl;
-		//can we assume this will never fail? 
-	}
 	this->_nextState = READ;
 	this->_handleStatusCode = false;
 	this->_bRead = 0;

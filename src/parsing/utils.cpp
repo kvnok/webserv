@@ -8,10 +8,10 @@ void trim_start(string &line) {
 }
 
 void print_raw_config(RAWCONF &raw_config) {
-	for (int i = 0; i < raw_config.size(); i++) {
-		for (int j = 0; j < raw_config[i].size(); j++) {
+	for (int i = 0; i < (int)raw_config.size(); i++) { //CHANGED cast to int
+		for (int j = 0; j < (int)raw_config[i].size(); j++) { //CHANGED cast to int
 			cout << raw_config[i][j];
-			if (j < raw_config[i].size() - 1) {
+			if (j < (int)raw_config[i].size() - 1) { //CHANGED cast to int
 				cout << "|";
 			}
 		}
@@ -20,7 +20,7 @@ void print_raw_config(RAWCONF &raw_config) {
 }
 
 void print_ascii(string &line) {
-	for (int i = 0; i < line.size(); i++) {
+	for (int i = 0; i < (int)line.size(); i++) {//CHANGED cast to int
 		cout << (int)line[i] << " ";
 	}
 	cout << endl;
@@ -39,12 +39,12 @@ void is_file_name_correct(string &f) {
 }
 
 void print_raw_servers(RAWSERVS &servers) {
-	for (int i = 0; i < servers.size(); i++) {
+	for (int i = 0; i < (int)servers.size(); i++) {//CHANGED cast to int
 		cout << "\nserver block " << i << "\n";
-		for (int j = 0; j < servers[i].size(); j++) {
-			for (int k = 0; k < servers[i][j].size(); k++) {
+		for (int j = 0; j < (int)servers[i].size(); j++) { //CHANGED cast to int
+			for (int k = 0; k < (int)servers[i][j].size(); k++) { //CHANGED cast to int
 				cout << servers[i][j][k];
-				if (k < servers[i][j].size() - 1) {
+				if (k < (int)servers[i][j].size() - 1) { //CHANGED cast to int
 					cout << "|";
 				}
 			}
@@ -54,10 +54,10 @@ void print_raw_servers(RAWSERVS &servers) {
 }
 
 void print_i_raw_serv(RAWSERV &server) {
-	for (int j = 0; j < server.size(); j++) {
-		for (int k = 0; k < server[j].size(); k++) {
+	for (int j = 0; j < (int)server.size(); j++) { //CHANGED cast to int
+		for (int k = 0; k < (int)server[j].size(); k++) {//CHANGED cast to int
 			cout << server[j][k];
-			if (k < server[j].size() - 1) {
+			if (k < (int)server[j].size() - 1) { //CHANGED cast to int
 				cout << "|";
 			}
 		}

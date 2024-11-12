@@ -38,7 +38,7 @@ void	getMethod(Connection& connection) {
 	else {
 		int fd = open(connection.getRequest().getPath().c_str(), O_RDONLY);
 		if (fd == -1) {
-			if (errno == ENOENT) //CHECK (i errno allowed after open, but not after read or write)
+			if (errno == ENOENT) //CHECK (if errno allowed after open, but not after read or write)
     	    	connection.getRequest().setStatusCode(404);
 			else if (errno == EACCES)
 				connection.getRequest().setStatusCode(403);

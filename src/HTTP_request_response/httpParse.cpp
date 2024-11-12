@@ -189,8 +189,9 @@ void	checkChunkedBody(Connection& connection) {
 		try {
 			chunkSize = stoul(string(buf.begin(), endSize), nullptr, 16);
 		} catch (...) {
-			cerr << "stoul failed in chunked body" << endl;
-			connection.getRequest().setReadState(DONE); // add an error state?
+			// cerr << "stoul failed in chunked body" << endl;
+			connection.getRequest().setStatusCode(500);
+			connection.getRequest().setReadState(DONE);
 			break ;
 		}
 		if (chunkSize == 0) {
@@ -276,7 +277,7 @@ void	checkHeaders(const vector<char> requestData, Request& request) {
 	}
 	else
 		request.setReadState(DONE);
-	cout << request.getPath() << " " << request.getMethod() << " " << request.getVersion() << endl;
+	// cout << request.getPath() << " " << request.getMethod() << " " << request.getVersion() << endl;
 	return ;
 }
 

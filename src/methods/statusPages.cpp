@@ -28,7 +28,7 @@ void	executeStatusCode(Connection& connection) {
 	return ;
 }
 
-void	extractStatusCodePage(Connection& connection) {
+void	getStatusCodePage(Connection& connection) {
 	connection.setHandleStatusCode(false);
 	int statusCode =  connection.getRequest().getStatusCode();
 	connection.getRequest().setPath(connection.getServer().getErrorPages()[statusCode]);

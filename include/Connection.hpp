@@ -66,7 +66,7 @@ void	deleteMethod(Connection& connection);
 void	postMethod(Connection& connection);
 void	getMethod(Connection& connection);
 void	cgiMethod(Connection& connection);
-void	extractStatusCodePage(Connection& connection);
+void	getStatusCodePage(Connection& connection);
 void	executeStatusCode(Connection& connection);
 void	executeCGI(Connection& connection);
 void	executePost(Connection& connection);
@@ -74,4 +74,3 @@ void	executeGet(Connection& connection);
 
 //loose those
 int		run_script(char *args[], Request &request);
-string	content_from_cgi(Request &request);

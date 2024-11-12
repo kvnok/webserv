@@ -4,25 +4,25 @@
 void    Servers::handleNewConnection(size_t i) {
     int clientSocket = accept(this->_serverBlocks[i].getFd(), NULL, NULL);
     if (clientSocket == -1) {
-        cerr << "accept failed" << endl;
+        // cerr << "accept failed" << endl;
         return ;
     }
     if (fcntl(clientSocket, F_SETFL, O_NONBLOCK) == -1) {
-            cerr << "fcntl set flags failed" << endl;
+            // cerr << "fcntl set flags failed" << endl;
             return ;
     }
     this->_fds.push_back({clientSocket, POLLIN | POLLOUT, 0});
     this->_connections.emplace_back(clientSocket, this->_serverBlocks[i]);
-    cout << "client: " << clientSocket << " on index: " << this->_fds.size() - 1 << endl;
-    cout << "created: ";
-    for (int k = 0; k < this->_fds.size(); k++)
-        cout << this->_fds[k].fd << " ";
-    cout << endl;
+    // cout << "client: " << clientSocket << " on index: " << this->_fds.size() - 1 << endl;
+    // cout << "created: ";
+    // for (int k = 0; k < this->_fds.size(); k++)
+    //     cout << this->_fds[k].fd << " ";
+    // cout << endl;
 }
 
 void    Servers::deleteOtherFd(Connection& connection, size_t& i) {
     if (connection.getOtherFD() == this->_fds[i].fd) {
-        cout << "delete otherfd: " << connection.getOtherFD() << " on index: " << i << endl;
+        // cout << "delete otherfd: " << connection.getOtherFD() << " on index: " << i << endl;
         close(connection.getOtherFD());
         this->_fds.erase(this->_fds.begin() + i);
         connection.setOtherFD(-1);
@@ -30,16 +30,16 @@ void    Servers::deleteOtherFd(Connection& connection, size_t& i) {
             connection.setNextState(STATUSCODE);
         else
             connection.setNextState(RESPONSE);
-        cout << "deleted: ";
-        for (int k = 0; k < this->_fds.size(); k++)
-            cout << this->_fds[k].fd << " ";
-        cout << endl;
+        // cout << "deleted: ";
+        // for (int k = 0; k < this->_fds.size(); k++)
+        //     cout << this->_fds[k].fd << " ";
+        // cout << endl;
         i--;
         //should i reset different vars here aswell?
     }
     else {
-        cout << "wrong, delete otherfd" << endl;
-        cout << connection.getOtherFD() << " " << connection.getFd() << " " << this->_fds[i].fd << " " << i << endl;
+        // cout << "wrong, delete otherfd" << endl;
+        // cout << connection.getOtherFD() << " " << connection.getFd() << " " << this->_fds[i].fd << " " << i << endl;
     }
 }
 
@@ -48,29 +48,29 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
         if (this->_connections[j].getFd() == connection.getFd() && this->_fds[i].fd == connection.getFd()) {
             for (size_t k = 0; k < this->_fds.size(); k++) {
                 if (this->_fds[k].fd == connection.getOtherFD()) {
-                    cout << "close otherfd: " << connection.getOtherFD() << " on index: " << k << endl;
+                    // cout << "close otherfd: " << connection.getOtherFD() << " on index: " << k << endl;
                     close(connection.getOtherFD());
                     this->_fds.erase(this->_fds.begin() + k);
                     connection.setOtherFD(-1);
-                    cout << "deleted: ";
-                    for (int d = 0; d < this->_fds.size(); d++)
-                        cout << this->_fds[d].fd << " ";
-                    cout << endl;
+                    // cout << "deleted: ";
+                    // for (int d = 0; d < this->_fds.size(); d++)
+                        // cout << this->_fds[d].fd << " ";
+                    // cout << endl;
                     if (k <= i) {
-                        cout << "This could be wrong" << endl;
+                        //cout << "This could be wrong" << endl;
                         i--;
                     }
                     break ;
                 }
             }
-            cout << "close clietnsocket: " << connection.getFd() << " on index: " << i << endl;
+            // cout << "close clietnsocket: " << connection.getFd() << " on index: " << i << endl;
             close(connection.getFd());
             this->_fds.erase(this->_fds.begin() + i);
             this->_connections.erase(this->_connections.begin() + j);
-            cout << "deleted: ";
-            for (int e = 0; e < this->_fds.size(); e++)
-                cout << this->_fds[e].fd << " ";
-            cout << endl;
+            // cout << "deleted: ";
+            // for (int e = 0; e < this->_fds.size(); e++)
+            //     cout << this->_fds[e].fd << " ";
+            // cout << endl;
             i--;
             break ;
         }
@@ -89,30 +89,31 @@ void	Servers::prepExec(Connection& connection) {
         getMethod(connection);
     else {
         connection.getRequest().setStatusCode(500);
+        connection.setHandleStatusCode(true);
         connection.setNextState(STATUSCODE);
     }
     return;
 }
 
-void    Servers::addFdToPoll(Connection& connection, size_t& i) {
+void    Servers::addFdToPoll(Connection& connection) {
     //need any aditional check before adding the fd to poll?
     //and check after?
     if (fcntl(connection.getOtherFD(), F_SETFL, O_NONBLOCK) == -1) {
-            cerr << "fcntl set flags failed" << endl;
+            // cerr << "fcntl set flags failed" << endl;
             // should set status code
             return ;
     }
     this->_fds.push_back({connection.getOtherFD(), POLLIN | POLLOUT, 0});
-    cout << "set otherfd: " << connection.getOtherFD() << " on index: " << this->_fds.size() - 1 << endl;
-    cout << "it will handle: " << connection.getRequest().getPath() << " with " << connection.getRequest().getMethod() << endl;
-    cout << "created: ";
-    for (int k = 0; k < this->_fds.size(); k++)
-        cout << this->_fds[k].fd << " ";
-    cout << endl;
+    // cout << "set otherfd: " << connection.getOtherFD() << " on index: " << this->_fds.size() - 1 << endl;
+    // cout << "it will handle: " << connection.getRequest().getPath() << " with " << connection.getRequest().getMethod() << endl;
+    // cout << "created: ";
+    // for (int k = 0; k < this->_fds.size(); k++)
+    //     cout << this->_fds[k].fd << " ";
+    // cout << endl;
     connection.setNextState(EXECFD);
 }
 
-void    Servers::executeMethod(Connection& connection, size_t& i) {
+void    Servers::executeMethod(Connection& connection) {
     if (connection.getHandleStatusCode() == true)
         executeStatusCode(connection);
     else if (connection.getRequest().getIsCGI() == true)
@@ -122,13 +123,8 @@ void    Servers::executeMethod(Connection& connection, size_t& i) {
     else if (connection.getRequest().getMethod() == "GET")
         executeGet(connection);
     else
-        cout << "execute method not found error" << endl;//error?
+        // cout << "execute method not found error" << endl;//error?
     return; 
-}
-
-void	Servers::getStatusCodePage(Connection& connection) {
-    extractStatusCodePage(connection);
-    return;
 }
 
 void    Servers::handleExistingConnection(Connection& connection, size_t& i) {
@@ -146,10 +142,10 @@ void    Servers::handleExistingConnection(Connection& connection, size_t& i) {
             getStatusCodePage(connection);
             break ;
         case SETFD:
-            addFdToPoll(connection, i);
+            addFdToPoll(connection);
             break ;
         case EXECFD:
-            executeMethod(connection, i);
+            executeMethod(connection);
             break ;
         case DELFD:
             deleteOtherFd(connection, i);
@@ -222,38 +218,75 @@ void    Servers::start() {
         int ret = poll(this->_fds.data(), this->_fds.size(), 0);
         if (ret == -1)
             cerr << "poll failed" << endl; //CHECK should we do this, or should we keep trying?
+        // if (this->_fds.size() > 5) {
+        //     for (size_t d = 0; d < this->_fds.size(); d++) {
+        //         if (isClientFd(this->_fds[d].fd))
+        //             cout << RED << this->_fds[d].fd << " " << RESET;
+        //         else if (isServerFd(this->_fds[d].fd))
+        //             cout << BLU << this->_fds[d].fd << " " << RESET;
+        //         else
+        //             cout << YEL << this->_fds[d].fd << " " << RESET;
+        //     }
+        //     cout << endl;
+        // }
         for (size_t i = 0; i < this->_fds.size(); i++) {
             if (isServerFd(this->_fds[i].fd)) {
                 ServerBlock* serverBlock = getFdsServerBlock(this->_fds[i].fd);
                 if (serverBlock) {
                     if (this->_fds[i].revents & POLLIN)
                         handleNewConnection(i);
-                    else if (this->_fds[i].revents & POLLOUT)
-                        cout << "server pollout, printed for checking" << endl;
-                    else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL))
-                        cout << "server error, printed for checking" << endl;
                 }
             }
             else if (isClientFd(this->_fds[i].fd)) {
                 Connection* connection = getFdsClient(this->_fds[i].fd);
                 if (connection && connection->getNextState() != EXECFD && connection->getNextState() != DELFD) {
-                    if (this->_fds[i].revents & POLLIN)
+                    if (this->_fds[i].revents & POLLIN) { //only for reading the request.
+                        // if (connection->getNextState() != READ && connection->getNextState() != CLOSE && connection->getNextState() != CLEANUP) {
+                        //     connection->getRequest().setStatusCode(400);
+                        //     connection->setNextState(STATUSCODE);
+                        // }
                         handleExistingConnection(*connection, i);
-                    else if (this->_fds[i].revents & POLLOUT)
+                    }
+                    else if (this->_fds[i].revents & POLLOUT) { //only for sending the response
+                        // if (connection->getNextState() == READ) {
+                        //     connection->getRequest().setStatusCode(400);
+                        //     connection->setNextState(STATUSCODE);
+                        // }
                         handleExistingConnection(*connection, i);
+                    }
                     else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL))
                         closeConnection(*connection, i);
+                    else {
+                        if (connection->getNextState() == CLOSE || connection->getNextState() == CLEANUP)
+                            handleExistingConnection(*connection, i);
+                    }
                 }
             }
             else if (isOtherFd(this->_fds[i].fd)) {
                 Connection* connection = getOtherFdsClient(this->_fds[i].fd);
                 if (connection && ((connection->getNextState() == EXECFD || connection->getNextState() == DELFD))) {
-                    if (this->_fds[i].revents & POLLIN)
+                    if (this->_fds[i].revents & POLLIN) {//only for 'getting' a file/cgi
+                        // if (connection->getRequest().getMethod() == "POST" && connection->getHandleStatusCode() == false) {
+                        //     connection->getRequest().setStatusCode(400);
+                        //     connection->setHandleStatusCode(true);
+                        //     connection->setNextState(DELFD);
+                        // }
                         handleExistingConnection(*connection, i);
-                    else if (this->_fds[i].revents & POLLOUT)
+                    }
+                    else if (this->_fds[i].revents & POLLOUT) { //only if post is executed. after 'posting', the 201 upload should be pollin
+                        // if (connection->getRequest().getMethod() != "POST" || (connection->getRequest().getMethod() == "POST" && connection->getHandleStatusCode() == true)) {
+                        //     connection->getRequest().setStatusCode(400);
+                        //     connection->setHandleStatusCode(true);
+                        //     connection->setNextState(DELFD);
+                        // }
                         handleExistingConnection(*connection, i);
+                    }
                     else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL))
                         deleteOtherFd(*connection, i);
+                    else {
+                        if (connection->getNextState() == DELFD)
+                            handleExistingConnection(*connection, i);
+                    }
                 }
             }
         }
