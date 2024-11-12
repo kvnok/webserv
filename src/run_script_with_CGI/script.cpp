@@ -7,7 +7,6 @@ void execScript(char *args[], int pipefd[2], Request &request)
     // Ensure correct path for the Python interpreter
     char *python_cgi = (char *)"/usr/bin/python3";
     // here is going be no difference
-
     if (request.getMethod() == "GET") 
     {
         cout << "GET script" << endl;
@@ -53,7 +52,7 @@ int run_script(char *args[], Request &request) {
         cerr << "Failed to fork" << endl;
         return -1;
     }
-
+	//
     if (pid == 0)
         execScript(args, pipefd, request);
     else {

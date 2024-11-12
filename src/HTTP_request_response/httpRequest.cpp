@@ -145,6 +145,7 @@ void handleRequest(Connection& connection) {
 			content = content_from_cgi(request);
 		}
 		else {
+			cout << BLU << "Here" << RESET << endl;
 			ifstream file(request.getPath());
         	if (!file.is_open())
         	    response.setStatusCode(404);

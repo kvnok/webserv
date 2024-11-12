@@ -57,11 +57,12 @@ int check_permissions(const string &path) {
 		cerr << "The file does not exist." << endl;
         status_code = 404;
 	}
-	if (access(path.c_str(), R_OK) == -1) {
+	else if (access(path.c_str(), R_OK) == -1) {
 		cerr << "The file does not have read permission." << endl;
         status_code = 401;
     }
-    cout << "Status code: " << status_code << endl;
+    else
+        cout << "Status code: " << status_code << endl;
     return status_code;
 }
 
@@ -91,11 +92,12 @@ void postMethod(Connection& connection) {
     else {
         int ret = 0;
         string path = connection.getRequest().getPath().c_str();
-        status_code = check_permissions(connection.getRequest().getPath());
+        status_code = check_permissions("." + path);
         if (status_code != 201) {
             connection.getRequest().setStatusCode(status_code);
             return ;
         }
+        
         char *args[] = {(char *) path.c_str(), (char *)storage.c_str(), nullptr};
         int fd = run_script(args, connection.getRequest());
         char buffer[connection.getServer().getMaxBody()];
