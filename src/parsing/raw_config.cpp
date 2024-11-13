@@ -21,7 +21,7 @@ void raw_extract(ifstream& file, RAWCONF &raw_config) {
 
 void get_words(string &line, vector<string> &words) {
 	string word = "";
-	for (int i = 0, j = 0; i < line.size(); i++) {
+	for (int i = 0, j = 0; i < (int)line.size(); i++) { //CHANGED cast to int
 		word = "";
 		while(line[i] && is_match(line[i], ' ', '\t', '\v', '\f', '\r') == false) {
 			word += line[i];
@@ -34,7 +34,7 @@ void get_words(string &line, vector<string> &words) {
 
 void extract_raw_servers(RAWCONF &raw_config, RAWSERVS &servers) {
 	RAWSERV server;
-	for (int i = 0; i < raw_config.size(); i++) {
+	for (int i = 0; i < (int)raw_config.size(); i++) { //CHANGED cast to int
 		if (raw_config[i][0] == "server") {
 			if (server.size() > 0) {
 				servers.push_back(server);

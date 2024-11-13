@@ -52,10 +52,10 @@ class Request {
 		string					_CGIExtension;
 		string					_fileName;
 		bool					_isRedirect;
+		Request(const Request& other);
 	
 	public:
 		Request();
-		Request(const Request& other);
 		~Request();
 		Request& operator=(const Request& other);
 
@@ -105,7 +105,7 @@ void	parseBodyParts(Request& request);
 
 // reading and getting path;
 void	readRequest(Connection& connection);
-void	handleRequest(Connection& connection);
+void	parsePath(Connection& connection);
 
 //https://www.ibm.com/docs/en/app-connect/11.0.0?topic=messages-http-headers
 //resource headers

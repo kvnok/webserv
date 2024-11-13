@@ -2,18 +2,18 @@
 #include "ServerBlock.hpp"
 #include "autoindex.hpp"
 
-void print_the_loc(Loc loc) {
-	cout << "loc: " << endl;
-	cout << "path: " << loc.get_path() << endl;
-	cout << "root: " << loc.get_root() << endl;
-	cout << "index: " << loc.get_index() << endl;
-	cout << "autoindex: " << loc.get_autoindex() << endl;
-	cout << "is_cgi: " << loc.get_is_cgi() << endl;
-	cout << "cgi_extension: " << loc.get_cgi_extension() << endl;
-	cout << "is_redirect: " << loc.get_is_redirect() << endl;
-	cout << "redirect: " << loc.get_redirect() << endl;
-	cout << "redirect_code: " << loc.get_redirect_code() << endl;
-}
+// void print_the_loc(Loc loc) {
+// 	cout << "loc: " << endl;
+// 	cout << "path: " << loc.get_path() << endl;
+// 	cout << "root: " << loc.get_root() << endl;
+// 	cout << "index: " << loc.get_index() << endl;
+// 	cout << "autoindex: " << loc.get_autoindex() << endl;
+// 	cout << "is_cgi: " << loc.get_is_cgi() << endl;
+// 	cout << "cgi_extension: " << loc.get_cgi_extension() << endl;
+// 	cout << "is_redirect: " << loc.get_is_redirect() << endl;
+// 	cout << "redirect: " << loc.get_redirect() << endl;
+// 	cout << "redirect_code: " << loc.get_redirect_code() << endl;
+// }
 
 static void parse_path(string &path, string &folder, string &file) {
 	if (path == "/") {
@@ -37,6 +37,8 @@ void check_baseline(Request &request, string &file, string &path, ServerBlock se
 	string root_and_file = root + "/" + file;
 	root_and_file = regex_replace(root_and_file, regex("//+"), "/");
 
+	(void)err_pages; //CHANGED unused var
+	
 	if (file.empty()) { // no file, check for index
 		string root_and_index = root + "/" + server.getIndex();
 		root_and_index = regex_replace(root_and_index, regex("//+"), "/");
@@ -63,7 +65,11 @@ void check_baseline(Request &request, string &file, string &path, ServerBlock se
 	}
 }
 
-void check_locs(Connection& connection, Request &request, string &folder, string &file, string &path, map<int, string> err_pages, smartLocs sLocs) {
+void check_locs(Connection& connection, Request &request, string &folder, string &file, string &path, map<int, string> err_pages, smartLocs& sLocs) { //CHANGED added '&' to smartLocs
+	
+	(void)connection; //CHANGED unused var
+	(void)err_pages; //CHANGED unused var
+	
 	Loc loc;
 	try {
 		loc = sLocs.get_loc(folder);
@@ -125,14 +131,14 @@ void check_locs(Connection& connection, Request &request, string &folder, string
 	}
 }
 
-void ok_print_server_block(ServerBlock &serverBlock) {
-	cout << "server block: " << endl;
-	cout << "port: " << serverBlock.getPort() << endl;
-	cout << "root: " << serverBlock.getRoot() << endl;
-	cout << "index: " << serverBlock.getIndex() << endl;
-}
+// void ok_print_server_block(ServerBlock &serverBlock) {
+// 	cout << "server block: " << endl;
+// 	cout << "port: " << serverBlock.getPort() << endl;
+// 	cout << "root: " << serverBlock.getRoot() << endl;
+// 	cout << "index: " << serverBlock.getIndex() << endl;
+// }
 
-bool is_this_a_redirect(string &folder, string &file, smartLocs sLocs) {
+bool is_this_a_redirect(string &folder, string &file, smartLocs& sLocs) { //CHANGED added '&' to smartLocs
 	if (folder != "" && file != "")
 		return false;
 	if ((folder == "" || folder == "/") && file == "")
@@ -151,7 +157,7 @@ bool is_this_a_redirect(string &folder, string &file, smartLocs sLocs) {
 	return true;
 }
 
-void do_the_redirect(Request &request, string &folder, smartLocs sLocs) {
+void do_the_redirect(Request &request, string &folder, smartLocs& sLocs) { //CHANGED added '&' to smartLocs
 	Loc loc;
 	loc = sLocs.get_loc(folder);
 	string redirect = loc.get_redirect();
@@ -159,11 +165,11 @@ void do_the_redirect(Request &request, string &folder, smartLocs sLocs) {
 	folder = redirect;
 }
 
-void print_smartLocs(smartLocs sLocs) {
-	map<string, Loc> locs = sLocs.get_locs();
-	for (auto it = locs.begin(); it != locs.end(); it++)
-		it->second.print_location();
-}
+// void print_smartLocs(smartLocs& sLocs) { //CHANGED added '&' to smartLocs
+// 	map<string, Loc> locs = sLocs.get_locs();
+// 	for (auto it = locs.begin(); it != locs.end(); it++)
+// 		it->second.print_location();
+// }
 
 void request_path_handler(Connection& connection) {
 	Request& request = connection.getRequest();

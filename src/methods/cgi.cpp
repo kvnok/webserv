@@ -3,34 +3,46 @@
 #include "httpResponse.hpp"
 
 void	executeCGI(Connection& connection) {
-	
+	string	buffer(BUFFER_SIZE, '\0');
+    ssize_t bytes = read(connection.getOtherFD(), &buffer[0], sizeof(buffer));
+	if (bytes < 0) {
+		connection.getResponse().setBody("");
+		connection.setBytesRead(0);
+		connection.getRequest().setStatusCode(500);
+		connection.setHandleStatusCode(true);
+		connection.setNextState(DELFD);
+		return ;
+	}
+	else if (bytes == 0) { //done with reading, so we close the fd
+		// cout << connection.getResponse().getBody() << endl;
+		connection.setHandleStatusCode(false);
+		connection.setBytesRead(0);
+		connection.setNextState(DELFD);
+		return ;
+	}
+	buffer.resize(bytes);
+	connection.getResponse().addToBody(buffer);
+	connection.addBytesRead(bytes);
+	//check if we dont exceed our body limit;
+	return ;
 }
 
-string content_from_cgi(Request &request)
-{
-	cout << "path in cgi: " << request.getPath() << endl;
-	string scriptPath = request.getPath().c_str(); // at the moment the path is wrong
-	string content = "";
-		// Prepare arguments for the script execution
-		char *args[] = {
-			const_cast<char*>("/usr/bin/python3"),    // Path to the interpreter
-			const_cast<char*>(scriptPath.c_str()),     // The script path
-			nullptr                                     // Null terminator
-		};
-		int fdForPolling = run_script(args, request);
-		
-        char buffer[1024]; // change size of buffer
-        ssize_t bytesRead;
-		//POLLFD
-        while ((bytesRead = read(fdForPolling, buffer, sizeof(buffer) - 1)) > 0) {
-            buffer[bytesRead] = '\0';
-            content += buffer;
-        }
-        close(fdForPolling); // close the fd for now
-		return content;
-} //old funct, needs to change
-
-void	cgiMethod(Connection& connection) {
-	connection.getResponse().setBody(content_from_cgi(connection.getRequest()));
-	connection.setNextState(RESPONSE);
+void cgiMethod(Connection& connection) { 
+	char *args[] = {
+		const_cast<char*>("/usr/bin/python3"),    // Path to the interpreter
+		const_cast<char*>(connection.getRequest().getPath().c_str()),     // The script path
+		nullptr  // Null terminator
+	};
+	int fd = run_script(args, connection.getRequest());
+	if (fd != -1) {
+		connection.setOtherFD(fd);
+		connection.setHandleStatusCode(false);
+		connection.setNextState(SETFD);
+	}
+	else {
+		connection.getRequest().setStatusCode(500);
+		connection.setHandleStatusCode(true);
+		connection.setNextState(STATUSCODE);
+	}
+	return ;
 }

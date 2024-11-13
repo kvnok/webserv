@@ -5,7 +5,7 @@ Parser::Parser(string config_file) : _config_file(config_file) {}
 Parser::~Parser() {}
 
 void check_outside(RAWCONF &a) {
-	for (int i = 0; i < a.size(); i++) {
+	for (int i = 0; i < (int)a.size(); i++) {//CHANGED cast to int
 		if (a[i].size() != 2 || a[i][0] != "server" || a[i][1] != "{")
 			throw logic_error("outside block: " + a[i][0]);
 		
@@ -43,7 +43,7 @@ void check_etc_hosts(pServerBlock &server_block) {
 
 	// save all the lines in entries
 	vector<vector<string>> entries;
-	for (int i = 0; i < lines.size(); i++) {
+	for (int i = 0; i < (int)lines.size(); i++) {//CHANGED cast to int
 		vector<string> words;
 		get_words(lines[i], words);
 		entries.push_back(words);
@@ -52,7 +52,7 @@ void check_etc_hosts(pServerBlock &server_block) {
 	// check if host is in /etc/hosts
 	int host_line = -1;
 	int flag = 0;
-	for (int i = 0; i < lines.size(); i++) {
+	for (int i = 0; i < (int)lines.size(); i++) {//CHANGED cast to int
 		if (entries[i].size() == 0) {
 			continue;
 		}
@@ -74,9 +74,9 @@ void check_etc_hosts(pServerBlock &server_block) {
 	}
 	
 	// check for each server_name if it is in the host line
-	for (int i = 0; i < server_names.size(); i++) {
+	for (int i = 0; i < (int)server_names.size(); i++) {//CHANGED cast to int
 		int check = 0;
-		for (int j = 1; j < entries[host_line].size(); j++) {
+		for (int j = 1; j < (int)entries[host_line].size(); j++) {//CHANGED cast to int
 			if (entries[host_line][j] == server_names[i]) {
 				if (check == 1) {
 					throw runtime_error("/etc/hosts: duplicate server_name: " + server_names[i]);
@@ -108,20 +108,20 @@ void Parser::parse(Config &config) {
 	RAWSERVS raw_servers;
 	extract_raw_servers(raw_config, raw_servers);
 	// print_raw_servers(servers);
-	for (int i = 0; i < raw_servers.size(); i++) {
+	for (int i = 0; i < (int)raw_servers.size(); i++) {//CHANGED cast to int
 		// cout << MAG << "raw server block " << i << RESET << endl;
 		// print_i_raw_serv(raw_servers[i]);
 		check_brackets(raw_servers[i]);
 	}
 
-	for (int i = 0; i < raw_servers.size(); i++) {
+	for (int i = 0; i < (int)raw_servers.size(); i++) {//CHANGED cast to int
 		pServerBlock server_block;
 		parse_server_block(raw_servers[i], server_block);
 		// check if server block host and server_name are in /etc/hosts
 		check_etc_hosts(server_block);
 		// check for duplicate host:port
 		int flag = 0;
-		for (int j = 0; j < config.get_server_blocks().size(); j++) {
+		for (int j = 0; j < (int)config.get_server_blocks().size(); j++) {//CHANGED cast to int
 			if (server_block.get_listen() == config.get_server_blocks()[j].get_listen()) {
 				flag = 1;
 				break;

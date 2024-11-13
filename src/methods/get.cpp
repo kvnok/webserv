@@ -14,11 +14,11 @@ void	executeGet(Connection& connection) {
 		connection.getRequest().setStatusCode(500);
 		connection.setHandleStatusCode(true);
 		connection.setNextState(DELFD);
-		//set flag for new status code;
 		return ;
 	}
 	else if (bytes == 0) {
 		connection.setHandleStatusCode(false);
+		connection.setBytesRead(0);
 		connection.setNextState(DELFD);
 		return ;
 	}
@@ -38,7 +38,7 @@ void	getMethod(Connection& connection) {
 	else {
 		int fd = open(connection.getRequest().getPath().c_str(), O_RDONLY);
 		if (fd == -1) {
-			if (errno == ENOENT) //CHECK (i errno allowed after open, but not after read or write)
+			if (errno == ENOENT) //CHECK (if errno allowed after open, but not after read or write)
     	    	connection.getRequest().setStatusCode(404);
 			else if (errno == EACCES)
 				connection.getRequest().setStatusCode(403);

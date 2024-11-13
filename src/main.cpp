@@ -9,7 +9,10 @@
 #include "autoindex.hpp"
 #include "smartLocs.hpp"
 
+#include <csignal>
+
 int main(int argc, char **argv) {
+	signal(SIGPIPE, SIG_IGN);
 	try
 	{
 		if (argc != 1 && argc != 2)
@@ -27,7 +30,7 @@ int main(int argc, char **argv) {
 		// test_smartLocs(config); // test smartLocs
 
 		vector<ServerBlock> serverBlocks;
-		for(int i = 0; i < config.get_server_blocks().size(); i++) {
+		for(int i = 0; i < (int)config.get_server_blocks().size(); i++) {//CHANGED cast to int
 			ServerBlock serverBlock(config.get_server_blocks()[i]);
 			serverBlocks.push_back(serverBlock);
 			// ok_print_server_block(serverBlock);

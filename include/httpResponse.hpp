@@ -17,14 +17,13 @@ class Response {
 		int					_statusCode;
 		map<string, string>	_header;
 		string				_body;
-		size_t				_bWritten;
 		int					_clientSocket;
-		size_t				_bytesWritten;
+		size_t				_bytesSend;
 		string				_fullResponse;
+		Response(const Response& other);
+		Response(int const clientSocket, int const statusCode, string const version);
 	public:
 		Response();
-		Response(int const clientSocket, int const statusCode, string const version);
-		Response(const Response& other);
 		~Response();
 
 		Response& operator=(const Response& other);
@@ -34,7 +33,8 @@ class Response {
 		void				setStatusCode(int const statusCode);
 		void				setClientSocket(int const clientSocket);
 		void				addToBody(string const bodyPart);
-		void				addBytesWritten(size_t const bWrtitten);
+		void				setBytesSend(size_t const bSend);
+		void				addBytesSend(size_t const bSend);
 		void				addHeader(string const key, string const value);
 		void				setHeaders(string const content, string const connectionState, string const path);
 
@@ -43,12 +43,12 @@ class Response {
 		map<string, string>	getHeaders() const;
 		string				getBody() const;
 		int					getClientSocket() const;
-		size_t				getBrytesWritten() const;
+		size_t				getBytesSend() const;
 		string				getFullResponse() const;
 
-		ssize_t				sendResponse() const;
-		void				setResponse(Response& response, Request& request, int cSocket);
 		void				reset();
+		void				setFullResponse();			
 };
 
 void	createResponse(Connection& connection);
+void	sendResponse(Connection& connection);

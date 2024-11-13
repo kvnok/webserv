@@ -39,6 +39,7 @@ void	Connection::setServer(const ServerBlock server) { this->_server = server; }
 void	Connection::setOtherFD(const int otherFD) { this->_otherFD = otherFD; }
 void	Connection::setHandleStatusCode(const bool flag) { this->_handleStatusCode = flag; }
 void	Connection::setBytesRead(const size_t bRead) { this->_bRead = bRead; }
+void	Connection::setBytesWritten(const size_t bWritten) { this->_bWritten = bWritten; }
 void	Connection::addBytesRead(const size_t bRead) { this->_bRead += bRead;}
 void	Connection::addBytesWritten(const size_t bWritten) { this->_bWritten += bWritten; }
 
@@ -79,10 +80,6 @@ void			Connection::reset() {
 	this->_request.reset();
 	this->_response.reset();
 	this->_nextState = READ;
-	if (this->_otherFD != -1) {
-		close (this->_otherFD);
-		this->_otherFD = -1;
-	}
 	this->_handleStatusCode = false;
 	this->_bRead = 0;
 	this->_bWritten = 0;
