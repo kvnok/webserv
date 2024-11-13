@@ -4,25 +4,19 @@
 void    Servers::handleNewConnection(size_t i) {
     int clientSocket = accept(this->_serverBlocks[i].getFd(), NULL, NULL);
     if (clientSocket == -1) {
-        // cerr << "accept failed" << endl;
+        // should set status code
         return ;
     }
     if (fcntl(clientSocket, F_SETFL, O_NONBLOCK) == -1) {
-            // cerr << "fcntl set flags failed" << endl;
+        // should set status code
             return ;
     }
     this->_fds.push_back({clientSocket, POLLIN | POLLOUT, 0});
     this->_connections.emplace_back(clientSocket, this->_serverBlocks[i]);
-    // cout << "client: " << clientSocket << " on index: " << this->_fds.size() - 1 << endl;
-    // cout << "created: ";
-    // for (int k = 0; k < this->_fds.size(); k++)
-    //     cout << this->_fds[k].fd << " ";
-    // cout << endl;
 }
 
 void    Servers::deleteOtherFd(Connection& connection, size_t& i) {
     if (connection.getOtherFD() == this->_fds[i].fd) {
-        // cout << "delete otherfd: " << connection.getOtherFD() << " on index: " << i << endl;
         close(connection.getOtherFD());
         this->_fds.erase(this->_fds.begin() + i);
         connection.setOtherFD(-1);
@@ -30,16 +24,8 @@ void    Servers::deleteOtherFd(Connection& connection, size_t& i) {
             connection.setNextState(STATUSCODE);
         else
             connection.setNextState(RESPONSE);
-        // cout << "deleted: ";
-        // for (int k = 0; k < this->_fds.size(); k++)
-        //     cout << this->_fds[k].fd << " ";
-        // cout << endl;
         i--;
-        //should i reset different vars here aswell?
-    }
-    else {
-        // cout << "wrong, delete otherfd" << endl;
-        // cout << connection.getOtherFD() << " " << connection.getFd() << " " << this->_fds[i].fd << " " << i << endl;
+        //should we reset different vars here aswell?
     }
 }
 
@@ -48,29 +34,19 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
         if (this->_connections[j].getFd() == connection.getFd() && this->_fds[i].fd == connection.getFd()) {
             for (size_t k = 0; k < this->_fds.size(); k++) {
                 if (this->_fds[k].fd == connection.getOtherFD()) {
-                    // cout << "close otherfd: " << connection.getOtherFD() << " on index: " << k << endl;
                     close(connection.getOtherFD());
                     this->_fds.erase(this->_fds.begin() + k);
                     connection.setOtherFD(-1);
-                    // cout << "deleted: ";
-                    // for (int d = 0; d < this->_fds.size(); d++)
-                        // cout << this->_fds[d].fd << " ";
-                    // cout << endl;
                     if (k <= i) {
-                        //cout << "This could be wrong" << endl;
+                        //is this needed?
                         i--;
                     }
                     break ;
                 }
             }
-            // cout << "close clietnsocket: " << connection.getFd() << " on index: " << i << endl;
             close(connection.getFd());
             this->_fds.erase(this->_fds.begin() + i);
             this->_connections.erase(this->_connections.begin() + j);
-            // cout << "deleted: ";
-            // for (int e = 0; e < this->_fds.size(); e++)
-            //     cout << this->_fds[e].fd << " ";
-            // cout << endl;
             i--;
             break ;
         }
@@ -99,17 +75,10 @@ void    Servers::addFdToPoll(Connection& connection) {
     //need any aditional check before adding the fd to poll?
     //and check after?
     if (fcntl(connection.getOtherFD(), F_SETFL, O_NONBLOCK) == -1) {
-            // cerr << "fcntl set flags failed" << endl;
             // should set status code
             return ;
     }
     this->_fds.push_back({connection.getOtherFD(), POLLIN | POLLOUT, 0});
-    // cout << "set otherfd: " << connection.getOtherFD() << " on index: " << this->_fds.size() - 1 << endl;
-    // cout << "it will handle: " << connection.getRequest().getPath() << " with " << connection.getRequest().getMethod() << endl;
-    // cout << "created: ";
-    // for (int k = 0; k < this->_fds.size(); k++)
-    //     cout << this->_fds[k].fd << " ";
-    // cout << endl;
     connection.setNextState(EXECFD);
 }
 
@@ -122,8 +91,9 @@ void    Servers::executeMethod(Connection& connection) {
         executePost(connection);
     else if (connection.getRequest().getMethod() == "GET")
         executeGet(connection);
-    else
-        // cout << "execute method not found error" << endl;//error?
+    else {
+        //error?
+    }
     return; 
 }
 

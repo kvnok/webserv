@@ -2,7 +2,7 @@
 
 set<string> s_directives = {"server_name", "listen", "root", "error_page", "client_max_body_size", "index", "location"};
 
-bool is_valid_server_block_directive(const string& directive) {
+static bool is_valid_server_block_directive(const string& directive) {
 	return s_directives.count(directive) > 0;
 }
 
@@ -15,7 +15,7 @@ map<string, function<void(vector<string> &, pServerBlock&)>> s_directive_funcs =
 	{"index", s_index}
 };
 
-void check_location_block(Location loc) {
+static void check_location_block(Location loc) {
 	if (loc.get_path().empty())
 		throw logic_error("location missing path");
 	
@@ -39,7 +39,7 @@ void check_location_block(Location loc) {
 	}
 }
 
-void check_manadatory_directives(pServerBlock &block) {
+static void check_manadatory_directives(pServerBlock &block) {
 	if (block.get_listen().empty())
 		throw logic_error("listen directive is mandatory");
 	if (block.get_root().empty())

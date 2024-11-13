@@ -21,7 +21,6 @@ static bool	parseHeaders(istringstream &headerStream, string line, Request& requ
 		}
 		string key(line.begin(), splitPos);
 		string value(splitPos + toFind.size(), end);
-		//cout << YEL << key << ": " << value << "$" << RESET << endl;
 		if (key.empty() || value.empty()) {
 			request.setStatusCode(400);
 			return (false);
@@ -85,9 +84,6 @@ static bool	parseRequestLine(const string line, Request& request) {
 	request.setMethod(requestLine[0]);
 	request.setPath(requestLine[1]);
 	request.setVersion(requestLine[2]);
-	// cout << "Method: " << requestLine[0] << endl;
-	//cout << "Path: " << requestLine[1] << endl;
-	// cout << "Version: " << requestLine[2] << endl;
 	if (!validateMethod(request.getMethod(), request) || !validateVersion(request.getVersion(), request) \
 		|| !validatePath(request.getPath(), request))
 		return (false);
@@ -127,19 +123,15 @@ static	void	parsePart(string content, Request& request) {
 	string body(hbPos + hbLim.size(), content.end() - 2); //get rid of hardcoded -2
 	// "name=" is used and should only be used, for indicating the field. so in this case, the part is a 'file',
 	//so we can get the content of the file (== body) and the filename (== "filename=...")
-	if (headers["Content-Disposition"].find("name=\"file\";") != string::npos) {
+	if (headers["Content-Disposition"].find("name=\"file\";") != string::npos)
 		request.setBody(body);
-		//cout << YEL << request.getBody() << RESET << endl;
-	}
 	string value = headers["Content-Disposition"];
 	string toFind = "filename=\"";
 	auto i = search(value.begin(), value.end(), toFind.begin(), toFind.end());
 	if (i != value.end()) {
 		auto j = find(i + toFind.size(), value.end(), '\"');
-		if (j < value.end()) {
+		if (j < value.end())
 			request.setFileName(string(i + toFind.size(), j));
-			//cout << RED << request.getFileName() << RESET << endl;
-		}
 	}
 	//TODO: revist this part, need to do this better
 	return ;
@@ -189,7 +181,6 @@ void	checkChunkedBody(Connection& connection) {
 		try {
 			chunkSize = stoul(string(buf.begin(), endSize), nullptr, 16);
 		} catch (...) {
-			// cerr << "stoul failed in chunked body" << endl;
 			connection.getRequest().setStatusCode(500);
 			connection.getRequest().setReadState(DONE);
 			break ;
@@ -277,7 +268,6 @@ void	checkHeaders(const vector<char> requestData, Request& request) {
 	}
 	else
 		request.setReadState(DONE);
-	// cout << request.getPath() << " " << request.getMethod() << " " << request.getVersion() << endl;
 	return ;
 }
 

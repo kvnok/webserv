@@ -92,7 +92,6 @@ class Request {
 		string				getFileName() const;
 		bool				getIsRedirect() const;
 		// ------------------------
-
 		void				reset();
 };
 
@@ -106,6 +105,3 @@ void	parseBodyParts(Request& request);
 // reading and getting path;
 void	readRequest(Connection& connection);
 void	parsePath(Connection& connection);
-
-//https://www.ibm.com/docs/en/app-connect/11.0.0?topic=messages-http-headers
-//resource headers

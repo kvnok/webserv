@@ -4,7 +4,7 @@ Parser::Parser(string config_file) : _config_file(config_file) {}
 
 Parser::~Parser() {}
 
-void check_outside(RAWCONF &a) {
+static void check_outside(RAWCONF &a) {
 	for (int i = 0; i < (int)a.size(); i++) {//CHANGED cast to int
 		if (a[i].size() != 2 || a[i][0] != "server" || a[i][1] != "{")
 			throw logic_error("outside block: " + a[i][0]);
@@ -18,7 +18,7 @@ void check_outside(RAWCONF &a) {
 	}
 }
 
-void check_etc_hosts(pServerBlock &server_block) {
+static void check_etc_hosts(pServerBlock &server_block) {
 	// check if server block host and server_name are in /etc/hosts
 	string path = "/etc/hosts";
 	ifstream file(path);
@@ -103,14 +103,10 @@ void Parser::parse(Config &config) {
 	if (raw_config[0].size() != 2 || raw_config[0][0] != "server" || raw_config[0][1] != "{")
 		throw logic_error("first block is not a server block");
 	check_outside(raw_config);
-	// print_raw_config(raw_config);
 
 	RAWSERVS raw_servers;
 	extract_raw_servers(raw_config, raw_servers);
-	// print_raw_servers(servers);
 	for (int i = 0; i < (int)raw_servers.size(); i++) {//CHANGED cast to int
-		// cout << MAG << "raw server block " << i << RESET << endl;
-		// print_i_raw_serv(raw_servers[i]);
 		check_brackets(raw_servers[i]);
 	}
 

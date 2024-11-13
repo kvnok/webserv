@@ -19,7 +19,7 @@ Request::Request()
 	  _fileName(""),
 	  _isRedirect(false)
 { }
-//Request::Request(const Request& other) { *this = other; }
+
 Request::~Request() { }
 
 Request&	Request::operator=(const Request& other) {
@@ -111,7 +111,6 @@ void	readRequest(Connection& connection) {
         return ;
     }
     buffer.resize(bytes);
-    // cout << YEL << string(buffer.begin(), buffer.end()) << RESET << endl;
     connection.addToBuffer(buffer);
     if (connection.getRequest().getReadState() == START)
         hasAllHeaders(connection.getBuffer(), connection.getRequest());

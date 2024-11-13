@@ -67,5 +67,3 @@ class ServerBlock
 		smartLocs& getSmartLocs();
 		void setSmartLocs(pServerBlock &block);
 } ;
-
-void ok_print_server_block(ServerBlock &serverBlock);

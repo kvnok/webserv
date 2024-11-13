@@ -21,7 +21,6 @@ class Response {
 		size_t				_bytesSend;
 		string				_fullResponse;
 		Response(const Response& other);
-		Response(int const clientSocket, int const statusCode, string const version);
 	public:
 		Response();
 		~Response();

@@ -11,16 +11,6 @@ Response::Response() {
     _fullResponse = "";
 }
 
-// Response::Response(int const clientSocket, int const statusCode, string const version) {
-//     _version = version;
-//     _statusCode = statusCode;
-//     _body = "";
-//     _clientSocket = clientSocket;
-//     _bytesSend = 0;
-//     _fullResponse = "";
-// } //dont use it
-
-// Response::Response(const Response& other) { *this = other; }
 Response::~Response() { }
 
 Response&	Response::operator=(const Response& other) {
@@ -97,7 +87,6 @@ void    sendResponse(Connection& connection) {
     int         clientSocket = response.getClientSocket();
     string      fullResponse = response.getFullResponse();   
 
-    // cout << "send: " << response.getBytesSend() << " size: " << fullResponse.size() << " to: " << clientSocket << endl;
     if (response.getBytesSend() >= fullResponse.size()) {
         if (connection.getRequest().getHeaderValue("Connection") == "close")
             connection.setNextState(CLOSE);
