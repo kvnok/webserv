@@ -16,6 +16,10 @@ using namespace std;
 
 #define MAX_URI_LENGTH 4096
 
+#define PYTHON_CGI "/usr/bin/python3"
+
+#define ARG_MAX_SIZE 4
+
 enum readState {START, HEADERS, CHUNKED_BODY, CONTENT_LENGTH_BODY, DONE};
 
 const set<string> validHttpMethods = {
