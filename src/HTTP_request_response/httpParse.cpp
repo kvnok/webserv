@@ -127,7 +127,7 @@ static	void	parsePart(string content, Request& request) {
 	string body(hbPos + hbLim.size(), content.end() - 2); //get rid of hardcoded -2
 	// "name=" is used and should only be used, for indicating the field. so in this case, the part is a 'file',
 	//so we can get the content of the file (== body) and the filename (== "filename=...")
-	if (headers["Content-Disposition"].find("name=\"file\";") != string::npos) {
+	if (headers["Content-Disposition"].find("name=\"postBody\";") != string::npos) {
 		request.setBody(body);
 		//cout << YEL << request.getBody() << RESET << endl;
 	}
