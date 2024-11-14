@@ -12,7 +12,7 @@ void fill_error_pages(pServerBlock &block) {
 	// 	cout << it->first << " " << it->second << endl;
 	// }
 	map<int, string> error_pages;
-	for (int i = 0; i < all_error_codes.size(); i++) {
+	for (int i = 0; i < (int)all_error_codes.size(); i++) { //CHANGED cast to int
 		if (set_pages.find(all_error_codes[i]) != set_pages.end()) {
 			error_pages[all_error_codes[i]] = set_pages[all_error_codes[i]];
 		}

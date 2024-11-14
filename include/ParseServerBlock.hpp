@@ -50,7 +50,7 @@ class pServerBlock {
 		void set_index(string index);
 		void set_locations(vector<Location> locations);
 		void add_location(Location location);
-		void print_server_block();
+		// void print_server_block();
 };
 
 void fill_error_pages(pServerBlock &block);

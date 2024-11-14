@@ -1,5 +1,6 @@
 #include "CGI.hpp"
 
+//POLLFD
 void cgi_child(int pipefd[2], string cgi_path) {
 	// Close the read end of the pipe
 	close(pipefd[0]);

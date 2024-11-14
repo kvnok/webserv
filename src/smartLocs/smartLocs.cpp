@@ -4,7 +4,7 @@ smartLocs::smartLocs() {}
 
 smartLocs::smartLocs(pServerBlock &block) {
 	vector<Loc> locs = block.get_locations();
-	for (int i = 0; i < locs.size(); i++)
+	for (int i = 0; i < (int)locs.size(); i++) //CHANGED cast to int
 	{
 		Loc loc = locs[i];
 		_locs[loc.get_path()] = loc;
@@ -20,14 +20,14 @@ smartLocs &smartLocs::operator=(const smartLocs &other) {
 	return *this;
 }
 
-void smartLocs::print_locs() {
-	map<string, Loc>::iterator it = _locs.begin();
-	for (; it != _locs.end(); it++)
-	{
-		color_print(BLU, "Location: ", it->first);
-		it->second.print_location();
-	}
-}
+// void smartLocs::print_locs() {
+// 	map<string, Loc>::iterator it = _locs.begin();
+// 	for (; it != _locs.end(); it++)
+// 	{
+// 		color_print(BLU, "Location: ", it->first);
+// 		it->second.print_location();
+// 	}
+// }
 
 map<string, Loc> &smartLocs::get_locs() { return _locs; }
 

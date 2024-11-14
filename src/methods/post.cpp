@@ -1,116 +1,70 @@
-#include "httpResponse.hpp"
 #include "httpRequest.hpp"
 #include "Connection.hpp"
-#include <filesystem>
+#include <fcntl.h>
 
-static bool fileExists(string &path) {
-    if (filesystem::exists(path))
-        return true;
-    else
-        return false;
-}
+void    executePost(Connection& connection) {
+    int     fd = connection.getOtherFD();
+    string  body = connection.getRequest().getBody();
 
-static bool storageExist(const string& path) {
-    return filesystem::exists(path);
-}
-
-static bool createDirectories(const string& path) {
-    return filesystem::create_directories(path);
-}
-
-static bool writeFile(const string& storage, const string& fullPath, const string& content) {
-    if (!filesystem::exists(storage))
-        filesystem::create_directories(storage);
-    if (filesystem::exists(storage)) {
-        ofstream outFile(fullPath, ios::binary | ios::app);
-        if (!outFile) {
-            cerr << "Failed to open file for writing: " << fullPath << endl;
-            return (false);
-        }
-        outFile << content;
-    }
-    else {
-        ofstream outFile(fullPath, ios::binary);
-        if (!outFile) {
-            cerr << "Failed to open file for writing: " << fullPath << endl;
-            return (false);
-        }
-        outFile << content;
-    }
-    return (true);
-}
-
-static string extract_file_name(const string &path) {
-    size_t posSlash = path.find_last_of('/');
-    string file;
-    if (posSlash == string::npos)
-        file = path;
-    else
-        file = path.substr(posSlash + 1);
-    return file;
-}
-
-int check_permissions(const string &path) {
-    int status_code = 201;
-    cout << BLU << path << RESET << endl;
-    if (access(path.c_str(), F_OK) == -1 || filesystem::is_directory(path)) {
-		cerr << "The file does not exist." << endl;
-        status_code = 404;
-	}
-	else if (access(path.c_str(), R_OK) == -1) {
-		cerr << "The file does not have read permission." << endl;
-        status_code = 401;
-    }
-    else
-        cout << "Status code: " << status_code << endl;
-    return status_code;
-}
-
-
-void postMethod(Connection& connection) {
-    string  uploadedFile;
-    string  storage = "www/storage/";
-    string  fullPath;
-    int     status_code = 201;
-
-    if (connection.getRequest().getStatusCode() != status_code)
-        connection.getRequest().setStatusCode(status_code);
-
-    cout << RED << connection.getRequest().getStatusCode() << RESET << endl;
-    cout << RED << "Full path: " << connection.getRequest().getPath() << RESET << endl;
-    fullPath = storage + extract_file_name(connection.getRequest().getPath());
-    if (fileExists(fullPath)) {
-        connection.getRequest().setStatusCode(409);
+    size_t chunkSize = body.size() - connection.getBytesWritten();
+    if (chunkSize > BUFFER_SIZE)
+        chunkSize = BUFFER_SIZE;
+    ssize_t written = write(fd, body.data() + connection.getBytesWritten(), chunkSize);
+    if (written == -1) {
+        connection.getRequest().setStatusCode(500);
+        connection.setBytesWritten(0);
+        connection.setHandleStatusCode(true);
+        connection.setNextState(DELFD);
+        remove(connection.getRequest().getPath().c_str()); //CHECK agree?
         return ;
     }
-    if (!connection.getRequest().getBody().empty()) {
-        if (writeFile(storage, fullPath, connection.getRequest().getBody()))
-            connection.getRequest().setStatusCode(201);
-        else
-            connection.getRequest().setStatusCode(404);
+    connection.addBytesWritten(written);
+    // check if written to much?
+    if (connection.getBytesWritten() >= body.size()) {
+        connection.setBytesWritten(0);
+        connection.setHandleStatusCode(true); // now open 201, and get the body
+        connection.setNextState(DELFD);
+    }
+    return ;
+}
+
+//201 Created: For a successful upload, respond with 201 Created.
+//400 Bad Request: If the request format is invalid or required headers are missing, return 400.
+//403 Forbidden: If the target directory isn’t allowed for uploads according to the config file, return 403.
+//409 Conflict: If a file with the same name already exists and overwriting is not permitted, return 409.
+//413 Payload Too Large: If the file exceeds the allowed size, return 413.
+
+void    postMethod(Connection& connection) {
+    string  storage = connection.getRequest().getPath();
+    string  file = connection.getRequest().getFileName();
+
+    //CHECK should we also check if the dir exists, or is this done in config?
+    //CHECK could the 'storage' path also be a file? and what should we do then?
+    if (access(storage.c_str(), W_OK) == -1) { //dir has no writing rights, so 403 forbidden
+        connection.getRequest().setStatusCode(403);
+        connection.setHandleStatusCode(true);
+        connection.setNextState(STATUSCODE);
+        return ;
+    }
+    string  fullPath = storage + '/' + file; //CHECK check if this is correct
+    if (access(fullPath.c_str(), F_OK) == 0) { //file already exists, so conflict status 409
+        connection.getRequest().setStatusCode(409);
+        connection.setHandleStatusCode(true);
+        connection.setNextState(STATUSCODE);
+        return ;
+    }
+    int fd = open(fullPath.c_str(), O_CREAT | O_WRONLY, 0644);
+    if (fd == -1) {
+		connection.getRequest().setStatusCode(500);
+        connection.setHandleStatusCode(true);
+        connection.setNextState(STATUSCODE);
     }
     else {
-        int ret = 0;
-        string path = connection.getRequest().getPath().c_str();
-        status_code = check_permissions("." + path);
-        if (status_code != 201) {
-            connection.getRequest().setStatusCode(status_code);
-            return ;
-        }
-        
-        char *args[] = {(char *) path.c_str(), (char *)storage.c_str(), nullptr};
-        int fd = run_script(args, connection.getRequest());
-        char buffer[connection.getServer().getMaxBody()];
-        ssize_t bytesRead;
-        while ((bytesRead = read(fd, buffer, sizeof(buffer) - 1)) > 0) {
-            buffer[bytesRead] = '\0';
-            cout << RED << buffer << RESET << endl;
-            if (strstr(buffer, "Error:") != nullptr)
-                connection.getRequest().setBody(buffer);
-            else
-                connection.getRequest().setStatusCode(201);
-        }
+        connection.getRequest().setPath(fullPath);
+        connection.getRequest().setStatusCode(201);
+        connection.setOtherFD(fd);
+        connection.setHandleStatusCode(false); //first write, afterthat get 201 page
+        connection.setNextState(SETFD);
     }
-    connection.getRequest().setStatusCode(201);
-    // return fd
+    return ;
 }

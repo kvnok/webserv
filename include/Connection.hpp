@@ -7,15 +7,19 @@
 
 using namespace std;
 
-enum cState {READ, EXECUTE, PAUZE, WRITE, CLEANUP, CLOSE};
+#define BUFFER_SIZE 10024
+
+enum cState {READ, PATH, PREPEXEC, STATUSCODE, SETFD, EXECFD, DELFD, RESPONSE, SEND, CLEANUP, CLOSE};
 
 class Connection {
 	private:
 		int				_fd;
 		cState			_nextState;
-		vector<char>	_buffer;
-		// size_t			_bRead; //not using
-		// size_t			_bWritten; //not using
+		vector<char>	_buffer; //use string instead of vector?
+		int				_otherFD;
+		bool			_handleStatusCode;
+		size_t			_bRead;
+		size_t			_bWritten;
 		Request			_request;
 		ServerBlock		_server;
 		Response		_response;
@@ -31,12 +35,15 @@ class Connection {
 		void	setRequest(Request request);
 		void	setResponse(Response response);
 		void	setNextState(const cState nextState);
+		void	setOtherFD(const int otherFD);
+		void	setHandleStatusCode(const bool flag);
 		void	setBuffer(const vector<char> buffer);
 		void	setServer(const ServerBlock server);
 		void	addToBuffer(const vector<char> buffer);
-
-		// void	addBytesRead(const size_t bRead);
-		// void	addBytesWritten(const size_t bWritten);
+		void	setBytesRead(const size_t bRead);
+		void	setBytesWritten(const size_t bWritten);
+		void	addBytesRead(const size_t bRead);
+		void	addBytesWritten(const size_t bWritten);
 
 		void	clearBuffer();
 
@@ -45,11 +52,25 @@ class Connection {
 		ServerBlock		getServer();
 		Response&		getResponse();
 		cState			getNextState() const;
-		// size_t			getBytesRead() const;
-		// size_t			getBytesWritten() const;
+		int				getOtherFD() const;
+		bool			getHandleStatusCode() const;
+		size_t			getBytesRead() const;
+		size_t			getBytesWritten() const;
 		vector<char>	getBuffer() const;
 
 		void			reset();
 };
 
-void request_path_handler(Connection& connection);
+void	request_path_handler(Connection& connection);
+void	deleteMethod(Connection& connection);
+void	postMethod(Connection& connection);
+void	getMethod(Connection& connection);
+void	cgiMethod(Connection& connection);
+void	getStatusCodePage(Connection& connection);
+void	executeStatusCode(Connection& connection);
+void	executeCGI(Connection& connection);
+void	executePost(Connection& connection);
+void	executeGet(Connection& connection);
+
+//loose those
+int		run_script(char *args[], Request &request);

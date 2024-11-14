@@ -2,5 +2,4 @@ obj
 webserv
 .vscode
 src/autoindex/outfile.html
-www/storage/*
 nopermission.txt

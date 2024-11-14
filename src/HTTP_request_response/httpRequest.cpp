@@ -1,9 +1,7 @@
 
 #include "httpRequest.hpp"
-#include "httpStatus.hpp"
 #include "httpResponse.hpp"
 #include "Servers.hpp"
-#include "autoindex.hpp"
 #include "Connection.hpp"
 
 Request::Request()
@@ -18,10 +16,10 @@ Request::Request()
 	  _isAutoindex(false),
 	  _isCGI(false),
 	  _CGIExtension(""),
-	  _CGIPath(""),
+	  _fileName(""),
 	  _isRedirect(false)
 { }
-Request::Request(const Request& other) { *this = other; }
+//Request::Request(const Request& other) { *this = other; }
 Request::~Request() { }
 
 Request&	Request::operator=(const Request& other) {
@@ -38,7 +36,7 @@ Request&	Request::operator=(const Request& other) {
 		this->_isAutoindex = other._isAutoindex;
 		this->_isCGI = other._isCGI;
 		this->_CGIExtension = other._CGIExtension;
-		this->_CGIPath = other._CGIPath;
+		this->_fileName = other._fileName;
 		this->_isRedirect = other._isRedirect;
 	}
 	return (*this);
@@ -58,7 +56,7 @@ void	Request::setMultipartFlag(bool const flag) { this->_multipartFlag = flag; }
 void	Request::setIsAutoindex(bool const isAutoindex) { this->_isAutoindex = isAutoindex; }
 void	Request::setIsCGI(bool const isCGI) { this->_isCGI = isCGI; }
 void	Request::setCGIExtension(string const CGIExtension) { this->_CGIExtension = CGIExtension; }
-void	Request::setCGIPath(string const CGIPath) { this->_CGIPath = CGIPath; }
+void	Request::setFileName(string const fileName) { this->_fileName = fileName; }
 void	Request::setIsRedirect(bool const isRedirect) { this->_isRedirect = isRedirect; }
 
 string	            Request::getMethod() const { return (this->_method); }
@@ -73,7 +71,7 @@ bool				Request::getMultipartFlag() const { return (this->_multipartFlag); }
 bool				Request::getIsAutoindex() const { return (this->_isAutoindex); }
 bool				Request::getIsCGI() const { return (this->_isCGI); }
 string				Request::getCGIExtension() const { return (this->_CGIExtension); }
-string				Request::getCGIPath() const { return (this->_CGIPath); }
+string				Request::getFileName() const { return (this->_fileName); }
 bool				Request::getIsRedirect() const { return (this->_isRedirect); }
 
 string				Request::getHeaderValue(const string& key) const{
@@ -84,7 +82,7 @@ string				Request::getHeaderValue(const string& key) const{
 	return (iterator->second);
 }
 
-void  Request::reset() {
+void	Request::reset() {
 	this->_method = "";
 	this->_path = "";
 	this->_version = "";
@@ -97,85 +95,50 @@ void  Request::reset() {
 	this->_isAutoindex = false;
 	this->_isCGI = false;
 	this->_CGIExtension = "";
-	this->_CGIPath = "";
+	this->_fileName = "";
 	this->_isRedirect = false;
 }
 
-string content_from_cgi(Request &request)
-{
-	string scriptPath = request.getPath().c_str(); // at the moment the path is wrong
-	string content = "";
-		// Prepare arguments for the script execution
-		char *args[] = {
-			const_cast<char*>("/usr/bin/python3"),    // Path to the interpreter
-			const_cast<char*>(scriptPath.c_str()),     // The script path
-			nullptr                                     // Null terminator
-		};
-		int fdForPolling = run_script(args, request);
-		
-        char buffer[1024]; // change size of buffer
-        ssize_t bytesRead;
-        while ((bytesRead = read(fdForPolling, buffer, sizeof(buffer) - 1)) > 0) {
-            buffer[bytesRead] = '\0';
-            content += buffer;
-        }
-        close(fdForPolling); // close the fd for now
-		return content;
+void	readRequest(Connection& connection) {
+    vector<char> buffer(BUFFER_SIZE);
+    ssize_t bytes = recv(connection.getFd(), buffer.data(), buffer.size(), 0);
+    if (bytes < 0) {
+        //stil need to check if something needs to be done here
+        return ;
+    }
+    else if (bytes == 0) {
+        connection.setNextState(CLOSE); //correct?
+        return ;
+    }
+    buffer.resize(bytes);
+    // cout << YEL << string(buffer.begin(), buffer.end()) << RESET << endl;
+    connection.addToBuffer(buffer);
+    if (connection.getRequest().getReadState() == START)
+        hasAllHeaders(connection.getBuffer(), connection.getRequest());
+    if (connection.getRequest().getReadState() == HEADERS) {
+        checkHeaders(connection.getBuffer(), connection.getRequest());
+        connection.clearBuffer();
+    }
+    if (connection.getRequest().getReadState() == CHUNKED_BODY)
+        checkChunkedBody(connection);
+    if (connection.getRequest().getReadState() == CONTENT_LENGTH_BODY)
+        checkContentLengthBody(connection);
+    if (connection.getRequest().getReadState() == DONE) {
+        connection.getBuffer().clear();
+        connection.getBuffer().resize(0);
+        connection.setNextState(PATH);
+    }
 }
 
-void handleRequest(Connection& connection) {
-	Response&	response = connection.getResponse();
-	Request&	request = connection.getRequest();
-	string		content = "";
-
-	cout << "path in handle request: " << request.getPath() << " " << request.getStatusCode() << " " << request.getMethod() << endl;
-	if (request.getStatusCode() != 200) {
-		response.setStatusCode(request.getStatusCode());
-		request.setPath(connection.getServer().getErrorPages()[request.getStatusCode()]);
-	}
-	// in the function down below, set response status code, instead of request.
-	// and the path should be updated to
-	else if (connection.getRequest().getMethod() == "GET") {
-		cout << BLU << "Get method" << RESET << endl;
+void	parsePath(Connection& connection) {
+	if (connection.getRequest().getStatusCode() == 200) 
 		request_path_handler(connection);
-		if (request.getIsAutoindex() == true) {
-			content = do_autoindex(request.getPath());
-		}
-		else if (request.getIsCGI() == true) {
-			content = content_from_cgi(request);
-		}
-		else {
-			cout << BLU << "Here" << RESET << endl;
-			ifstream file(request.getPath());
-        	if (!file.is_open())
-        	    response.setStatusCode(404);
-        	else {
-        	    content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-        	    file.close();
-        	}
-		}
+	if (connection.getRequest().getStatusCode() != 200) {
+		connection.setHandleStatusCode(true);
+		connection.setNextState(STATUSCODE);
 	}
-	else if (connection.getRequest().getMethod() == "DELETE") {
-        cout << BLU << "Delete method" << endl;
-        deleteMethod(connection);
-		request.setPath(connection.getServer().getErrorPages()[request.getStatusCode()]);
-	}
-	else if (connection.getRequest().getMethod() == "POST") {
-		cout << BLU << "Post method" << RESET << endl;
-		postMethod(connection);
-		request.setPath(connection.getServer().getErrorPages()[request.getStatusCode()]);
-	}
-	response.setStatusCode(connection.getRequest().getStatusCode());
-	if (response.getStatusCode() != 200) {
-		ifstream file(request.getPath());
-        if (!file.is_open())
-            response.setStatusCode(404);
-        else {
-            content = string ((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-            file.close();
-        }
-	}
-	if (content.empty())
-		content = fourZeroFourBody();
-	response.setBody(content);
+	else
+		connection.setNextState(PREPEXEC);
+	return ;
 }
+

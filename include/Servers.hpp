@@ -7,8 +7,6 @@
 
 using namespace std;
 
-#define BUFFER_SIZE 1024
-
 class Servers
 {
 	private:
@@ -23,15 +21,21 @@ class Servers
 		void	setFds();
 		void	handleNewConnection(size_t i);
 		void	handleExistingConnection(Connection& connection, size_t& i);
-		void	readRequest(Connection& connection);
-		void	executeRequest(Connection& connection);
-		void	checkRequest(Connection& connection);
-		void	writeResponse(Connection& connection);
+		void	prepExec(Connection& connection);
+		void	addFdToPoll(Connection& connection);
+		void	executeMethod(Connection& connection);
 		void	closeConnection(Connection& connection, size_t& i);
+		void	deleteOtherFd(Connection& connection, size_t& i);
 		vector<ServerBlock> &get_serverBlocks();
 		vector<Connection>	&get_connections();
 		vector<pollfd>		&get_fds();
 		void	set_serverBlocks(vector<ServerBlock> &serverBlocks);
 		void	set_connections(vector<Connection> &connections);
 		void	set_fds(vector<pollfd> &fds);
+		bool	isServerFd(int const fd);
+		bool	isClientFd(int const fd);
+		bool	isOtherFd(int const fd);
+		ServerBlock*	getFdsServerBlock(int const fd);
+		Connection*		getFdsClient(int const fd);
+		Connection*		getOtherFdsClient(int const fd);
 };

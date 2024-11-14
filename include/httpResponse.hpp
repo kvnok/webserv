@@ -11,8 +11,6 @@ using namespace std;
 
 class Connection;
 
-enum wState {WSTART, WRITING, WDONE};
-
 class Response {
 	private:
 		string				_version;
@@ -20,12 +18,12 @@ class Response {
 		map<string, string>	_header;
 		string				_body;
 		int					_clientSocket;
-		size_t				_bytesWritten;
-		wState				_writeState;
+		size_t				_bytesSend;
+		string				_fullResponse;
+		Response(const Response& other);
+		Response(int const clientSocket, int const statusCode, string const version);
 	public:
 		Response();
-		Response(int const clientSocket, int const statusCode, string const version);
-		Response(const Response& other);
 		~Response();
 
 		Response& operator=(const Response& other);
@@ -34,35 +32,23 @@ class Response {
 		void				setBody(string const body);
 		void				setStatusCode(int const statusCode);
 		void				setClientSocket(int const clientSocket);
-		void				addBytesWritten(size_t const bWrtitten);
-		void				setWriteState(wState const wState);
+		void				addToBody(string const bodyPart);
+		void				setBytesSend(size_t const bSend);
+		void				addBytesSend(size_t const bSend);
 		void				addHeader(string const key, string const value);
-		void				setHeaders(Response& response, Request& request);
+		void				setHeaders(string const content, string const connectionState, string const path);
 
 		string				getVersion() const;
 		int					getStatusCode() const;
 		map<string, string>	getHeaders() const;
 		string				getBody() const;
 		int					getClientSocket() const;
-		wState				getWriteState() const;
-		size_t				getBrytesWritten() const;
+		size_t				getBytesSend() const;
+		string				getFullResponse() const;
 
-		ssize_t				sendResponse() const;
 		void				reset();
+		void				setFullResponse();			
 };
 
 void	createResponse(Connection& connection);
-
-void	postMethod(Connection& connection);
-// void	getMethod(Connection &connection);
-int		run_script(char *args[], Request &request);
-void	deleteMethod(Connection& connection);
-
-// add fucntions outside class
-//	  - get file with body, open and read, create headers, fill response class
-//    - this depending on the statusCode
-//    - partly already present in Connection.cpp.
-//    - create new page, maybe even different header
-// these fucntions need to make sure that,
-// the createResponseString() always generates a correct response.
-// so it important that this part is always run before the response is created and sent.
+void	sendResponse(Connection& connection);

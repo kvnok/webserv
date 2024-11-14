@@ -4,6 +4,8 @@
 #include "ServerBlock.hpp"
 #include "Servers.hpp"
 
+using namespace std;
+
 class CGI {
 	private:
 		string _cgi_path;
@@ -14,6 +16,7 @@ class CGI {
 		string get_cgi_path() const;
 		void set_cgi_path(string cgi_path);
 };
+
 void ignoreSignals();
 void defaultSignals();
 

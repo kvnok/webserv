@@ -28,7 +28,7 @@ int                 ServerBlock::getFd() { return this->_serverFd; }
 int                 ServerBlock::getMaxClients() { return this->max_clients; }
 string              ServerBlock::getCurrentPath() { return this->_currentPath; }
 vector<Location>    ServerBlock::getLocations() { return this->_locations; }
-smartLocs           ServerBlock::getSmartLocs() { return this->_smartLocs; }
+smartLocs&          ServerBlock::getSmartLocs() { return this->_smartLocs; } //CHANGED return 
 
 void                ServerBlock::setSmartLocs(pServerBlock &block) { this->_smartLocs = smartLocs(block); }
 

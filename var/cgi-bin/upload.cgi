@@ -11,7 +11,7 @@ fileitem = form['filename']
 if fileitem.filename:
 	# strip leading path from file name to avoid directory traversal attacks
 	fn = os.path.basename(fileitem.filename)
-	open('/path/to/save/' + fn, 'wb').write(fileitem.file.read())
+	open('/path/to/save/' + fn, 'wb').write(fileitem.file.read()) #POLLFD
 
 	message = 'The file "' + fn + '" was uploaded successfully'
 	
