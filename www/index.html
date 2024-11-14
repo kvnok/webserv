@@ -9,10 +9,10 @@
 </head>
 <body>
     <header>
-        <h1>Welcome to the House of Request Rangers</h1>
+        <h1>Welcome to all the House of Request Rangers</h1>
         <nav>
             <ul>
-                <li><a href="https://cdn.intra.42.fr/pdf/pdf/128390/en.subject.pdf">Subject</a></li>
+                <li><a href="https://cdn.intra.42.fr/pdf/pdf/140717/en.subject.pdf">Subject</a></li>
             </ul>
         </nav>
     </header>
@@ -27,19 +27,14 @@
         </section>
         <section>
             <h2>Test CGI execution</h2>
-            <a href="../var/cgi-bin/get_time.cgi">Get to CGI file</a>
+            <a href="../cgi-bin/get_time.cgi">Get to CGI file</a>
         </section>
         <section>
-            <h2>Test autoindex ON</h2>
-            <a href="./autoIndexON.html">Get To result page</a>
-        </section>
-        <section>
-            <h2>Test autoindex OFF</h2>
-            <a href="./autoIndexOFF.html">Get To result page</a>
-        </section>
-        <section>
-            <h2>Test Default Error Page</h2>
-            <a href="./iDon'tExist.html">Get To Error Page</a>
+            <h2>Test Post with cgi</h2>
+            <form action="../cgi-bin/uploadFile.cgi" method="post" enctype="multipart/form-data">
+                <input type="file" id="fileInput" name="postBody" required>
+                <button type="submit">Upload</button>
+            </form>
         </section>
         <section>
             <h2>Contact</h2>
