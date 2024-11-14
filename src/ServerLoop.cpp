@@ -4,12 +4,11 @@
 void    Servers::handleNewConnection(size_t i) {
     int clientSocket = accept(this->_serverBlocks[i].getFd(), NULL, NULL);
     if (clientSocket == -1) {
-        // should set status code
         return ;
     }
     if (fcntl(clientSocket, F_SETFL, O_NONBLOCK) == -1) {
-        // should set status code
-            return ;
+        close(clientSocket);
+        return ;
     }
     this->_fds.push_back({clientSocket, POLLIN | POLLOUT, 0});
     this->_connections.emplace_back(clientSocket, this->_serverBlocks[i]);
@@ -20,12 +19,12 @@ void    Servers::deleteOtherFd(Connection& connection, size_t& i) {
         close(connection.getOtherFD());
         this->_fds.erase(this->_fds.begin() + i);
         connection.setOtherFD(-1);
+        //should we reset different vars here aswell?
         if (connection.getHandleStatusCode() == true)
             connection.setNextState(STATUSCODE);
         else
             connection.setNextState(RESPONSE);
         i--;
-        //should we reset different vars here aswell?
     }
 }
 
@@ -37,10 +36,8 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
                     close(connection.getOtherFD());
                     this->_fds.erase(this->_fds.begin() + k);
                     connection.setOtherFD(-1);
-                    if (k <= i) {
-                        //is this needed?
+                    if (k <= i) //DISCUSS normaly k should never be smaller then i, since the client will always be created before the otherFD
                         i--;
-                    }
                     break ;
                 }
             }
@@ -64,7 +61,7 @@ void	Servers::prepExec(Connection& connection) {
     else if (connection.getRequest().getMethod() == "GET")
         getMethod(connection);
     else {
-        connection.getRequest().setStatusCode(500); //CHECK
+        connection.getRequest().setStatusCode(500);
         connection.setHandleStatusCode(true);
         connection.setNextState(STATUSCODE);
     }
@@ -72,10 +69,12 @@ void	Servers::prepExec(Connection& connection) {
 }
 
 void    Servers::addFdToPoll(Connection& connection) {
-    //need any aditional check before adding the fd to poll?
-    //and check after?
     if (fcntl(connection.getOtherFD(), F_SETFL, O_NONBLOCK) == -1) {
-            // should set status code
+            close(connection.getOtherFD());
+            connection.setOtherFD(-1);
+            connection.getRequest().setStatusCode(500);
+            connection.setHandleStatusCode(true);
+            connection.setNextState(STATUSCODE);
             return ;
     }
     this->_fds.push_back({connection.getOtherFD(), POLLIN | POLLOUT, 0});
@@ -93,7 +92,9 @@ void    Servers::executeMethod(Connection& connection) {
     else if (connection.getRequest().getMethod() == "GET")
         executeGet(connection);
     else {
-        //error?
+        connection.getRequest().setStatusCode(500);
+        connection.setHandleStatusCode(true);
+        connection.setNextState(DELFD);
     }
     return; 
 }

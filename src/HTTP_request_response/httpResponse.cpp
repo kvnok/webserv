@@ -35,30 +35,6 @@ void	Response::addToBody(string const bodyPart) { this->_body.append(bodyPart); 
 void    Response::addBytesSend(size_t const bSend) { this->_bytesSend += bSend; }
 void	Response::addHeader(string const key, string const value) { this->_header[key] = value; }
 
-void	Response::setHeaders(string const content, string const connectionState, string const path) {
-	string extension;
-
-	extension = path.substr(path.find_last_of(".") + 1);
-	if (extension == "html")
-        this->addHeader("Content-Type", "text/html");
-    else if (extension == "css")
-        this->addHeader("Content-Type", "text/css");
-    else if (extension == "ico")
-        this->addHeader("Content-Type", "image/x-icon");
-    else {
-        //set statuscode 415, unsupported media type
-        //so we'll need Connection& connection in here
-        //reset response and bytesread/written in connection.
-    }
-    this->addHeader("Content-Length", to_string(content.size()));
-    if (connectionState.empty())
-        this->addHeader("Connection", "keep-alive");
-    else
-        this->addHeader("Connection", connectionState);
-    //are there other situations we need to send "close" as connection status to the client?
-    return ;
-}
-
 void    Response::setFullResponse() {
 	this->_fullResponse = this->_version + " " + to_string(this->_statusCode) + " " + httpStatusMessage(this->_statusCode) + "\r\n";
 	for (auto& pair : this->_header)
@@ -119,8 +95,28 @@ void    createResponse(Connection& connection) {
     response.setClientSocket(connection.getFd());
     response.setVersion(request.getVersion());
     response.setStatusCode(request.getStatusCode());
-    response.setHeaders(response.getBody(), request.getHeaderValue("Connection"), request.getPath());
-	response.setFullResponse();
+    string const path = request.getPath();
+    string extension = path.substr(path.find_last_of("."));
+
+    auto i = mimeTypes.find(extension);
+    if (i != mimeTypes.end())
+        response.addHeader("Content-Type", i->second);
+    else if (unsupportedExtensions.find(extension) != unsupportedExtensions.end()) {
+        connection.getRequest().setStatusCode(415);
+        connection.setHandleStatusCode(true);
+        response.reset();
+        connection.setNextState(STATUSCODE);
+        return ; 
+    }
+    else
+        response.addHeader("Content-Type", "application/octet-stream");
+    response.addHeader("Content-Length", to_string(response.getBody().size()));
+    string const state = request.getHeaderValue("Connection");
+    if (state.empty())
+        response.addHeader("Connection", "keep-alive");
+    else
+        response.addHeader("Connection", state);
+    response.setFullResponse();
     connection.setNextState(SEND);
     return ;
 }

@@ -23,9 +23,16 @@ void	executeGet(Connection& connection) {
 		return ;
 	}
 	buffer.resize(bytes);
+	// if (connection.getResopnse().getBody().size() + bytes > max_response_body_size) {
+	// 	connection.getResponse().setBody("");
+	// 	connection.setBytesRead(0);
+	// 	connection.getRequest().setStatusCode(413); //payload to large, correct?
+	// 	connection.setHandleStatusCode(true);
+	// 	connection.setNextState(DELFD);
+	// 	return ;
+	// }
 	connection.getResponse().addToBody(buffer);
 	connection.addBytesRead(bytes);
-	//check if we dont exceed our body limit;
 	return ;
 }
 
