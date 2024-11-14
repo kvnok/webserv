@@ -64,7 +64,7 @@ void	Servers::prepExec(Connection& connection) {
     else if (connection.getRequest().getMethod() == "GET")
         getMethod(connection);
     else {
-        connection.getRequest().setStatusCode(500);
+        connection.getRequest().setStatusCode(500); //CHECK
         connection.setHandleStatusCode(true);
         connection.setNextState(STATUSCODE);
     }
@@ -83,6 +83,7 @@ void    Servers::addFdToPoll(Connection& connection) {
 }
 
 void    Servers::executeMethod(Connection& connection) {
+    //reset bytes written/read and response._body, if an error occures
     if (connection.getHandleStatusCode() == true)
         executeStatusCode(connection);
     else if (connection.getRequest().getIsCGI() == true)
@@ -212,14 +213,14 @@ void    Servers::start() {
                 if (connection && connection->getNextState() != EXECFD && connection->getNextState() != DELFD) {
                     if (this->_fds[i].revents & POLLIN) { //only for reading the request.
                         // if (connection->getNextState() != READ && connection->getNextState() != CLOSE && connection->getNextState() != CLEANUP) {
-                        //     connection->getRequest().setStatusCode(400);
+                        //     connection->getRequest().setStatusCode(500); //CHECK
                         //     connection->setNextState(STATUSCODE);
                         // }
                         handleExistingConnection(*connection, i);
                     }
                     else if (this->_fds[i].revents & POLLOUT) { //only for sending the response
                         // if (connection->getNextState() == READ) {
-                        //     connection->getRequest().setStatusCode(400);
+                        //     connection->getRequest().setStatusCode(500); //CHECK
                         //     connection->setNextState(STATUSCODE);
                         // }
                         handleExistingConnection(*connection, i);
@@ -237,7 +238,7 @@ void    Servers::start() {
                 if (connection && ((connection->getNextState() == EXECFD || connection->getNextState() == DELFD))) {
                     if (this->_fds[i].revents & POLLIN) {//only for 'getting' a file/cgi
                         // if (connection->getRequest().getMethod() == "POST" && connection->getHandleStatusCode() == false) {
-                        //     connection->getRequest().setStatusCode(400);
+                        //     connection->getRequest().setStatusCode(500); //CHECK
                         //     connection->setHandleStatusCode(true);
                         //     connection->setNextState(DELFD);
                         // }
@@ -245,7 +246,7 @@ void    Servers::start() {
                     }
                     else if (this->_fds[i].revents & POLLOUT) { //only if post is executed. after 'posting', the 201 upload should be pollin
                         // if (connection->getRequest().getMethod() != "POST" || (connection->getRequest().getMethod() == "POST" && connection->getHandleStatusCode() == true)) {
-                        //     connection->getRequest().setStatusCode(400);
+                        //     connection->getRequest().setStatusCode(500); //CHECK
                         //     connection->setHandleStatusCode(true);
                         //     connection->setNextState(DELFD);
                         // }

@@ -45,7 +45,11 @@ void	Response::setHeaders(string const content, string const connectionState, st
         this->addHeader("Content-Type", "text/css");
     else if (extension == "ico")
         this->addHeader("Content-Type", "image/x-icon");
-    //else other extensions we support?
+    else {
+        //set statuscode 415, unsupported media type
+        //so we'll need Connection& connection in here
+        //reset response and bytesread/written in connection.
+    }
     this->addHeader("Content-Length", to_string(content.size()));
     if (connectionState.empty())
         this->addHeader("Connection", "keep-alive");
@@ -99,9 +103,9 @@ void    sendResponse(Connection& connection) {
     ssize_t bytes = send(clientSocket, fullResponse.c_str() + response.getBytesSend(), chunkSize, 0);
     if (bytes == -1) {   
         connection.getRequest().setStatusCode(500);
+        connection.setHandleStatusCode(true);
         connection.setNextState(DELFD);
         response.reset();
-        connection.setHandleStatusCode(true);
         return ;
     }
     response.addBytesSend(bytes);

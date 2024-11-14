@@ -36,7 +36,7 @@ static bool	validateMethod(string const method, Request& request) {
 		return (false);
 	}
 	if (supportedHttpMethods.find(method) == supportedHttpMethods.end()) {
-		request.setStatusCode(405);
+		request.setStatusCode(405); //CHECK
 		return (false);
 	}
 	return (true);
@@ -60,7 +60,7 @@ static bool validatePath(string const path, Request& request) {
 		return (false);
 	}
 	if (path.length() > MAX_URI_LENGTH) {
-		request.setStatusCode(414); // nginx has a build in max of 4096 bytes
+		request.setStatusCode(414);
 		return (false);
 	}
 	regex pattern("^[a-zA-Z0-9_0\\-/\\.]+$");
@@ -105,22 +105,25 @@ string findBoundary(const string& headerValue) {
 static	void	parsePart(string content, Request& request) {
 	string				hbLim = "\r\n\r\n";
 	string				nl = "\r\n";
+	string				kv = ": "; //CHECK is this the correct limit?
 	map<string, string>	headers;
 
 	auto hbPos = search(content.begin(), content.end(), hbLim.begin(), hbLim.end());
-	if (hbPos == content.end())
-		return ; // add error handling, part is empty
+	if (hbPos == content.end()) {
+		return ; //CHECK add error handling, part is empty
+	}
 	auto start = search(content.begin(), hbPos, nl.begin(), nl.begin());
 	start += nl.size();
 	while (start != hbPos) {
 		auto end = search(start, hbPos, nl.begin(), nl.end()); 
-		auto kvLim = find(start, end, ':');
-		if (start >= end || kvLim >= end)
-			break ; //handle error
-		headers[string(start, kvLim)] = string(kvLim + 2, end); //get rid of hardcoded +2
+		auto kvLim = search(start, end, kv.begin(), kv.end());
+		if (start >= end || kvLim >= end) {
+			break ; //CHECK handle error
+		}
+		headers[string(start, kvLim)] = string(kvLim + kv.size(), end);
 		start = end + nl.size();
 	}
-	string body(hbPos + hbLim.size(), content.end() - 2); //get rid of hardcoded -2
+	string body(hbPos + hbLim.size(), content.end() - nl.size());
 	// "name=" is used and should only be used, for indicating the field. so in this case, the part is a 'file',
 	//so we can get the content of the file (== body) and the filename (== "filename=...")
 	if (headers["Content-Disposition"].find("name=\"file\";") != string::npos)
@@ -144,23 +147,23 @@ void	parseBodyParts(Request& request) {
 	if (request.getHeaderValue("Content-Type").find("multipart/form-data") != string::npos)
 		boundary = findBoundary(request.getHeaderValue("Content-Type"));
 	if (boundary.empty() || body.empty())
-		return ; //handle error;
+		return ; //CHECK handle error;
 	boundary = "--" + boundary;
 	auto i = search(body.begin(), body.end(), boundary.begin(), boundary.end());
 	if (i == body.end())
-		return ; //handle error.
+		return ; //CHECK handle error.
 	i += boundary.size();
 	while (true) {
 		if (i >= body.end())
-			break ; //handle error
+			break ; //CHECK handle error
 		string	tmpB(i, body.end());
 		if (tmpB.empty())
-			break ; //handle error
+			break ; //CHECK handle error
 		else if (tmpB == "--")
 			break ; //finished
 		auto pos = search(tmpB.begin(), tmpB.end(), boundary.begin(), boundary.end());
 		if (pos == tmpB.end())
-			break ; //handle error
+			break ; //CHECK handle error
 		parsePart(string(tmpB.begin(), pos), request);
 		i = search(i, body.end(), boundary.begin(), boundary.end()) + boundary.size();
 	}
@@ -173,10 +176,10 @@ void	checkChunkedBody(Connection& connection) {
 	
 	while (true) {
 		if (buf.empty())
-			break ;
+			break ; //CHECK
 		auto endSize = search(buf.begin(), buf.end(), d.begin(), d.end());
 		if (endSize == buf.end())
-			break ;
+			break ; //CHECK
 		unsigned long chunkSize;
 		try {
 			chunkSize = stoul(string(buf.begin(), endSize), nullptr, 16);
@@ -186,14 +189,14 @@ void	checkChunkedBody(Connection& connection) {
 			break ;
 		}
 		if (chunkSize == 0) {
-			if (connection.getRequest().getMultipartFlag())
+			if (connection.getRequest().getMultipartFlag()) //CHECK
 				parseBodyParts(connection.getRequest());
 			connection.getRequest().setReadState(DONE);
 			break ;
 		}
 		unsigned long fullChunkSize = (endSize - buf.begin()) + d.size() + chunkSize + d.size();
 		if (buf.size() < fullChunkSize)
-			break ;
+			break ; //CHECK
 		if (connection.getServer().getMaxBody() != 0 && fullChunkSize > connection.getServer().getMaxBody()) {
 			connection.getRequest().setStatusCode(413);
 			connection.getRequest().setReadState(DONE);
@@ -216,7 +219,7 @@ void	checkContentLengthBody(Connection& connection) {
 		connection.getRequest().setReadState(DONE);
 		return ;
 	}
-	if (connection.getBuffer().size() == readLength) { //need catch error if length stay's to short or to long
+	if (connection.getBuffer().size() >= readLength) {
 		vector<char> buf = connection.getBuffer();
 		connection.getRequest().setBody(string(buf.begin(), buf.end()));
 		if (connection.getRequest().getMultipartFlag())
@@ -242,7 +245,7 @@ void	checkHeaders(const vector<char> requestData, Request& request) {
 	}
 	if (request.getHeaderValue("Content-Type").find("multipart/form-data") != string::npos)
 		request.setMultipartFlag(true);
-	if (request.getMethod() == "POST" && !request.getMultipartFlag()) {
+	if (request.getMethod() == "POST" && !request.getMultipartFlag()) { //CHECK post without body/contentlength/transfer-encoding=chunked
 		request.setStatusCode(400);
 		request.setReadState(DONE);
 		return ;
@@ -260,7 +263,7 @@ void	checkHeaders(const vector<char> requestData, Request& request) {
 			unsigned long cLength = stoul(request.getHeaderValue("Content-Length"));
 			request.setContentLength(cLength);
 		} catch (...) {
-			request.setStatusCode(413);
+			request.setStatusCode(413); //CHECK or 500 internal error?
 			request.setReadState(DONE);
 			return ;
 		}

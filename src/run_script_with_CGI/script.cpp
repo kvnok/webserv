@@ -18,7 +18,8 @@ void execScript(char *args[], int pipefd[2], Request &request)
         close(pipefd[1]);
 
         if (execve(args[0], args, nullptr) == -1) {
-            // cerr << "Failed to execute Python script" << endl;
+            request.setStatusCode(500); //CHECK
+            //need connection to set nextstate
             exit(EXIT_FAILURE);  // I dont know how to handle this yet
         }
     }
@@ -34,7 +35,8 @@ void execScript(char *args[], int pipefd[2], Request &request)
         close(pipefd[1]);
         
         if (execve(python_cgi, args1, nullptr) == -1) {
-            // cerr << "Failed to execute Python script" << endl;
+            request.setStatusCode(500); //CHECK
+            //need connection to set nextstate
             exit(EXIT_FAILURE);  // I dont know how to handle this yet
         }
     }
@@ -46,12 +48,14 @@ int run_script(char *args[], Request &request) {
     pid_t pid;
 
     if (pipe(pipefd) == -1) {
-        // cerr << "Failed to create pipe" << endl;
+        request.setStatusCode(500); //CHECK
+        //need connection to set nextstate
         return -1;
     }
 
     if ((pid = fork()) == -1) {
-        // cerr << "Failed to fork" << endl;
+        request.setStatusCode(500); //CHECK
+        //need connection to set nextstate 
         return -1;
     }
 
@@ -60,7 +64,8 @@ int run_script(char *args[], Request &request) {
     else {
         close(pipefd[1]);
         if (waitpid(pid, &status, 0) == -1) {
-            // cerr << "Failed to wait for child process" << endl;
+            request.setStatusCode(500); //CHECK
+            //need connection to set nextstate
             close(pipefd[0]);
             return -1;
         }

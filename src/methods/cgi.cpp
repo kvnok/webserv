@@ -8,7 +8,7 @@ void	executeCGI(Connection& connection) {
 	if (bytes < 0) {
 		connection.getResponse().setBody("");
 		connection.setBytesRead(0);
-		connection.getRequest().setStatusCode(500);
+		connection.getRequest().setStatusCode(500); //CHECK
 		connection.setHandleStatusCode(true);
 		connection.setNextState(DELFD);
 		return ;
@@ -40,7 +40,7 @@ void cgiMethod(Connection& connection) {
 		connection.setNextState(SETFD);
 	}
 	else {
-		connection.getRequest().setStatusCode(500);
+		connection.getRequest().setStatusCode(500); //CHECK
 		connection.setHandleStatusCode(true);
 		connection.setNextState(STATUSCODE);
 	}

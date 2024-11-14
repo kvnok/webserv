@@ -33,7 +33,7 @@ static void check_baseline(Request &request, string &file, string &path, ServerB
 			stream.close();
 		}
 		else // can't open index
-			request.setStatusCode(404);
+			request.setStatusCode(404); //CHECK
 		//TODO: is it correct that we dont close the stream if 'is_dir' is true?
 	}
 	else if (!file.empty()) { // check for file
@@ -45,7 +45,7 @@ static void check_baseline(Request &request, string &file, string &path, ServerB
 			stream.close();
 		}
 		else // can't open file part of the path
-			request.setStatusCode(404);
+			request.setStatusCode(404); //CHECK
 		//TODO: is it correct that we dont close the stream if 'is_dir' is true?
 	}
 }
@@ -56,7 +56,7 @@ static void check_locs(Request &request, string &folder, string &file, string &p
 		loc = sLocs.get_loc(folder);
 	}
 	catch (invalid_argument &e) {
-		request.setStatusCode(404);
+		request.setStatusCode(404); //CHECK
 		return;
 	}
 
@@ -81,14 +81,14 @@ static void check_locs(Request &request, string &folder, string &file, string &p
 				stream.close();
 			}
 			else // can't open index;
-				request.setStatusCode(404);
+				request.setStatusCode(404); //CHECK
 		}
 		else if (loc.get_autoindex() == true) {
 			request.setIsAutoindex(true);
 			path = root;
 		}
 		else // no index, no autoindex
-			request.setStatusCode(404);
+			request.setStatusCode(404); //CHECK
 	}
 	else if (!file.empty()) { // check for file
 		if (loc.get_is_cgi() == true)
@@ -104,7 +104,7 @@ static void check_locs(Request &request, string &folder, string &file, string &p
 			stream.close();
 		}
 		else // can't open file part of the path
-			request.setStatusCode(404);
+			request.setStatusCode(404); //CHECK
 		//TODO: is it correct that we dont close the stream if 'is_dir' is true?
 	}
 }
