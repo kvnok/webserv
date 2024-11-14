@@ -23,7 +23,8 @@ static void check_baseline(Request &request, string &file, string &path, ServerB
 	string root = server.getRoot();
 	string root_and_file = root + "/" + file;
 	root_and_file = regex_replace(root_and_file, regex("//+"), "/");
-	
+
+	//TODO here we need to implement DENY aswell
 	if (file.empty()) { // no file, check for index
 		string root_and_index = root + "/" + server.getIndex();
 		root_and_index = regex_replace(root_and_index, regex("//+"), "/");
@@ -50,7 +51,7 @@ static void check_baseline(Request &request, string &file, string &path, ServerB
 	}
 }
 
-static void check_locs(Request &request, string &folder, string &file, string &path, smartLocs& sLocs) { //CHANGED added '&' to smartLocs, del connection and err_pages
+static void check_locs(Request &request, string &folder, string &file, string &path, smartLocs sLocs) { //CHANGED del connection and err_pages
 	Loc loc;
 	try {
 		loc = sLocs.get_loc(folder);
@@ -59,7 +60,6 @@ static void check_locs(Request &request, string &folder, string &file, string &p
 		request.setStatusCode(404); //CHECK
 		return;
 	}
-
 	vector<string> deny = loc.get_deny();
 	if (find(deny.begin(), deny.end(), request.getMethod()) != deny.end()) {
 		request.setStatusCode(403);
@@ -109,7 +109,7 @@ static void check_locs(Request &request, string &folder, string &file, string &p
 	}
 }
 
-static bool is_this_a_redirect(string &folder, string &file, smartLocs& sLocs) { //CHANGED added '&' to smartLocs
+static bool is_this_a_redirect(string &folder, string &file, smartLocs sLocs) {
 	if (folder != "" && file != "")
 		return false;
 	if ((folder == "" || folder == "/") && file == "")
@@ -128,7 +128,7 @@ static bool is_this_a_redirect(string &folder, string &file, smartLocs& sLocs) {
 	return true;
 }
 
-static void do_the_redirect(Request &request, string &folder, smartLocs& sLocs) { //CHANGED added '&' to smartLocs
+static void do_the_redirect(Request &request, string &folder, smartLocs sLocs) {
 	Loc loc;
 	loc = sLocs.get_loc(folder);
 	string redirect = loc.get_redirect();

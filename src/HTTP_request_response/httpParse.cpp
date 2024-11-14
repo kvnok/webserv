@@ -126,7 +126,7 @@ static	void	parsePart(string content, Request& request) {
 	string body(hbPos + hbLim.size(), content.end() - nl.size());
 	// "name=" is used and should only be used, for indicating the field. so in this case, the part is a 'file',
 	//so we can get the content of the file (== body) and the filename (== "filename=...")
-	if (headers["Content-Disposition"].find("name=\"postBody\";") != string::npos) {
+	if (headers["Content-Disposition"].find("name=\"postBody\";") != string::npos)
 		request.setBody(body);
 	string value = headers["Content-Disposition"];
 	string toFind = "filename=\"";

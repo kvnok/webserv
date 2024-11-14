@@ -52,8 +52,6 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
 }
 
 void	Servers::prepExec(Connection& connection) {
-    cout << "HERE" << endl;
-    cout << BLU << connection.getRequest().getPath() << RESET << endl;
     if (connection.getRequest().getIsCGI() == true)
         cgiMethod(connection);
     else if (connection.getRequest().getMethod() == "DELETE")
