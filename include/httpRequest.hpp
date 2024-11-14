@@ -79,7 +79,6 @@ class Request {
 		void 	setCGIExtension(string const CGIExtension);
 		void	setFileName(string const fileName);
 		void 	setIsRedirect(bool const isRedirect);
-		void	setCGIArgs(char** const args);
 
 		string				getMethod() const;
 		string				getPath() const;
@@ -96,7 +95,6 @@ class Request {
 		string				getCGIExtension() const;
 		string				getFileName() const;
 		bool				getIsRedirect() const;
-		char**				getCGIArgs() const;
 		// ------------------------
 
 		void				reset();
