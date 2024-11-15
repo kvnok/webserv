@@ -20,15 +20,6 @@ smartLocs &smartLocs::operator=(const smartLocs &other) {
 	return *this;
 }
 
-// void smartLocs::print_locs() {
-// 	map<string, Loc>::iterator it = _locs.begin();
-// 	for (; it != _locs.end(); it++)
-// 	{
-// 		color_print(BLU, "Location: ", it->first);
-// 		it->second.print_location();
-// 	}
-// }
-
 map<string, Loc> &smartLocs::get_locs() { return _locs; }
 
 Loc &smartLocs::get_loc(string &path) {

@@ -14,7 +14,7 @@ ServerBlock::ServerBlock( void ) {
     this->_opt = 1;
     this->_serverFd = 0;
     this->max_clients = MAX_CLIENTS;
-} // do we need a default constructor? or should we alwasy get the constructor whti pServerBlock?
+}
 
 vector<string>      ServerBlock::getServerName() { return this->_server_names; }
 int                 ServerBlock::getPort() { return this->_port; }
@@ -28,7 +28,7 @@ int                 ServerBlock::getFd() { return this->_serverFd; }
 int                 ServerBlock::getMaxClients() { return this->max_clients; }
 string              ServerBlock::getCurrentPath() { return this->_currentPath; }
 vector<Location>    ServerBlock::getLocations() { return this->_locations; }
-smartLocs&          ServerBlock::getSmartLocs() { return this->_smartLocs; } //CHANGED return 
+smartLocs           ServerBlock::getSmartLocs() { return this->_smartLocs; }
 
 void                ServerBlock::setSmartLocs(pServerBlock &block) { this->_smartLocs = smartLocs(block); }
 
@@ -60,7 +60,6 @@ void ServerBlock::setBind() {
     address.sin_port = htons(this->_port);
     int addrlen = sizeof(address);
 	if (bind(this->_serverFd, (struct sockaddr *)&address, addrlen) == -1) {
-        perror("bind failed"); //why do we use perror here?
         throw runtime_error("bind failed");
     }
 }
@@ -69,7 +68,7 @@ void ServerBlock::setListen() {
     if (this->_serverFd == 0)
         throw runtime_error("socket not set");
     if (listen(this->_serverFd, this->getMaxClients()) == -1)
-        throw runtime_error("listen failed");
+        throw runtime_error("listen failed"); //CHANGED deleted a perror
 }
 
 void ServerBlock::setSocket() {

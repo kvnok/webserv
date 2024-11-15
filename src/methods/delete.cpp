@@ -14,7 +14,7 @@ void	deleteMethod(Connection& connection) {
 	if (!filesystem::exists(file))
 		connection.getRequest().setStatusCode(404);
 	else {
-		if (remove(file.c_str()) != 0) // can we use remove?
+		if (remove(file.c_str()) != 0)
 			connection.getRequest().setStatusCode(404);
 		else
 			connection.getRequest().setStatusCode(204);

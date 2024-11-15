@@ -2,7 +2,7 @@
 
 set<string> l_directives = {"root", "index", "autoindex", "cgi_extension", "return", "deny"};
 
-bool is_valid_location_directive(const string& directive) {
+static bool is_valid_location_directive(const string& directive) {
 	return l_directives.count(directive) > 0;
 }
 

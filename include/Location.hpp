@@ -57,5 +57,4 @@ class Location {
 		void set_has_deny(bool has_deny);
 		void set_deny(vector<string> deny);
 		void add_deny(string deny);
-		void print_location();
 };
