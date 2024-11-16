@@ -5,6 +5,7 @@
 void execScript(char *args[], int pipefd[2], Request &request) 
 {
         cout << "exec script" << endl;
+        (void) request; //CHANGED
         close(pipefd[0]);
         // for(int i = 0; args[i]; i++)
 		//     cout << "args[" << i << "]: " << args[i] << endl;

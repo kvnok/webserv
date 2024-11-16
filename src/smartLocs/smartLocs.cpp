@@ -11,6 +11,8 @@ smartLocs::smartLocs(pServerBlock &block) {
 	}
 }
 
+smartLocs::smartLocs(const smartLocs& other) { *this = other; } //CHANGED
+
 smartLocs::~smartLocs() {}
 
 smartLocs &smartLocs::operator=(const smartLocs &other) {
