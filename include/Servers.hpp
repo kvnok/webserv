@@ -38,4 +38,6 @@ class Servers
 		ServerBlock*	getFdsServerBlock(int const fd);
 		Connection*		getFdsClient(int const fd);
 		Connection*		getOtherFdsClient(int const fd);
+		
+		void 			printFDS(); //for debug
 };

@@ -12,7 +12,7 @@
 #include <csignal>
 
 int main(int argc, char **argv) {
-	signal(SIGPIPE, SIG_IGN); //CHECK 
+	//signal(SIGPIPE, SIG_IGN); 
 	try
 	{
 		if (argc != 1 && argc != 2)
