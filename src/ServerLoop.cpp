@@ -15,17 +15,14 @@ void    Servers::handleNewConnection(size_t i) {
 }
 
 void    Servers::deleteOtherFd(Connection& connection, size_t& i) {
-    if (connection.getOtherFD() == this->_fds[i].fd) {
-        close(connection.getOtherFD());
-        this->_fds.erase(this->_fds.begin() + i);
-        connection.setOtherFD(-1);
-        //should we reset different vars here aswell?
-        if (connection.getHandleStatusCode() == true)
-            connection.setNextState(STATUSCODE);
-        else
-            connection.setNextState(RESPONSE);
-        i--;
-    }
+    close(connection.getOtherFD());
+    this->_fds.erase(this->_fds.begin() + i);
+    connection.setOtherFD(-1);
+    i--;
+    if (connection.getHandleStatusCode() == true)
+        connection.setNextState(STATUSCODE);
+    else
+        connection.setNextState(RESPONSE);
 }
 
 void    Servers::closeConnection(Connection& connection, size_t& i) {
@@ -36,7 +33,7 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
                     close(connection.getOtherFD());
                     this->_fds.erase(this->_fds.begin() + k);
                     connection.setOtherFD(-1);
-                    if (k <= i) //DISCUSS normaly k should never be smaller then i, since the client will always be created before the otherFD
+                    if (k <= i)
                         i--;
                     break ;
                 }
@@ -100,6 +97,7 @@ void    Servers::executeMethod(Connection& connection) {
 }
 
 void    Servers::handleExistingConnection(Connection& connection, size_t& i) {
+
     switch (connection.getNextState()) {
         case READ:
             readRequest(connection);
@@ -135,6 +133,7 @@ void    Servers::handleExistingConnection(Connection& connection, size_t& i) {
             closeConnection(connection, i);
             break ;
     }
+
 }
 
 ServerBlock*	Servers::getFdsServerBlock(int const fd) {
@@ -192,8 +191,10 @@ void    Servers::start() {
             cerr << "poll failed" << endl; //CHECK should we do this, or should we keep trying?
         // if (this->_fds.size() > 5) {
         //     for (size_t d = 0; d < this->_fds.size(); d++) {
-        //         if (isClientFd(this->_fds[d].fd))
+        //         if (isClientFd(this->_fds[d].fd)) {
         //             cout << RED << this->_fds[d].fd << " " << RESET;
+        //             cout << getFdsClient(this->_fds[d].fd)->getNextState();
+        //         }
         //         else if (isServerFd(this->_fds[d].fd))
         //             cout << BLU << this->_fds[d].fd << " " << RESET;
         //         else
@@ -210,20 +211,12 @@ void    Servers::start() {
                 }
             }
             else if (isClientFd(this->_fds[i].fd)) {
-                Connection* connection = getFdsClient(this->_fds[i].fd);
+                Connection* connection = getFdsClient(this->_fds[i].fd); 
                 if (connection && connection->getNextState() != EXECFD && connection->getNextState() != DELFD) {
-                    if (this->_fds[i].revents & POLLIN) { //only for reading the request.
-                        // if (connection->getNextState() != READ && connection->getNextState() != CLOSE && connection->getNextState() != CLEANUP) {
-                        //     connection->getRequest().setStatusCode(500); //CHECK
-                        //     connection->setNextState(STATUSCODE);
-                        // }
+                    if (this->_fds[i].revents & POLLIN) {
                         handleExistingConnection(*connection, i);
                     }
-                    else if (this->_fds[i].revents & POLLOUT) { //only for sending the response
-                        // if (connection->getNextState() == READ) {
-                        //     connection->getRequest().setStatusCode(500); //CHECK
-                        //     connection->setNextState(STATUSCODE);
-                        // }
+                    else if (this->_fds[i].revents & POLLOUT) {
                         handleExistingConnection(*connection, i);
                     }
                     else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL))
@@ -237,20 +230,10 @@ void    Servers::start() {
             else if (isOtherFd(this->_fds[i].fd)) {
                 Connection* connection = getOtherFdsClient(this->_fds[i].fd);
                 if (connection && ((connection->getNextState() == EXECFD || connection->getNextState() == DELFD))) {
-                    if (this->_fds[i].revents & POLLIN) {//only for 'getting' a file/cgi
-                        // if (connection->getRequest().getMethod() == "POST" && connection->getHandleStatusCode() == false) {
-                        //     connection->getRequest().setStatusCode(500); //CHECK
-                        //     connection->setHandleStatusCode(true);
-                        //     connection->setNextState(DELFD);
-                        // }
+                    if (this->_fds[i].revents & POLLIN) {
                         handleExistingConnection(*connection, i);
                     }
-                    else if (this->_fds[i].revents & POLLOUT) { //only if post is executed. after 'posting', the 201 upload should be pollin
-                        // if (connection->getRequest().getMethod() != "POST" || (connection->getRequest().getMethod() == "POST" && connection->getHandleStatusCode() == true)) {
-                        //     connection->getRequest().setStatusCode(500); //CHECK
-                        //     connection->setHandleStatusCode(true);
-                        //     connection->setNextState(DELFD);
-                        // }
+                    else if (this->_fds[i].revents & POLLOUT) {
                         handleExistingConnection(*connection, i);
                     }
                     else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL))
