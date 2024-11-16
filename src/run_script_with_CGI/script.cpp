@@ -7,7 +7,7 @@ void execScript(char *args[], int pipefd[2], Request &request)
         cout << "exec script" << endl;
         close(pipefd[0]);
         // for(int i = 0; args[i]; i++)
-		//     cout << "args[" << i << "]: " << args[i] << endl;
+		//     cout << "args[" << i << "]: " << args[i] << endl;)
         dup2(pipefd[1], STDOUT_FILENO);
         close(pipefd[1]);
 
@@ -18,7 +18,7 @@ void execScript(char *args[], int pipefd[2], Request &request)
 
 int run_script(char *args[], Request &request) {
     int pipefd[2];
-    int status = -1; //not used
+    int status = -1;
     pid_t pid;
 
     if (pipe(pipefd) == -1) {
@@ -34,6 +34,7 @@ int run_script(char *args[], Request &request) {
         close(pipefd[1]);
         if (waitpid(pid, &status, 0) == -1) {
             close(pipefd[0]);
+            request.setStatusCode(status);
             return -1;
         }
         return pipefd[0];

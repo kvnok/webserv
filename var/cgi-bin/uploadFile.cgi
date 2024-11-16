@@ -5,7 +5,7 @@ import sys
 
 # Function to create the storage directory if it doesn't exist
 def create_storage_directory():
-    storage_path = "www/storage/"
+    storage_path = "www/CGIStorage/"
     if not os.path.exists(storage_path):
         try:
             os.makedirs(storage_path)
@@ -16,12 +16,14 @@ def create_storage_directory():
     return storage_path
 
 # Function to write the file to storage
+
 def save_file(storage_path, file_name, file_content):
     file_path = os.path.join(storage_path, file_name)
-    
     try:
-        with open(file_path, 'w') as file:
-            file.write(file_content)
+        with open(file_path, 'wb') as file:
+            for byte in file_content.encode('utf-8'):
+                print(byte)
+                file.write(bytes([byte]))
         print(f"File '{file_name}' successfully saved at '{file_path}'")
     except Exception as e:
         print(f"Error writing to file '{file_name}': {str(e)}")
@@ -36,14 +38,8 @@ def main():
 
     # Argument 1: File name
     file_name = sys.argv[1]
-
-    # Argument 2: File content
     file_content = sys.argv[2]
-
-    # Create the storage directory
     storage_path = create_storage_directory()
-
-    # Save the file in the storage directory
     save_file(storage_path, file_name, file_content)
 
 

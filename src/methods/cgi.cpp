@@ -18,11 +18,16 @@ char** create_args(Connection& connection)
 {
     string method = connection.getRequest().getMethod();
     string path = connection.getRequest().getPath();
- 
 	string body = connection.getRequest().getBody();
+ 	// string body = string(connection.getBuffer().begin(), connection.getBuffer().end());
 	string name = connection.getRequest().getFileName();
+	// Set PATHINFO as environment variable
 
 	cout << "FILENAME: " << name << endl;
+	cout << YEL << body.size() << RESET << endl;
+	// cout << YEL << string(connection.getBuffer().begin(), connection.getBuffer().end()) << RESET << endl;
+	// if(connection.getRequest().getCGIExtension() == "ico")
+	// 	cout << "ICO" << endl;
 
 	char** args = new char*[ARG_MAX_SIZE + 1];	
 	args[0] = new char[17];
@@ -33,7 +38,7 @@ char** create_args(Connection& connection)
 
 	// args[2] = new char[method.length() + 1];
 	// strcpy(args[2], method.c_str());
-	
+
 	args[2] = new char[name.length() + 1];
 	strcpy(args[2], name.c_str());
 	
