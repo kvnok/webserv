@@ -67,12 +67,6 @@ void    sendResponse(Connection& connection) {
     int         clientSocket = response.getClientSocket();
     string      fullResponse = response.getFullResponse();   
 
-    if (response.getBytesSend() >= fullResponse.size()) {
-        if (connection.getRequest().getHeaderValue("Connection") == "close")
-            connection.setNextState(CLOSE);
-        else
-            connection.setNextState(CLEANUP);
-    }
     size_t chunkSize = fullResponse.size() - response.getBytesSend();
     if (chunkSize > BUFFER_SIZE)
         chunkSize = BUFFER_SIZE;
@@ -80,11 +74,17 @@ void    sendResponse(Connection& connection) {
     if (bytes == -1) {   
         connection.getRequest().setStatusCode(500);
         connection.setHandleStatusCode(true);
-        connection.setNextState(DELFD);
+        connection.setNextState(STATUSCODE);
         response.reset();
         return ;
     }
     response.addBytesSend(bytes);
+    if (response.getBytesSend() >= fullResponse.size()) {
+        if (connection.getRequest().getHeaderValue("Connection") == "close")
+            connection.setNextState(CLOSE);
+        else
+            connection.setNextState(CLEANUP);
+    }
     return ;
 }
 

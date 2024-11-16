@@ -200,6 +200,50 @@ void Servers::printFDS() {
     }
 }
 
+void printInsideIf(string a, string b, size_t i, enum cState num) {
+    cout << "-------" << i << "-------" << endl;
+    cout << a << endl;
+    cout << b << endl;
+    switch(num) {
+        case 0:
+            cout << "READ" << endl;
+            break;
+        case 1:
+            cout << "PATH" << endl;
+            break;
+        case 2:
+            cout << "PREPEXEC" << endl;
+            break;
+        case 3:
+            cout << "STATUSCODE" << endl;
+            break;
+        case 4:
+            cout << "SETFD" << endl;
+            break;
+        case 5:
+            cout << "EXECFD" << endl;
+            break;
+        case 6:
+            cout << "DELFD" << endl;
+            break;
+        case 7:
+            cout << "RESPONSE" << endl;
+            break;
+        case 8:
+            cout << "SEND" << endl;
+            break;
+        case 9:
+            cout << "CLEANUP" << endl;
+            break;
+        case 10:
+            cout << "CLOSE" << endl;
+            break;
+        default:
+            break;
+    }
+    cout << "--------------" << endl;
+}
+
 void    Servers::start() {
     while (true) {
         int ret = poll(this->_fds.data(), this->_fds.size(), 0);
@@ -219,16 +263,29 @@ void    Servers::start() {
                     Connection* connection = getFdsClient(this->_fds[i].fd); 
                     if (connection && connection->getNextState() != EXECFD && connection->getNextState() != DELFD) {
                         if (this->_fds[i].revents & POLLIN) {
+                            // if (connection->getNextState() == SEND) {
+                            //     connection->getRequest().setStatusCode(500);
+                            //     connection->setHandleStatusCode(true);
+                            //     connection->setNextState(STATUSCODE);
+                            //     connection->getResponse().reset();
+                            // }
+                            printInsideIf("isClientFd", "if (this->_fds[i].revents & POLLIN)", i, connection->getNextState());
                             handleExistingConnection(*connection, i);
                         }
                         else if (this->_fds[i].revents & POLLOUT) {
+                            printInsideIf("isClientFd", "else if (this->_fds[i].revents & POLLOUT)", i, connection->getNextState());
                             handleExistingConnection(*connection, i);
                         }
-                        else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL))
+                        else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+                            printInsideIf("isClientFd", "else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL))", i, connection->getNextState());
                             closeConnection(*connection, i);
+                        }
                         else {
-                            if (connection->getNextState() == CLOSE || connection->getNextState() == CLEANUP)
+                            printInsideIf("isClientFd", "else", i, connection->getNextState());
+                            if (connection->getNextState() == CLOSE || connection->getNextState() == CLEANUP) {
+                                printInsideIf("isClientFd", "if (connection->getNextState() == CLOSE || connection->getNextState() == CLEANUP)", i, connection->getNextState());
                                 handleExistingConnection(*connection, i);
+                            }
                         }
                     }
                 }
@@ -236,16 +293,23 @@ void    Servers::start() {
                     Connection* connection = getOtherFdsClient(this->_fds[i].fd);
                     if (connection && ((connection->getNextState() == EXECFD || connection->getNextState() == DELFD))) {
                         if (this->_fds[i].revents & POLLIN) {
+                            printInsideIf("isOtherFd", "if (this->_fds[i].revents & POLLIN)", i, connection->getNextState());
                             handleExistingConnection(*connection, i);
                         }
                         else if (this->_fds[i].revents & POLLOUT) {
+                            printInsideIf("isOtherFd", "else if (this->_fds[i].revents & POLLOUT)", i, connection->getNextState());
                             handleExistingConnection(*connection, i);
                         }
-                        else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL))
+                        else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+                            printInsideIf("isOtherFd", "else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL))", i, connection->getNextState());
                             deleteOtherFd(*connection, i);
+                        }
                         else {
-                            if (connection->getNextState() == DELFD)
+                            printInsideIf("isOtherFd", "else", i, connection->getNextState());
+                            if (connection->getNextState() == DELFD) {
+                                printInsideIf("isOtherFd", "if (connection->getNextState() == DELFD)", i, connection->getNextState());
                                 handleExistingConnection(*connection, i);
+                            }
                         }
                     }
                 }
