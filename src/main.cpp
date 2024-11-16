@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
 		parser.parse(config);
 
 		vector<ServerBlock> serverBlocks;
-		for(int i = 0; i < (int)config.get_server_blocks().size(); i++) {//CHANGED cast to int
+		for(size_t i = 0; i < config.get_server_blocks().size(); i++) {
 			ServerBlock serverBlock(config.get_server_blocks()[i]);
 			serverBlocks.push_back(serverBlock);
 		}

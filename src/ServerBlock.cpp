@@ -68,7 +68,7 @@ void ServerBlock::setListen() {
     if (this->_serverFd == 0)
         throw runtime_error("socket not set");
     if (listen(this->_serverFd, this->getMaxClients()) == -1)
-        throw runtime_error("listen failed"); //CHANGED deleted a perror
+        throw runtime_error("listen failed");
 }
 
 void ServerBlock::setSocket() {
@@ -76,7 +76,7 @@ void ServerBlock::setSocket() {
         throw runtime_error("socket failed");
 	if (setsockopt(this->_serverFd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &this->_opt, sizeof(this->_opt)) == -1)
         throw runtime_error("setsockopt failed");
-    if (fcntl(this->_serverFd, F_SETFL, O_NONBLOCK) == -1) //set it to non-blocking mode
+    if (fcntl(this->_serverFd, F_SETFL, O_NONBLOCK) == -1)
         throw runtime_error("fcntl failed");
     this->setBind();
     this->setListen();
