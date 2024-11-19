@@ -63,6 +63,7 @@ class Response {
 		int					getClientSocket() const;
 		size_t				getBytesSend() const;
 		string				getFullResponse() const;
+		string				getHeaderValue(const string& value) const;
 
 		void				reset();
 		void				setFullResponse();			
