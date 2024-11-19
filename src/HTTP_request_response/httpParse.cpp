@@ -105,7 +105,7 @@ string findBoundary(const string& headerValue) {
 static	void	parsePart(string content, Request& request) {
 	string				hbLim = "\r\n\r\n";
 	string				nl = "\r\n";
-	string				kv = ": "; //CHECK is this the correct limit?
+	string				kv = ": ";
 	map<string, string>	headers;
 
 	auto hbPos = search(content.begin(), content.end(), hbLim.begin(), hbLim.end());
@@ -124,8 +124,6 @@ static	void	parsePart(string content, Request& request) {
 		start = end + nl.size();
 	}
 	string body(hbPos + hbLim.size(), content.end() - nl.size());
-	// "name=" is used and should only be used, for indicating the field. so in this case, the part is a 'file',
-	//so we can get the content of the file (== body) and the filename (== "filename=...")
 	if (headers["Content-Disposition"].find("name=\"postBody\";") != string::npos)
 		request.setBody(body);
 	string value = headers["Content-Disposition"];
@@ -136,7 +134,6 @@ static	void	parsePart(string content, Request& request) {
 		if (j < value.end())
 			request.setFileName(string(i + toFind.size(), j));
 	}
-	//TODO: revist this part, need to do this better
 	return ;
 }
 
@@ -189,14 +186,14 @@ void	checkChunkedBody(Connection& connection) {
 			break ;
 		}
 		if (chunkSize == 0) {
-			if (connection.getRequest().getMultipartFlag()) //CHECK
+			if (connection.getRequest().getMultipartFlag())
 				parseBodyParts(connection.getRequest());
 			connection.getRequest().setReadState(DONE);
 			break ;
 		}
 		unsigned long fullChunkSize = (endSize - buf.begin()) + d.size() + chunkSize + d.size();
 		if (buf.size() < fullChunkSize)
-			break ; //CHECK
+			break ;
 		if (connection.getServer().getMaxBody() != 0 && fullChunkSize > connection.getServer().getMaxBody()) {
 			connection.getRequest().setStatusCode(413);
 			connection.getRequest().setReadState(DONE);
@@ -208,7 +205,6 @@ void	checkChunkedBody(Connection& connection) {
 	}
 	connection.setBuffer(buf);
 	return ;
-	//TODO: double check if it works correct
 }
 
 void	checkContentLengthBody(Connection& connection) {
