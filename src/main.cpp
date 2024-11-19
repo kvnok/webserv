@@ -16,7 +16,6 @@ Servers* globalServer = nullptr;
 static void	signalHandler(int signum) {
 	if (signum == SIGINT && globalServer) {
         for (size_t i = 0; i < globalServer->get_fds().size(); i++) {
-			cout << globalServer->get_fds()[i].fd << " CLOSED" << endl;
             close(globalServer->get_fds()[i].fd);
         }
 		exit (0);

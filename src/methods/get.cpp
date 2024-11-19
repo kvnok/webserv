@@ -1,8 +1,5 @@
-#include "httpRequest.hpp"
 #include "Connection.hpp"
-#include "httpResponse.hpp"
 #include "autoindex.hpp"
-#include <fcntl.h>
 
 void	executeGet(Connection& connection) {
 	string	buffer(BUFFER_SIZE, '\0');

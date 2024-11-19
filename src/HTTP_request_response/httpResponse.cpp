@@ -83,7 +83,6 @@ void    sendResponse(Connection& connection) {
         return ;
     }
     response.addBytesSend(bytes);
-    cout << bytes << " " << response.getBytesSend() << " " << fullResponse.size() << endl;
     if (response.getBytesSend() >= fullResponse.size()) {
         if (connection.getResponse().getHeaderValue("Connection") == "close")
             connection.setNextState(CLOSE);

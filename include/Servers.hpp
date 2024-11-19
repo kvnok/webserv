@@ -20,7 +20,7 @@ class Servers
 		void	start();
 		void	setFds();
 		void	handleNewConnection(size_t i);
-		void	handleExistingConnection(Connection& connection, size_t& i);
+		void	handleExistingConnection(Connection& connection);
 		void	prepExec(Connection& connection);
 		void	addFdToPoll(Connection& connection);
 		void	executeMethod(Connection& connection);
