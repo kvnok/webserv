@@ -3,3 +3,4 @@ webserv
 .vscode
 src/autoindex/outfile.html
 nopermission.txt
+var/cgi-bin/deleteTest.cgi
