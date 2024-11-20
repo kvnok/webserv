@@ -9,9 +9,8 @@ void execScript(int pipefd[2], Connection& connection) {
     string name = connection.getRequest().getFileName();
     string fd_str = to_string(pipefd[0]);
     string body_size = to_string(body.size());
-
+    
     cout << "exec script" << endl;
-
     dup2(pipefd[1], STDOUT_FILENO);
     close(pipefd[1]);
 
@@ -23,8 +22,8 @@ void execScript(int pipefd[2], Connection& connection) {
     args.push_back(const_cast<char*>(body_size.c_str()));
     args.push_back(nullptr);
 
-    if (execve(args[0], args.data(), nullptr) == -1) {
-        perror("execve failed");
+    if (execve(args[0], args.data(), nullptr) == -1)
+    {
         connection.getRequest().setStatusCode(500);
         exit(500);
     }

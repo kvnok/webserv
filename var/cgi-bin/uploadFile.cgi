@@ -26,7 +26,7 @@ def save_file(storage_path, file_name, file_content):
 
 def main():
     if len(sys.argv) != 4:
-        print("Usage: script_name.py <file_name> <file_descriptor> <file_size>")
+        print("Not all the required arguments were provided")
         sys.exit(1)
     
     file_name = sys.argv[1]
