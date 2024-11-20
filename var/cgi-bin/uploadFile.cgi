@@ -21,7 +21,7 @@ def save_file(storage_path, file_name, file_content):
     try:
         # Open the file in binary write mode and write the file_content
         with open(file_path, 'wb') as file:
-            file.write(file_content)  # Write the bytes to the file
+            file.write(file_content)
         print(f"File '{file_name}' successfully saved at '{file_path}'")
     except Exception as e:
         print(f"Error writing to file '{file_name}': {str(e)}")
@@ -29,26 +29,31 @@ def save_file(storage_path, file_name, file_content):
 
 # Main function
 def main():
-    # Check if the correct number of arguments are provided
-    print(sys.argv)
-    if len(sys.argv) != 5:
-        print("Usage: script_name.py <file_name> <file_content>")
+    if len(sys.argv) != 4:
+        print("Usage: script_name.py <file_name> <file_descriptor> <file_size>")
         sys.exit(1)
-
-    # Argument 1: File name
-    file_name = sys.argv[2]
-    # Argument 2: File content
-    file_content = sys.argv[3]
-
-    file_fd = sys.argv[4]
-
-    print(file_fd)
-
-    # Create storage directory if needed
-    storage_path = create_storage_directory()
     
-    # Save the file
-    save_file(storage_path, file_name, file_content)
+    file_name = sys.argv[1]
+    fd = int(sys.argv[2])
+    file_size = int(sys.argv[3])
+    print(f"File name: {file_name}, File descriptor: {fd}, File size: {file_size}")
+    
+    data = b""
+    bytes_read = 0
+    while bytes_read < file_size:
+        chunk = os.read(fd, min(4096, file_size - bytes_read))
+        if not chunk:
+            break
+        data += chunk
+        bytes_read += len(chunk)
+    
+    try:
+        os.close(fd)
+    except OSError as e:
+        print(f"Error closing file descriptor: {e}")
+
+    storage_path = create_storage_directory()
+    save_file(storage_path, file_name, data)
 
 if __name__ == "__main__":
     main()

@@ -74,3 +74,5 @@ void	executeGet(Connection& connection);
 
 //loose those
 int		run_script(Connection& connection);
+
+int		run_script(Connection& connection);
