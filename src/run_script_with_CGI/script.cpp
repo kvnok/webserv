@@ -36,14 +36,11 @@ int run_script(Connection& connection) {
     pid_t pid;
 
     if (pipe(pipefd) == -1 || (pid = fork()) == -1)
-        return -1;
+        return status;
     if (pid == 0)
-    {
         execScript(pipefd, connection);
-    }
     else 
     {
-        // close(pipefd[1]);
         string body = connection.getRequest().getBody();
         write(pipefd[1], body.c_str(), body.size());
         close(pipefd[1]);
@@ -51,7 +48,7 @@ int run_script(Connection& connection) {
         if (waitpid(pid, &status, 0) == -1)
         {
             connection.getRequest().setStatusCode(status);
-            return -1;
+            return status;
         }
         return pipefd[0];
     }

@@ -3,7 +3,6 @@
 import os
 import sys
 
-# Function to create the storage directory if it doesn't exist
 def create_storage_directory():
     storage_path = "www/CGIStorage/"
     if not os.path.exists(storage_path):
@@ -15,11 +14,9 @@ def create_storage_directory():
             sys.exit(1)
     return storage_path
 
-# Function to write the file to storage
 def save_file(storage_path, file_name, file_content):
     file_path = os.path.join(storage_path, file_name)
     try:
-        # Open the file in binary write mode and write the file_content
         with open(file_path, 'wb') as file:
             file.write(file_content)
         print(f"File '{file_name}' successfully saved at '{file_path}'")
@@ -27,7 +24,6 @@ def save_file(storage_path, file_name, file_content):
         print(f"Error writing to file '{file_name}': {str(e)}")
         sys.exit(1)
 
-# Main function
 def main():
     if len(sys.argv) != 4:
         print("Usage: script_name.py <file_name> <file_descriptor> <file_size>")
