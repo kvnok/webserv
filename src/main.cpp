@@ -11,13 +11,25 @@
 
 #include <csignal>
 
+Servers* globalServer = nullptr;
+
+static void	signalHandler(int signum) {
+	if (signum == SIGINT && globalServer) {
+        for (size_t i = 0; i < globalServer->get_fds().size(); i++) {
+            close(globalServer->get_fds()[i].fd);
+        }
+		exit (0);
+    }
+}
+
+
 int main(int argc, char **argv) {
-	signal(SIGPIPE, SIG_IGN); //CHECK 
+	//signal(SIGPIPE, SIG_IGN); 
+	signal(SIGINT, signalHandler);
 	try
 	{
 		if (argc != 1 && argc != 2)
 			throw invalid_argument("usage: ./webserv [config_file]");
-		
 		string config_file = "default.conf";
 		if (argc == 2)
 			config_file = argv[1];
@@ -28,11 +40,12 @@ int main(int argc, char **argv) {
 		parser.parse(config);
 
 		vector<ServerBlock> serverBlocks;
-		for(int i = 0; i < (int)config.get_server_blocks().size(); i++) {//CHANGED cast to int
+		for(size_t i = 0; i < config.get_server_blocks().size(); i++) {
 			ServerBlock serverBlock(config.get_server_blocks()[i]);
 			serverBlocks.push_back(serverBlock);
 		}
 		Servers servers(serverBlocks);
+		globalServer = &servers;
 		servers.start();
 	} catch (exception &e) {
 		//also need to close fd's if they are open?

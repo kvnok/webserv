@@ -4,12 +4,14 @@ smartLocs::smartLocs() {}
 
 smartLocs::smartLocs(pServerBlock &block) {
 	vector<Loc> locs = block.get_locations();
-	for (int i = 0; i < (int)locs.size(); i++) //CHANGED cast to int
+	for (int i = 0; i < (int)locs.size(); i++)
 	{
 		Loc loc = locs[i];
 		_locs[loc.get_path()] = loc;
 	}
 }
+
+smartLocs::smartLocs(const smartLocs& other) { *this = other; }
 
 smartLocs::~smartLocs() {}
 

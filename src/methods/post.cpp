@@ -1,6 +1,4 @@
-#include "httpRequest.hpp"
 #include "Connection.hpp"
-#include <fcntl.h>
 
 void    executePost(Connection& connection) {
     int     fd = connection.getOtherFD();
@@ -39,9 +37,7 @@ void    postMethod(Connection& connection) {
     string  storage = connection.getRequest().getPath();
     string  file = connection.getRequest().getFileName();
 
-    //CHECK should we also check if the dir exists, or is this done in config?
-    //CHECK could the 'storage' path also be a file? and what should we do then?
-    if (access(storage.c_str(), W_OK) == -1) { //dir has no writing rights, so 403 forbidden
+    if (!filesystem::is_directory(storage) || access(storage.c_str(), W_OK) == -1) { //is not a dir or dir has no writing rights, so 403 forbidden
         connection.getRequest().setStatusCode(403);
         connection.setHandleStatusCode(true);
         connection.setNextState(STATUSCODE);
@@ -64,7 +60,7 @@ void    postMethod(Connection& connection) {
         connection.getRequest().setPath(fullPath);
         connection.getRequest().setStatusCode(201);
         connection.setOtherFD(fd);
-        connection.setHandleStatusCode(false); //first write, afterthat get 201 page
+        connection.setHandleStatusCode(false); //first write, after that get 201 page
         connection.setNextState(SETFD);
     }
     return ;

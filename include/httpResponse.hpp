@@ -19,11 +19,7 @@ const map<string, string> mimeTypes = {
 	{".pdf", "application/pdf"},
 	{".zip", "application/zip"},
 	{".ico", "image/x-icon"},
-	{".css", "text/css"},
-	{".html", "text/html"},
-	{".html", "text/html"},
-	{".html", "text/html"},
-	{".html", "text/html"},
+	{".css", "text/css"}
 };
 
 const set<string> unsupportedExtensions = {
@@ -67,6 +63,7 @@ class Response {
 		int					getClientSocket() const;
 		size_t				getBytesSend() const;
 		string				getFullResponse() const;
+		string				getHeaderValue(const string& value) const;
 
 		void				reset();
 		void				setFullResponse();			

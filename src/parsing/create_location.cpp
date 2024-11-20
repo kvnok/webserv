@@ -39,7 +39,7 @@ void parse_location(RAWSERV &s, Location &location, int &i)
 	location.set_path(s[i][1]);
 	i++;
 
-	for (; i < (int)s.size(); i++) { //CHANGED cast to int
+	for (; i < (int)s.size(); i++) {
 		// basic error checking
 		if (s[i][0] == "}" && s[i].size() == 1)
 			break;

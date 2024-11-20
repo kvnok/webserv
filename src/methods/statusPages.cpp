@@ -1,8 +1,5 @@
-#include "httpRequest.hpp"
 #include "Connection.hpp"
-#include "httpResponse.hpp"
 #include "httpStatus.hpp"
-#include <fcntl.h>
 
 void	executeStatusCode(Connection& connection) {
 	string	buffer(BUFFER_SIZE, '\0');
@@ -49,11 +46,11 @@ void	getStatusCodePage(Connection& connection) {
 			connection.getRequest().setStatusCode(403);
 		else
 			connection.getRequest().setStatusCode(500);
-		//CHECK do we want to try again , or go the the default right a way?
 		connection.getRequest().setPath(connection.getServer().getErrorPages()[statusCode]);
 		int lastTryFD = open(connection.getRequest().getPath().c_str(), O_RDONLY);
 		if (lastTryFD == -1) {
 			connection.getRequest().setStatusCode(500);
+			connection.getRequest().setPath("500.html");
 			string content = lastResortBody();
 			connection.getResponse().setBody(content);
 			connection.setNextState(RESPONSE);

@@ -19,12 +19,11 @@ static void parse_path(string &path, string &folder, string &file) {
 	}
 }
 
-static void check_baseline(Request &request, string &file, string &path, ServerBlock server) { //CHANGED, del err_pages
+static void check_baseline(Request &request, string &file, string &path, ServerBlock server) {
 	string root = server.getRoot();
 	string root_and_file = root + "/" + file;
 	root_and_file = regex_replace(root_and_file, regex("//+"), "/");
 
-	//TODO here we need to implement DENY aswell
 	if (file.empty()) { // no file, check for index
 		string root_and_index = root + "/" + server.getIndex();
 		root_and_index = regex_replace(root_and_index, regex("//+"), "/");
@@ -34,8 +33,9 @@ static void check_baseline(Request &request, string &file, string &path, ServerB
 			stream.close();
 		}
 		else // can't open index
-			request.setStatusCode(404); //CHECK
-		//TODO: is it correct that we dont close the stream if 'is_dir' is true?
+			request.setStatusCode(404);
+		if (stream.is_open())
+			stream.close();
 	}
 	else if (!file.empty()) { // check for file
 		ifstream stream(root_and_file);
@@ -46,18 +46,19 @@ static void check_baseline(Request &request, string &file, string &path, ServerB
 			stream.close();
 		}
 		else // can't open file part of the path
-			request.setStatusCode(404); //CHECK
-		//TODO: is it correct that we dont close the stream if 'is_dir' is true?
+			request.setStatusCode(404);
+		if (stream.is_open())
+			stream.close();
 	}
 }
 
-static void check_locs(Request &request, string &folder, string &file, string &path, smartLocs sLocs) { //CHANGED del connection and err_pages
+static void check_locs(Request &request, string &folder, string &file, string &path, smartLocs sLocs) {
 	Loc loc;
 	try {
 		loc = sLocs.get_loc(folder);
 	}
 	catch (invalid_argument &e) {
-		request.setStatusCode(404); //CHECK
+		request.setStatusCode(404);
 		return;
 	}
 	vector<string> deny = loc.get_deny();
@@ -81,20 +82,21 @@ static void check_locs(Request &request, string &folder, string &file, string &p
 				stream.close();
 			}
 			else // can't open index;
-				request.setStatusCode(404); //CHECK
+				request.setStatusCode(404);
+			if (stream.is_open())
+				stream.close();
 		}
 		else if (loc.get_autoindex() == true) {
 			request.setIsAutoindex(true);
 			path = root;
 		}
 		else // no index, no autoindex
-			request.setStatusCode(404); //CHECK
+			request.setStatusCode(404);
 	}
 	else if (!file.empty()) { // check for file
 		if (loc.get_is_cgi() == true)
 		{
 			//cout << "identified that its an CGI" << endl;
-			// dont set it to true, check if it is indeed a valid cgi path, then set it to true.
 			request.setIsCGI(true);
 			request.setCGIExtension(loc.get_cgi_extension());
 		}
@@ -105,7 +107,8 @@ static void check_locs(Request &request, string &folder, string &file, string &p
 		}
 		else // can't open file part of the path
 			request.setStatusCode(404); //CHECK
-		//TODO: is it correct that we dont close the stream if 'is_dir' is true?
+		if (stream.is_open())
+			stream.close();
 	}
 }
 

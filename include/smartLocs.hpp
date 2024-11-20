@@ -10,6 +10,7 @@ class smartLocs {
 	public:
 		smartLocs();
 		smartLocs(pServerBlock &block);
+		smartLocs(const smartLocs& other);
 		~smartLocs();
 
 		smartLocs& operator=(const smartLocs& other);
