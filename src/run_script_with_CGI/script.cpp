@@ -2,42 +2,56 @@
 #include "httpRequest.hpp"
 #include "Connection.hpp"
 
-void execScript(char *args[], int pipefd[2], Request &request) 
-{
-        cout << "exec script" << endl;
-        close(pipefd[0]);
-        // for(int i = 0; args[i]; i++)
-		//     cout << "args[" << i << "]: " << args[i] << endl;)
-        dup2(pipefd[1], STDOUT_FILENO);
-        close(pipefd[1]);
+void execScript(int pipefd[2], Connection& connection) {
+    string method = connection.getRequest().getMethod();
+    string path = connection.getRequest().getPath();
+    string body = connection.getRequest().getBody();
+    string name = connection.getRequest().getFileName();
+    string fd_str = to_string(pipefd[0]);
 
-        if (execve(PYTHON_CGI, args, nullptr) == -1) {
-            exit(EXIT_FAILURE);  // I dont know how to handle this yet
-        }
+    cout << "exec script" << endl;
+
+    dup2(pipefd[1], STDOUT_FILENO);
+    close(pipefd[1]);
+
+    vector<char*> args;
+    args.push_back(const_cast<char*>(PYTHON_CGI));
+    args.push_back(const_cast<char*>(path.c_str()));
+    args.push_back(const_cast<char*>(name.c_str()));
+    args.push_back(const_cast<char*>(fd_str.c_str()));
+    args.push_back(nullptr);
+
+    if (execve(args[0], args.data(), nullptr) == -1) {
+        perror("execve failed");
+        connection.getRequest().setStatusCode(500);
+        exit(500);
+    }
 }
 
-int run_script(char *args[], Request &request) {
+int run_script(Connection& connection) {
     int pipefd[2];
     int status = -1;
     pid_t pid;
 
-    if (pipe(pipefd) == -1) {
+    if (pipe(pipefd) == -1)
         return -1;
-    }
-
-    if ((pid = fork()) == -1) {
+    if ((pid = fork()) == -1)
         return -1;
-    }
     if (pid == 0)
-        execScript(args, pipefd, request);
+        execScript(pipefd, connection);
     else {
-        close(pipefd[1]);
+        string body = connection.getRequest().getBody();
+        write(pipefd[1], body.c_str(), body.size());
+
         if (waitpid(pid, &status, 0) == -1) {
             close(pipefd[0]);
-            request.setStatusCode(status);
+            connection.getRequest().setStatusCode(status);
             return -1;
         }
+        close(pipefd[1]);
         return pipefd[0];
     }
-    return -1;
+
+    return status;
 }
+
