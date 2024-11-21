@@ -10,21 +10,13 @@ void    executePost(Connection& connection) {
     ssize_t written = write(fd, body.data() + connection.getBytesWritten(), chunkSize);
     if (written == -1) {
         connection.getRequest().setStatusCode(500);
-        remove(connection.getRequest().getPath().c_str()); //CHECK agree?
+        remove(connection.getRequest().getPath().c_str()); //delete file which we made, because writing error
         connection.setBytesWritten(0);
         connection.setHandleStatusCode(true);
         connection.setNextState(DELFD);
         return ;
     }
     connection.addBytesWritten(written);
-    // if (connection.getBytesWritten > max_request_body_size) {	
-	// 	connection.getRequest().setStatusCode(413); //payload to large, correct?
-    //   remove(connection.getRequest().getPath().c_str()); //CHECK agree?
-	// 	connection.setBytesWritten(0);
-	// 	connection.setHandleStatusCode(true);
-	// 	connection.setNextState(DELFD);
-	// 	return ;
-	// }
     if (connection.getBytesWritten() >= body.size()) {
         connection.setBytesWritten(0);
         connection.setHandleStatusCode(true); // now open 201, and get the body

@@ -40,7 +40,7 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
 }
 
 void    Servers::deleteOtherFd(Connection& connection, size_t& i) {
-    close(connection.getOtherFD()); //not in case of cgi
+    close(connection.getOtherFD());
     this->_fds.erase(this->_fds.begin() + i);
     connection.setOtherFD(-1);
     i--;
@@ -50,7 +50,6 @@ void    Servers::deleteOtherFd(Connection& connection, size_t& i) {
         connection.setNextState(PREPEXEC);
     else
         connection.setNextState(RESPONSE);
-    //if cgi, also close other fd's and exit pid
 }
 
 void	Servers::prepExec(Connection& connection) {

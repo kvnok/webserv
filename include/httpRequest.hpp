@@ -22,6 +22,13 @@ using namespace std;
 
 enum readState {START, HEADERS, CHUNKED_BODY, CONTENT_LENGTH_BODY, DONE};
 
+const set<string> suportedCTypes = {
+	{"text/html"},
+	{"text/plain"},
+	{"multipart/form-data"},
+	{""}
+};
+
 const set<string> validHttpMethods = {
 	"GET", "POST", "DELETE",
 	"HEAD", "PUT", "CONNECT", "OPTIONS", "TRACE", "PATCH", "PROPPATCH",

@@ -22,15 +22,6 @@ const map<string, string> mimeTypes = {
 	{".css", "text/css"}
 };
 
-const set<string> unsupportedExtensions = {
-	{".png"},
-	{".gif"},
-	{".tar"},
-	{".mp3"},
-	{".avi"},
-	{".csv"}
-};
-
 class Response {
 	private:
 		string				_version;
