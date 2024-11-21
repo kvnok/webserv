@@ -10,6 +10,8 @@ Connection::Connection(const int fd, const ServerBlock serverBlock) {
 	this->_bRead = 0;
 	this->_bWritten = 0;
 	this->_server = serverBlock;
+	this->_lastActive = chrono::steady_clock::now();
+	this->_activeFlag = false;
 }
 Connection::Connection(const Connection& other) { *this = other; }
 
@@ -25,6 +27,8 @@ Connection& Connection::operator=(const Connection& other) {
 		this->_request = other._request;
 		this->_server = other._server;
 		this->_response = other._response;
+		this->_lastActive = other._lastActive;
+		this->_activeFlag = other._activeFlag;
 	}
 	return *this;
 }
@@ -71,6 +75,38 @@ void			Connection::clearBuffer() {
 	else {
 		this->_buffer.clear(); 
 		this->_buffer.resize(0);
+	}
+}
+
+void			Connection::updateTimeStamp() {
+	this->_lastActive = chrono::steady_clock::now();
+	return ;
+}
+
+void			Connection::setActiveFlag(const bool flag) { this->_activeFlag = flag; }
+bool			Connection::getActiveFlag() const { return (this->_activeFlag); }
+
+void			Connection::activityCheck() {
+	auto now = chrono::steady_clock::now();
+	long duration = chrono::duration_cast<chrono::milliseconds>(now - this->_lastActive).count();
+	if (this->_activeFlag == false && duration >= IDLE_LIMIT) {
+		// cout << "closed, duration: " << duration << " milliseconds" << endl;
+		// cout << "fd: " << this->getFd() << " of serverport: " << this->getServer().getPort() << endl;
+		this->_nextState = CLOSE;
+	}
+	else if (this->_activeFlag == true && duration >= ACTIVE_LIMIT) {
+		// cout << "statuscode 503, duration : " << duration << " milliseconds" << endl;
+		// cout << "fd: " << this->getFd() << " of serverport: " << this->getServer().getPort() << endl;
+		this->_request.setStatusCode(504);
+		if (this->_nextState == DELFD || this->_nextState == EXECFD)
+			this->_nextState = DELFD;
+		else
+			this->_nextState = STATUSCODE;
+		this->_bRead = 0;
+		this->_bWritten = 0;
+		this->_handleStatusCode = true;
+		this->_response.reset();
+		this->updateTimeStamp();
 	}
 }
 

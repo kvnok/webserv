@@ -1,0 +1,39 @@
+Here's a comprehensive overview of HTTP status codes grouped by their meaning:
+1xx - Informational Responses:
+
+100 Continue: Server received initial part of request, client can continue
+101 Switching Protocols: Server agreeing to change application protocols
+
+2xx - Successful Responses:
+
+200 OK: Standard successful request
+201 Created: Successful resource creation (e.g., new database entry)
+204 No Content: Successful request with no content to return
+
+3xx - Redirection:
+
+301 Moved Permanently: Resource permanently relocated
+302 Found: Temporary redirection
+304 Not Modified: Cached content unchanged
+
+4xx - Client Errors:
+
+400 Bad Request: Invalid request syntax
+401 Unauthorized: Authentication required/failed
+403 Forbidden: Server understands request but refuses authorization
+404 Not Found: Requested resource doesn't exist
+405 Method Not Allowed: Unsupported HTTP method
+408 Request Timeout: Client didn't complete request in time
+409 Conflict: Request conflicts with current state
+413 Payload Too Large: Request body exceeds server limits
+415 Unsupported Media Type: Incompatible content type
+
+5xx - Server Errors:
+
+500 Internal Server Error: Generic server error
+502 Bad Gateway: Invalid response from upstream server
+503 Service Unavailable: Server overloaded/maintenance
+504 Gateway Timeout: Upstream server didn't respond in time
+505 HTTP Version Not Supported
+
+Would you like me to elaborate on any specific category or status code?
