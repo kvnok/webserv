@@ -20,16 +20,13 @@ void	executeStatusCode(Connection& connection) {
 		return ;
 	}
 	buffer.resize(bytes);
-	// if (connection.getResopnse().getBody().size() + bytes > max_response_body_size) {
-	// 	connection.getResponse().setBody("");
-	// 	connection.setBytesRead(0);
-	// 	connection.getRequest().setStatusCode(413); //payload to large, correct?
-	// 	connection.setHandleStatusCode(true);
-	// 	connection.setNextState(DELFD);
-	// 	return ;
-	// }
 	connection.getResponse().addToBody(buffer);
 	connection.addBytesRead(bytes);
+	if (bytes < BUFFER_SIZE || (bytes == BUFFER_SIZE && buffer[BUFFER_SIZE - 1] == '\0')) {
+		connection.setHandleStatusCode(false);
+		connection.setBytesRead(0);
+		connection.setNextState(DELFD);
+	}
 	return ;
 }
 

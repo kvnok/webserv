@@ -102,35 +102,42 @@ void    sendResponse(Connection& connection) {
     return ;
 }
 
+// void creatCgiResponse() {
+//     if error
+//         set statuscode, 
+//         response.reset();
+//         reset response values
+//         set handle status code flag == true h
+//         set nextState(connection) to STATUSCODE;
+
+// }
+
 void    createResponse(Connection& connection) {
     Response&   response = connection.getResponse();
     Request&    request = connection.getRequest();
 
-    response.setClientSocket(connection.getFd());
-    response.setVersion(request.getVersion());
-    response.setStatusCode(request.getStatusCode());
-    string const path = request.getPath();
-    string extension = path.substr(path.find_last_of("."));
+    // if (connection.getCgi().getCgiStage() == CGI_DONE)
+    //     createCgiResponse();
+    // else {
+        response.setClientSocket(connection.getFd());
+        response.setVersion(request.getVersion());
+        response.setStatusCode(request.getStatusCode());
+        string const path = request.getPath();
+        string extension = path.substr(path.find_last_of("."));
 
-    auto i = mimeTypes.find(extension);
-    if (i != mimeTypes.end())
-        response.addHeader("Content-Type", i->second);
-    else if (unsupportedExtensions.find(extension) != unsupportedExtensions.end()) {
-        connection.getRequest().setStatusCode(415);
-        connection.setHandleStatusCode(true);
-        response.reset();
-        connection.setNextState(STATUSCODE);
-        return ; 
-    }
-    else
-        response.addHeader("Content-Type", "text/plain");
-    response.addHeader("Content-Length", to_string(response.getBody().size()));
-    string const state = request.getHeaderValue("Connection");
-    if (state.empty())
-        response.addHeader("Connection", "keep-alive");
-    else
-        response.addHeader("Connection", state);
-    response.createFullResponse();
+        auto i = mimeTypes.find(extension);
+        if (i != mimeTypes.end())
+            response.addHeader("Content-Type", i->second);
+        else
+            response.addHeader("Content-Type", "text/plain");
+        response.addHeader("Content-Length", to_string(response.getBody().size()));
+        string const state = request.getHeaderValue("Connection");
+        if (state.empty())
+            response.addHeader("Connection", "keep-alive");
+        else
+            response.addHeader("Connection", state);
+        response.createFullResponse();
+    // }
     connection.setNextState(SEND);
     return ;
 }

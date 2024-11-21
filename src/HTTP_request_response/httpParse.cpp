@@ -1,5 +1,4 @@
 
-#include "httpRequest.hpp"
 #include "Connection.hpp"
 
 static bool	parseHeaders(istringstream &headerStream, string line, Request& request) {
@@ -36,7 +35,7 @@ static bool	validateMethod(string const method, Request& request) {
 		return (false);
 	}
 	if (supportedHttpMethods.find(method) == supportedHttpMethods.end()) {
-		request.setStatusCode(405); //CHECK
+		request.setStatusCode(405);
 		return (false);
 	}
 	return (true);
@@ -56,7 +55,7 @@ static bool validateVersion(string const version, Request& request) {
 
 static bool validatePath(string const path, Request& request) {
 	if (path[0] != '/') {
-		request.setStatusCode(400); // need to check correct statuscode
+		request.setStatusCode(400);
 		return (false);
 	}
 	if (path.length() > MAX_URI_LENGTH) {
@@ -103,37 +102,44 @@ string findBoundary(const string& headerValue) {
 }
 
 static	void	parsePart(string content, Request& request) {
-	string				hbLim = "\r\n\r\n";
-	string				nl = "\r\n";
-	string				kv = ": ";
+	string				hbLim = "\r\n\r\n"; //headers limit
+	string				nl = "\r\n"; //new line
+	string				kv = ": "; //header/value limit
 	map<string, string>	headers;
+	bool				bodyCheck = false;
+	bool				nameCheck = false;
 
 	auto hbPos = search(content.begin(), content.end(), hbLim.begin(), hbLim.end());
 	if (hbPos == content.end()) {
-		return ; //CHECK add error handling, part is empty
+		throw runtime_error("400");
 	}
 	auto start = search(content.begin(), hbPos, nl.begin(), nl.begin());
 	start += nl.size();
 	while (start != hbPos) {
 		auto end = search(start, hbPos, nl.begin(), nl.end()); 
 		auto kvLim = search(start, end, kv.begin(), kv.end());
-		if (start >= end || kvLim >= end) {
-			break ; //CHECK handle error
-		}
+		if (start >= end || kvLim >= end)
+			break ;
 		headers[string(start, kvLim)] = string(kvLim + kv.size(), end);
 		start = end + nl.size();
 	}
 	string body(hbPos + hbLim.size(), content.end() - nl.size());
-	if (headers["Content-Disposition"].find("name=\"postBody\";") != string::npos)
-		request.setBody(body); //if not present, we still need the body to be set
+	if (headers["Content-Disposition"].find("name=\"file\";") != string::npos) {
+		bodyCheck = true;
+		request.setBody(body);
+	}
 	string value = headers["Content-Disposition"];
 	string toFind = "filename=\"";
 	auto i = search(value.begin(), value.end(), toFind.begin(), toFind.end());
 	if (i != value.end()) {
 		auto j = find(i + toFind.size(), value.end(), '\"');
-		if (j < value.end())
+		if (j < value.end()) {
 			request.setFileName(string(i + toFind.size(), j));
+			nameCheck = true;
+		}
 	}
+	if (nameCheck != bodyCheck)
+		throw runtime_error("400");
 	return ;
 }
 
@@ -143,24 +149,26 @@ void	parseBodyParts(Request& request) {
 
 	if (request.getHeaderValue("Content-Type").find("multipart/form-data") != string::npos)
 		boundary = findBoundary(request.getHeaderValue("Content-Type"));
+	else
+		throw runtime_error("400");
 	if (boundary.empty() || body.empty())
-		return ; //CHECK handle error;
+		throw runtime_error("400");
 	boundary = "--" + boundary;
 	auto i = search(body.begin(), body.end(), boundary.begin(), boundary.end());
 	if (i == body.end())
-		return ; //CHECK handle error.
+		throw runtime_error("400");
 	i += boundary.size();
 	while (true) {
 		if (i >= body.end())
-			break ; //CHECK handle error
+			break ;
 		string	tmpB(i, body.end());
 		if (tmpB.empty())
-			break ; //CHECK handle error
+			break ;
 		else if (tmpB == "--")
-			break ; //finished
+			break ;
 		auto pos = search(tmpB.begin(), tmpB.end(), boundary.begin(), boundary.end());
 		if (pos == tmpB.end())
-			break ; //CHECK handle error
+			break ;
 		parsePart(string(tmpB.begin(), pos), request);
 		i = search(i, body.end(), boundary.begin(), boundary.end()) + boundary.size();
 	}
@@ -173,10 +181,10 @@ void	checkChunkedBody(Connection& connection) {
 	
 	while (true) {
 		if (buf.empty())
-			break ; //CHECK
+			break ;
 		auto endSize = search(buf.begin(), buf.end(), d.begin(), d.end());
 		if (endSize == buf.end())
-			break ; //CHECK
+			break ;
 		unsigned long chunkSize;
 		try {
 			chunkSize = stoul(string(buf.begin(), endSize), nullptr, 16);
@@ -186,8 +194,13 @@ void	checkChunkedBody(Connection& connection) {
 			break ;
 		}
 		if (chunkSize == 0) {
-			if (connection.getRequest().getMultipartFlag())
-				parseBodyParts(connection.getRequest());
+			if (connection.getRequest().getMultipartFlag()) {
+				try {
+					parseBodyParts(connection.getRequest());
+				} catch (...) {
+					connection.getRequest().setStatusCode(400);
+				}
+			}
 			connection.getRequest().setReadState(DONE);
 			break ;
 		}
@@ -218,8 +231,13 @@ void	checkContentLengthBody(Connection& connection) {
 	if (connection.getBuffer().size() >= readLength) {
 		vector<char> buf = connection.getBuffer();
 		connection.getRequest().setBody(string(buf.begin(), buf.end()));
-		if (connection.getRequest().getMultipartFlag())
-			parseBodyParts(connection.getRequest());
+		if (connection.getRequest().getMultipartFlag()) {
+			try {
+				parseBodyParts(connection.getRequest());
+			} catch (...) {
+				connection.getRequest().setStatusCode(400);
+			}
+		}
 		connection.getRequest().setReadState(DONE);
 	}
 	return ;
@@ -239,16 +257,21 @@ void	checkHeaders(const vector<char> requestData, Request& request) {
 		request.setReadState(DONE);
 		return ;
 	}
+
 	if (request.getHeaderValue("Content-Type").find("multipart/form-data") != string::npos)
 		request.setMultipartFlag(true);
-	if (request.getMethod() == "POST" && !request.getMultipartFlag()) { //CHECK post without body/contentlength/transfer-encoding=chunked
+	else if (suportedCTypes.find(request.getHeaderValue("Content-Type")) == suportedCTypes.end()) {
+		request.setStatusCode(415);
+		return ;
+	}
+	if (request.getMethod() == "POST" && !request.getMultipartFlag()) {
 		request.setStatusCode(400);
 		request.setReadState(DONE);
 		return ;
 	}
 	if (request.getHeaderValue("Transfer-Encoding") == "chunked") {
 		if (!request.getHeaderValue("Content-Length").empty()) {
-			request.setStatusCode(400); //only one of those headers should be present
+			request.setStatusCode(400);
 			request.setReadState(DONE);
 			return ;
 		}
@@ -259,7 +282,7 @@ void	checkHeaders(const vector<char> requestData, Request& request) {
 			unsigned long cLength = stoul(request.getHeaderValue("Content-Length"));
 			request.setContentLength(cLength);
 		} catch (...) {
-			request.setStatusCode(413); //CHECK or 500 internal error?
+			request.setStatusCode(500);
 			request.setReadState(DONE);
 			return ;
 		}
