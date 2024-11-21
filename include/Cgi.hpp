@@ -8,7 +8,7 @@ using namespace std;
 
 class Connection;
 
-enum cgiStage {CGI_OFF, CGI_ON, CGI_FORK, CGI_BUSY, CGI_DONE, CGI_WRITE, CGI_READ};
+enum cgiStage {CGI_OFF, CGI_ON, CGI_FDWRITE, CGI_FDREAD, CGI_DONE, CGI_WRITE, CGI_READ};
 
 class	Cgi {
 	private:
@@ -41,3 +41,7 @@ class	Cgi {
 
 		void	reset();
 };
+
+bool	creatCgiArg(Connection& connection);
+bool	createCgiFds(Connection& connection);
+bool	forkCgi(Connection& connection);
