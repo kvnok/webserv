@@ -82,4 +82,6 @@ void	executePost(Connection& connection);
 void	executeGet(Connection& connection);
 
 //loose those
-int		run_script(char *args[], Request &request);
+int		run_script(Connection& connection);
+
+int		run_script(Connection& connection);
