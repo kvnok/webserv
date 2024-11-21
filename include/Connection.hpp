@@ -3,6 +3,7 @@
 
 #include "httpResponse.hpp"
 #include "httpRequest.hpp"
+#include "Cgi.hpp"
 #include "ServerBlock.hpp"
 
 using namespace std;
@@ -18,6 +19,7 @@ class Connection {
 		vector<char>	_buffer; //use string instead of vector?
 		int				_otherFD;
 		bool			_handleStatusCode;
+		Cgi				_cgi;
 		size_t			_bRead;
 		size_t			_bWritten;
 		Request			_request;
@@ -32,8 +34,8 @@ class Connection {
 
 		Connection& operator=(const Connection& other);
 
-		void	setRequest(Request request);
-		void	setResponse(Response response);
+		void	setRequest(Request request); //we dont use it
+		void	setResponse(Response response);//we dont use it
 		void	setNextState(const cState nextState);
 		void	setOtherFD(const int otherFD);
 		void	setHandleStatusCode(const bool flag);
@@ -51,6 +53,7 @@ class Connection {
 		Request&		getRequest();
 		ServerBlock		getServer();
 		Response&		getResponse();
+		Cgi&			getCgi();
 		cState			getNextState() const;
 		int				getOtherFD() const;
 		bool			getHandleStatusCode() const;

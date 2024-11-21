@@ -66,7 +66,9 @@ class Response {
 		string				getHeaderValue(const string& value) const;
 
 		void				reset();
-		void				setFullResponse();			
+		void				setFullResponse(string const fullResponse);
+		void				addToFullResponse(string const part);
+		void				createFullResponse();			
 };
 
 void	createResponse(Connection& connection);

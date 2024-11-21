@@ -135,8 +135,11 @@ void	parsePath(Connection& connection) {
 		connection.setHandleStatusCode(true);
 		connection.setNextState(STATUSCODE);
 	}
-	else
+	else {
+		if (connection.getRequest().getIsCGI())
+			connection.getCgi().setCgiStage(CGI_ON);
 		connection.setNextState(PREPEXEC);
+	}
 	return ;
 }
 

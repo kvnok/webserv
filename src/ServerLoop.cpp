@@ -38,12 +38,16 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
 }
 
 void    Servers::deleteOtherFd(Connection& connection, size_t& i) {
-    close(connection.getOtherFD());
+    close(connection.getOtherFD()); //not in case of cgi
     this->_fds.erase(this->_fds.begin() + i);
     connection.setOtherFD(-1);
     i--;
     if (connection.getHandleStatusCode() == true)
         connection.setNextState(STATUSCODE);
+    else if (connection.getCgi().getCgiStage() == CGI_BUSY)
+        connection.setNextState(PREPEXEC);
+    else if (connection.getCgi().getCgiStage() == CGI_DONE)
+        connection.setNextState(SEND);
     else
         connection.setNextState(RESPONSE);
 }
