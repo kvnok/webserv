@@ -1,5 +1,28 @@
 #include "Connection.hpp"
 
+static void	checkParent(Connection& connection) {
+	int status = -1;
+	if (waitpid(connection.getCgi().getPid(), &status, WNOHANG) == -1)
+    {
+   	    connection.getRequest().setStatusCode(500);
+   	    connection.getCgi().setCgiStage(CGI_OFF);;
+		connection.setHandleStatusCode(true);
+		connection.setNextState(DELFD);
+		//clean up all fds/pid from cgi
+   	}
+	else {
+		if (status < 200)
+			connection.getRequest().setStatusCode(500);
+		else
+			connection.getRequest().setStatusCode(status);
+		cout << status << endl;
+   	    connection.getCgi().setCgiStage(CGI_OFF);
+		connection.setHandleStatusCode(true);
+		connection.setNextState(DELFD);
+		//clean up all fds/pid from cgi
+	}
+}
+
 void	executeCGI(Connection& connection) {
 	if (connection.getCgi().getCgiStage() == CGI_WRITE) {
 		int fd = connection.getOtherFD();
@@ -31,6 +54,7 @@ void	executeCGI(Connection& connection) {
 		string	buffer(BUFFER_SIZE, '\0');
 		int		fd = connection.getOtherFD();
 		ssize_t bytes = read(fd, &buffer[0], BUFFER_SIZE);
+		cout << bytes << endl;
 		if (bytes < 0) {
 			connection.getCgi().setCgiStage(CGI_OFF);
 			connection.getRequest().setStatusCode(500);
@@ -42,15 +66,22 @@ void	executeCGI(Connection& connection) {
 			return ;
 		}
 		else if (bytes == 0) {
+			checkParent(connection);
 			connection.getCgi().setCgiStage(CGI_DONE);
 			connection.setNextState(DELFD); //dont close the fd, only delete from poll
 			connection.setBytesWritten(0);
-			return ;
 		}
-		buffer.resize(bytes);
-		connection.getResponse().addToBody(buffer); //not add to full response
-		connection.addBytesRead(bytes);
-		return ;
+		else  {
+			buffer.resize(bytes);
+			connection.getResponse().addToBody(buffer); //not add to full response
+			connection.addBytesRead(bytes);
+			if (bytes < BUFFER_SIZE || (bytes == BUFFER_SIZE && buffer[BUFFER_SIZE - 1] == '\0')) {
+				checkParent(connection);
+				connection.getCgi().setCgiStage(CGI_DONE);
+				connection.setNextState(DELFD); //dont close the fd, only delete from poll
+				connection.setBytesWritten(0);
+			}
+		}
 	}
 }
 

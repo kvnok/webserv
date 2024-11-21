@@ -110,6 +110,7 @@ bool	forkCgi(Connection& connection) {
 		vector<char *> args;
 		 args.push_back(const_cast<char*>(PYTHON_CGI));
     	args.push_back(const_cast<char*>(path.c_str()));
+		
    		args.push_back(const_cast<char*>(name.c_str()));
     	args.push_back(const_cast<char*>(body_size.c_str()));
     	args.push_back(nullptr);
@@ -118,31 +119,9 @@ bool	forkCgi(Connection& connection) {
     	env.push_back(const_cast<char*>(path_info.c_str()));
     	env.push_back(nullptr);
 		if (execve(args[0], args.data(), env.data()) == -1)
-			exit(1);
+			exit(500);
 	}
-	else {
+	else
 		connection.getCgi().setPid(pid);
-		int status = -1;
-		if (waitpid(pid, &status, WNOHANG) == -1)
-        {
-            connection.getRequest().setStatusCode(500);
-            connection.getCgi().setCgiStage(CGI_OFF);;
-			connection.setHandleStatusCode(true);
-			connection.setNextState(DELFD);
-			//clean up all fds/pid from cgi
-			return (false);
-        }
-		else {
-			if (status < 200)
-				connection.getRequest().setStatusCode(500);
-			else
-				connection.getRequest().setStatusCode(status);
-            connection.getCgi().setCgiStage(CGI_OFF);
-			connection.setHandleStatusCode(true);
-			connection.setNextState(DELFD);
-			//clean up all fds/pid from cgi
-			return (false);
-		}
-	}
 	return (true);
 }
