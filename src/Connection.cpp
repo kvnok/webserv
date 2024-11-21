@@ -22,6 +22,7 @@ Connection& Connection::operator=(const Connection& other) {
 		this->_buffer = other._buffer;
 		this->_otherFD = other._otherFD;
 		this->_handleStatusCode = other._handleStatusCode;
+		this->_cgi = other._cgi;
 		this->_bRead = other._bRead;
 		this->_bWritten = other._bWritten;
 		this->_request = other._request;
@@ -55,6 +56,7 @@ void	Connection::addToBuffer(const vector<char> buffer) {
 int				Connection::getFd() const { return (this->_fd); }
 Request&		Connection::getRequest() { return (this->_request); }
 Response&		Connection::getResponse() { return (this->_response); }
+Cgi&			Connection::getCgi() { return (this->_cgi); }
 cState			Connection::getNextState() const { return (this->_nextState); }
 vector<char>	Connection::getBuffer() const { return (this->_buffer); }
 ServerBlock		Connection::getServer() { return (this->_server); }
@@ -115,6 +117,7 @@ void			Connection::reset() {
 	this->_buffer.resize(0);
 	this->_request.reset();
 	this->_response.reset();
+	this->_cgi.reset();
 	this->_nextState = READ;
 	this->_handleStatusCode = false;
 	this->_bRead = 0;

@@ -35,7 +35,10 @@ void	Response::addToBody(string const bodyPart) { this->_body.append(bodyPart); 
 void    Response::addBytesSend(size_t const bSend) { this->_bytesSend += bSend; }
 void	Response::addHeader(string const key, string const value) { this->_header[key] = value; }
 
-void    Response::setFullResponse() {
+void	Response::setFullResponse(string const fullResponse) { this->_fullResponse = fullResponse; }
+void	Response::addToFullResponse(string const part) { this->_fullResponse.append(part); }
+
+void    Response::createFullResponse() {
 	this->_fullResponse = this->_version + " " + to_string(this->_statusCode) + " " + httpStatusMessage(this->_statusCode) + "\r\n";
 	for (auto& pair : this->_header)
 		this->_fullResponse +=  pair.first + ": " + pair.second + "\r\n";
@@ -127,7 +130,7 @@ void    createResponse(Connection& connection) {
         response.addHeader("Connection", "keep-alive");
     else
         response.addHeader("Connection", state);
-    response.setFullResponse();
+    response.createFullResponse();
     connection.setNextState(SEND);
     return ;
 }

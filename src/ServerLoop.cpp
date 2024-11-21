@@ -40,14 +40,17 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
 }
 
 void    Servers::deleteOtherFd(Connection& connection, size_t& i) {
-    close(connection.getOtherFD());
+    close(connection.getOtherFD()); //not in case of cgi
     this->_fds.erase(this->_fds.begin() + i);
     connection.setOtherFD(-1);
     i--;
     if (connection.getHandleStatusCode() == true)
         connection.setNextState(STATUSCODE);
+    else if (connection.getCgi().getCgiStage() == CGI_FDREAD)
+        connection.setNextState(PREPEXEC);
     else
         connection.setNextState(RESPONSE);
+    //if cgi, also close other fd's and exit pid
 }
 
 void	Servers::prepExec(Connection& connection) {
@@ -74,6 +77,7 @@ void    Servers::addFdToPoll(Connection& connection) {
             connection.getRequest().setStatusCode(500);
             connection.setHandleStatusCode(true);
             connection.setNextState(STATUSCODE);
+            //if cgi, also close other fd's and exit pid
             return ;
     }
     this->_fds.push_back({connection.getOtherFD(), POLLIN | POLLOUT, 0});

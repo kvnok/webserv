@@ -125,7 +125,7 @@ static	void	parsePart(string content, Request& request) {
 	}
 	string body(hbPos + hbLim.size(), content.end() - nl.size());
 	if (headers["Content-Disposition"].find("name=\"postBody\";") != string::npos)
-		request.setBody(body);
+		request.setBody(body); //if not present, we still need the body to be set
 	string value = headers["Content-Disposition"];
 	string toFind = "filename=\"";
 	auto i = search(value.begin(), value.end(), toFind.begin(), toFind.end());
