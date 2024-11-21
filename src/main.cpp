@@ -11,13 +11,25 @@
 
 #include <csignal>
 
+Servers* globalServer = nullptr;
+
+static void	signalHandler(int signum) {
+	if (signum == SIGINT && globalServer) {
+        for (size_t i = 0; i < globalServer->get_fds().size(); i++) {
+            close(globalServer->get_fds()[i].fd);
+        }
+		exit (0);
+    }
+}
+
+
 int main(int argc, char **argv) {
-	signal(SIGPIPE, SIG_IGN);
+	//signal(SIGPIPE, SIG_IGN); 
+	signal(SIGINT, signalHandler);
 	try
 	{
 		if (argc != 1 && argc != 2)
 			throw invalid_argument("usage: ./webserv [config_file]");
-		
 		string config_file = "default.conf";
 		if (argc == 2)
 			config_file = argv[1];
@@ -26,32 +38,20 @@ int main(int argc, char **argv) {
 		Parser parser(config_file);
 		Config config;
 		parser.parse(config);
-		// config.print_server_blocks();
-		// test_smartLocs(config); // test smartLocs
 
 		vector<ServerBlock> serverBlocks;
-		for(int i = 0; i < (int)config.get_server_blocks().size(); i++) {//CHANGED cast to int
+		for(size_t i = 0; i < config.get_server_blocks().size(); i++) {
 			ServerBlock serverBlock(config.get_server_blocks()[i]);
 			serverBlocks.push_back(serverBlock);
-			// ok_print_server_block(serverBlock);
 		}
 		Servers servers(serverBlocks);
-		// cout << "IN MAIN" << endl;
-		// for (int i = 0; i < servers.get_serverBlocks().size(); i++) {
-		// 	cout << "new block: " << endl;
-		// 	ok_print_server_block(servers.get_serverBlocks()[i]);
-		// }
+		globalServer = &servers;
 		servers.start();
 	} catch (exception &e) {
-		//also need to close fd's if they are open
+		//also need to close fd's if they are open?
 		cerr << RED << "Exception: " << e.what() << RESET << endl;
 	}
-	
-	// here we want to delete all post requests and stuff
-
-	// parseMainTest();
-	// cgi_multiple_tests();
-	// test_autoindex();
+	// here we want to delete all post requests and stuff, do we?
 	return 0;
 }
 

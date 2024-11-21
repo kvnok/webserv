@@ -35,7 +35,7 @@ class ServerBlock
 		vector<Location> _locations;
 		int _serverFd;
 		int _opt;
-		int newSocket;
+		//int newSocket; //UNUSED VAR
 		int max_clients;
 		string _currentPath;
 		smartLocs _smartLocs;
@@ -64,8 +64,6 @@ class ServerBlock
 		void setBind();
 		void setListen();
 		// ------------------------- //
-		smartLocs& getSmartLocs();
+		smartLocs getSmartLocs();
 		void setSmartLocs(pServerBlock &block);
 } ;
-
-void ok_print_server_block(ServerBlock &serverBlock);

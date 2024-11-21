@@ -71,21 +71,3 @@ void Location::set_redirect_code(int redirect_code) { _redirect_code = redirect_
 void Location::set_has_deny(bool has_deny) { _has_deny = has_deny; }
 void Location::set_deny(vector<string> deny) { _deny = deny; }
 void Location::add_deny(string deny) { _deny.push_back(deny); }
-
-
-// void Location::print_location() {
-// 	cout << "Path: " << (_path.empty() ? is_not_set() : _path) << endl;
-// 	cout << "Root: " << (_root.empty() ? is_not_set() : _root) << endl;
-// 	cout << "Index: " << (_index.empty() ? is_not_set() : _index) << endl;
-// 	cout << "Autoindex: " << (_autoindex ? "true" : "false") << endl;
-// 	cout << "Is CGI: " << (_is_cgi ? "true" : "false") << endl;
-// 	cout << "CGI extension: " << (_cgi_extension.empty() ? is_not_set() : _cgi_extension) << endl;
-// 	cout << "Is redirect: " << (_is_redirect ? "true" : "false") << endl;
-// 	cout << "Redirect: " << (_redirect.empty() ? is_not_set() : _redirect) << endl;
-// 	cout << "has deny: " << (_has_deny ? "true" : "false") << endl;
-// 	cout << "Deny: " << (_deny.size() == 0 ? is_not_set() : "");
-// 	for (int i = 0; i < _deny.size(); i++) {
-// 		cout << _deny[i] << " ";
-// 	}
-// 	cout << endl;
-// }

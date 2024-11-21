@@ -11,16 +11,6 @@ Response::Response() {
     _fullResponse = "";
 }
 
-// Response::Response(int const clientSocket, int const statusCode, string const version) {
-//     _version = version;
-//     _statusCode = statusCode;
-//     _body = "";
-//     _clientSocket = clientSocket;
-//     _bytesSend = 0;
-//     _fullResponse = "";
-// } //dont use it
-
-// Response::Response(const Response& other) { *this = other; }
 Response::~Response() { }
 
 Response&	Response::operator=(const Response& other) {
@@ -45,26 +35,6 @@ void	Response::addToBody(string const bodyPart) { this->_body.append(bodyPart); 
 void    Response::addBytesSend(size_t const bSend) { this->_bytesSend += bSend; }
 void	Response::addHeader(string const key, string const value) { this->_header[key] = value; }
 
-void	Response::setHeaders(string const content, string const connectionState, string const path) {
-	string extension;
-
-	extension = path.substr(path.find_last_of(".") + 1);
-	if (extension == "html")
-        this->addHeader("Content-Type", "text/html");
-    else if (extension == "css")
-        this->addHeader("Content-Type", "text/css");
-    else if (extension == "ico")
-        this->addHeader("Content-Type", "image/x-icon");
-    //else other extensions we support?
-    this->addHeader("Content-Length", to_string(content.size()));
-    if (connectionState.empty())
-        this->addHeader("Connection", "keep-alive");
-    else
-        this->addHeader("Connection", connectionState);
-    //are there other situations we need to send "close" as connection status to the client?
-    return ;
-}
-
 void    Response::setFullResponse() {
 	this->_fullResponse = this->_version + " " + to_string(this->_statusCode) + " " + httpStatusMessage(this->_statusCode) + "\r\n";
 	for (auto& pair : this->_header)
@@ -82,6 +52,13 @@ int                 Response::getClientSocket() const { return (this->_clientSoc
 size_t              Response::getBytesSend() const { return (this->_bytesSend); }
 string              Response::getFullResponse() const {return (this->_fullResponse); }
 
+string				Response::getHeaderValue(const string& key) const{
+	auto iterator = this->_header.find(key);
+	if (iterator == this->_header.end())
+		return ("");
+	return (iterator->second);
+}
+
 void    Response::reset() {
     this->_version = "";
     this->_statusCode = 200;
@@ -97,25 +74,21 @@ void    sendResponse(Connection& connection) {
     int         clientSocket = response.getClientSocket();
     string      fullResponse = response.getFullResponse();   
 
-    // cout << "send: " << response.getBytesSend() << " size: " << fullResponse.size() << " to: " << clientSocket << endl;
+    size_t chunkSize = fullResponse.size() - response.getBytesSend();
+    if (chunkSize > BUFFER_SIZE)
+        chunkSize = BUFFER_SIZE;
+    ssize_t bytes = send(clientSocket, fullResponse.c_str() + response.getBytesSend(), chunkSize, MSG_NOSIGNAL); //ignore SIGPIPE, it will retrun -1, we will close the connection and a new one will be openend
+    if (bytes == -1) {   
+        connection.setNextState(CLOSE);
+        return ;
+    }
+    response.addBytesSend(bytes);
     if (response.getBytesSend() >= fullResponse.size()) {
-        if (connection.getRequest().getHeaderValue("Connection") == "close")
+        if (connection.getResponse().getHeaderValue("Connection") == "close")
             connection.setNextState(CLOSE);
         else
             connection.setNextState(CLEANUP);
     }
-    size_t chunkSize = fullResponse.size() - response.getBytesSend();
-    if (chunkSize > BUFFER_SIZE)
-        chunkSize = BUFFER_SIZE;
-    ssize_t bytes = send(clientSocket, fullResponse.c_str() + response.getBytesSend(), chunkSize, 0);
-    if (bytes == -1) {   
-        connection.getRequest().setStatusCode(500);
-        connection.setNextState(DELFD);
-        response.reset();
-        connection.setHandleStatusCode(true);
-        return ;
-    }
-    response.addBytesSend(bytes);
     return ;
 }
 
@@ -126,8 +99,28 @@ void    createResponse(Connection& connection) {
     response.setClientSocket(connection.getFd());
     response.setVersion(request.getVersion());
     response.setStatusCode(request.getStatusCode());
-    response.setHeaders(response.getBody(), request.getHeaderValue("Connection"), request.getPath());
-	response.setFullResponse();
+    string const path = request.getPath();
+    string extension = path.substr(path.find_last_of("."));
+
+    auto i = mimeTypes.find(extension);
+    if (i != mimeTypes.end())
+        response.addHeader("Content-Type", i->second);
+    else if (unsupportedExtensions.find(extension) != unsupportedExtensions.end()) {
+        connection.getRequest().setStatusCode(415);
+        connection.setHandleStatusCode(true);
+        response.reset();
+        connection.setNextState(STATUSCODE);
+        return ; 
+    }
+    else
+        response.addHeader("Content-Type", "text/plain");
+    response.addHeader("Content-Length", to_string(response.getBody().size()));
+    string const state = request.getHeaderValue("Connection");
+    if (state.empty())
+        response.addHeader("Connection", "keep-alive");
+    else
+        response.addHeader("Connection", state);
+    response.setFullResponse();
     connection.setNextState(SEND);
     return ;
 }

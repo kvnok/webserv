@@ -1,6 +1,4 @@
-#include "httpRequest.hpp"
 #include "Connection.hpp"
-#include <fcntl.h>
 
 void    executePost(Connection& connection) {
     int     fd = connection.getOtherFD();
@@ -12,14 +10,21 @@ void    executePost(Connection& connection) {
     ssize_t written = write(fd, body.data() + connection.getBytesWritten(), chunkSize);
     if (written == -1) {
         connection.getRequest().setStatusCode(500);
+        remove(connection.getRequest().getPath().c_str()); //CHECK agree?
         connection.setBytesWritten(0);
         connection.setHandleStatusCode(true);
         connection.setNextState(DELFD);
-        remove(connection.getRequest().getPath().c_str()); //CHECK agree?
         return ;
     }
     connection.addBytesWritten(written);
-    // check if written to much?
+    // if (connection.getBytesWritten > max_request_body_size) {	
+	// 	connection.getRequest().setStatusCode(413); //payload to large, correct?
+    //   remove(connection.getRequest().getPath().c_str()); //CHECK agree?
+	// 	connection.setBytesWritten(0);
+	// 	connection.setHandleStatusCode(true);
+	// 	connection.setNextState(DELFD);
+	// 	return ;
+	// }
     if (connection.getBytesWritten() >= body.size()) {
         connection.setBytesWritten(0);
         connection.setHandleStatusCode(true); // now open 201, and get the body
@@ -28,19 +33,11 @@ void    executePost(Connection& connection) {
     return ;
 }
 
-//201 Created: For a successful upload, respond with 201 Created.
-//400 Bad Request: If the request format is invalid or required headers are missing, return 400.
-//403 Forbidden: If the target directory isn’t allowed for uploads according to the config file, return 403.
-//409 Conflict: If a file with the same name already exists and overwriting is not permitted, return 409.
-//413 Payload Too Large: If the file exceeds the allowed size, return 413.
-
 void    postMethod(Connection& connection) {
     string  storage = connection.getRequest().getPath();
     string  file = connection.getRequest().getFileName();
 
-    //CHECK should we also check if the dir exists, or is this done in config?
-    //CHECK could the 'storage' path also be a file? and what should we do then?
-    if (access(storage.c_str(), W_OK) == -1) { //dir has no writing rights, so 403 forbidden
+    if (!filesystem::is_directory(storage) || access(storage.c_str(), W_OK) == -1) { //is not a dir or dir has no writing rights, so 403 forbidden
         connection.getRequest().setStatusCode(403);
         connection.setHandleStatusCode(true);
         connection.setNextState(STATUSCODE);
@@ -63,7 +60,7 @@ void    postMethod(Connection& connection) {
         connection.getRequest().setPath(fullPath);
         connection.getRequest().setStatusCode(201);
         connection.setOtherFD(fd);
-        connection.setHandleStatusCode(false); //first write, afterthat get 201 page
+        connection.setHandleStatusCode(false); //first write, after that get 201 page
         connection.setNextState(SETFD);
     }
     return ;

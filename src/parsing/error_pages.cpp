@@ -6,13 +6,9 @@ static const vector<int> all_error_codes = {
 
 void fill_error_pages(pServerBlock &block) {
 	map<int, string> set_pages = block.get_error_pages();
-	// print set pages
-	// cout << "set pages" << endl;
-	// for (map<int, string>::iterator it = set_pages.begin(); it != set_pages.end(); it++) {
-	// 	cout << it->first << " " << it->second << endl;
-	// }
+
 	map<int, string> error_pages;
-	for (int i = 0; i < (int)all_error_codes.size(); i++) { //CHANGED cast to int
+	for (size_t i = 0; i < all_error_codes.size(); i++) {
 		if (set_pages.find(all_error_codes[i]) != set_pages.end()) {
 			error_pages[all_error_codes[i]] = set_pages[all_error_codes[i]];
 		}

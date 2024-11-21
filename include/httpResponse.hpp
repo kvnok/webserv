@@ -11,6 +11,26 @@ using namespace std;
 
 class Connection;
 
+const map<string, string> mimeTypes = {
+	{".html", "text/html"},
+	{".txt", "text/plain"},
+	{".jpg", "image/jpeg"},
+	{".jpeg", "image/jpeg"},
+	{".pdf", "application/pdf"},
+	{".zip", "application/zip"},
+	{".ico", "image/x-icon"},
+	{".css", "text/css"}
+};
+
+const set<string> unsupportedExtensions = {
+	{".png"},
+	{".gif"},
+	{".tar"},
+	{".mp3"},
+	{".avi"},
+	{".csv"}
+};
+
 class Response {
 	private:
 		string				_version;
@@ -21,7 +41,6 @@ class Response {
 		size_t				_bytesSend;
 		string				_fullResponse;
 		Response(const Response& other);
-		Response(int const clientSocket, int const statusCode, string const version);
 	public:
 		Response();
 		~Response();
@@ -36,7 +55,6 @@ class Response {
 		void				setBytesSend(size_t const bSend);
 		void				addBytesSend(size_t const bSend);
 		void				addHeader(string const key, string const value);
-		void				setHeaders(string const content, string const connectionState, string const path);
 
 		string				getVersion() const;
 		int					getStatusCode() const;
@@ -45,6 +63,7 @@ class Response {
 		int					getClientSocket() const;
 		size_t				getBytesSend() const;
 		string				getFullResponse() const;
+		string				getHeaderValue(const string& value) const;
 
 		void				reset();
 		void				setFullResponse();			

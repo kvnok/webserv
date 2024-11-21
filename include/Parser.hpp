@@ -37,12 +37,8 @@ string is_not_set();
 void trim_start(string &line);
 void get_words(string &line, vector<string> &words);
 void raw_extract(ifstream& file, RAWCONF &raw_config);
-void print_ascii(string &line);
-void print_raw_config(RAWCONF &raw_config);
 void is_file_name_correct(string &f);
 void extract_raw_servers(RAWCONF &raw_config, RAWSERVS &servers);
-void print_raw_servers(RAWSERVS &servers);
-void print_i_raw_serv(RAWSERV &server);
 void check_brackets(RAWSERV &raw_server);
 vector<string> split(const string &s, char delimiter);
 
