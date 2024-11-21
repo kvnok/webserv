@@ -5,12 +5,15 @@
 #include "httpRequest.hpp"
 #include "Cgi.hpp"
 #include "ServerBlock.hpp"
+#include <chrono>
 
 using namespace std;
 
-#define BUFFER_SIZE 10024
+#define BUFFER_SIZE 1024
+#define IDLE_LIMIT  30000 //1 minute
+#define ACTIVE_LIMIT 3000 // 3 seconds
 
-enum cState {READ, PATH, PREPEXEC, STATUSCODE, SETFD, EXECFD, DELFD, RESPONSE, SEND, CLEANUP, CLOSE};
+enum cState {READ, PATH, PREPEXEC, STATUSCODE, SETFD, EXECFD, DELFD, RESPONSE, SEND, CLOSE};
 
 class Connection {
 	private:
@@ -25,6 +28,8 @@ class Connection {
 		Request			_request;
 		ServerBlock		_server;
 		Response		_response;
+		bool			_activeFlag;
+		chrono::steady_clock::time_point	_lastActive;
 		Connection();
 
 	public:
@@ -61,6 +66,10 @@ class Connection {
 		size_t			getBytesWritten() const;
 		vector<char>	getBuffer() const;
 
+		void			setActiveFlag(const bool flag);
+		bool			getActiveFlag() const;
+		void			updateTimeStamp();
+		void			activityCheck();
 		void			reset();
 };
 
@@ -76,4 +85,6 @@ void	executePost(Connection& connection);
 void	executeGet(Connection& connection);
 
 //loose those
-int		run_script(char *args[], Request &request);
+int		run_script(Connection& connection);
+
+int		run_script(Connection& connection);

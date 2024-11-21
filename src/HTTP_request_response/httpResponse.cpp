@@ -82,15 +82,22 @@ void    sendResponse(Connection& connection) {
         chunkSize = BUFFER_SIZE;
     ssize_t bytes = send(clientSocket, fullResponse.c_str() + response.getBytesSend(), chunkSize, MSG_NOSIGNAL); //ignore SIGPIPE, it will retrun -1, we will close the connection and a new one will be openend
     if (bytes == -1) {   
+        // cout << "fd: " << connection.getFd() << " set to close response -1 for: " << connection.getRequest().getPath() << ", for port: " << connection.getServer().getPort() << endl;
         connection.setNextState(CLOSE);
         return ;
     }
     response.addBytesSend(bytes);
     if (response.getBytesSend() >= fullResponse.size()) {
-        if (connection.getResponse().getHeaderValue("Connection") == "close")
+        if (connection.getResponse().getHeaderValue("Connection") == "close") {
+            // cout << "fd: " << connection.getFd() << " close after response for: " << connection.getRequest().getPath() << ", for port: " << connection.getServer().getPort() << endl;
             connection.setNextState(CLOSE);
-        else
-            connection.setNextState(CLEANUP);
+        }
+        else {
+            // cout << "fd: " << connection.getFd() << " cleanup after response for: " << connection.getRequest().getPath() << ", for port: " << connection.getServer().getPort() << endl;
+            connection.setActiveFlag(false);
+            connection.updateTimeStamp();
+            connection.reset();
+        }
     }
     return ;
 }

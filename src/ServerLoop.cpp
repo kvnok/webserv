@@ -10,6 +10,7 @@ void    Servers::handleNewConnection(size_t i) {
         close(clientSocket);
         return ;
     }
+    // cout << "Created fd: " << clientSocket << " for: " << this->_serverBlocks[i].getPort() << endl;
     this->_fds.push_back({clientSocket, POLLIN | POLLOUT, 0});
     this->_connections.emplace_back(clientSocket, this->_serverBlocks[i]);
 }
@@ -27,6 +28,7 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
                     break ;
                 }
             }
+            // cout << "Closed fd: " << connection.getFd() << " for port: " << connection.getServer().getPort() << endl;
             close(connection.getFd());
             this->_fds.erase(this->_fds.begin() + i);
             this->_connections.erase(this->_connections.begin() + j);
@@ -130,9 +132,6 @@ void    Servers::handleExistingConnection(Connection& connection) {
         case SEND:
             sendResponse(connection);
             break ;
-        case CLEANUP:
-            connection.reset();
-            break ;
         case CLOSE: // could swap state for a flag, added function in fd loop
             break ;
     }
@@ -187,19 +186,16 @@ bool    Servers::isOtherFd(int const fd) {
 }
 
 void Servers::printFDS() {
-    if (this->_fds.size() > 5) {
-        for (size_t d = 0; d < this->_fds.size(); d++) {
-            if (isClientFd(this->_fds[d].fd)) {
-                cout << RED << this->_fds[d].fd << " " << RESET;
-                cout << getFdsClient(this->_fds[d].fd)->getNextState();
-            }
-            else if (isServerFd(this->_fds[d].fd))
-                cout << BLU << this->_fds[d].fd << " " << RESET;
-            else
-                cout << YEL << this->_fds[d].fd << " " << RESET;
+    for (size_t d = 0; d < this->_fds.size(); d++) {
+        if (isClientFd(this->_fds[d].fd)) {
+            cout << "client: " << this->_fds[d].fd << "    ";
         }
-        cout << endl;
+        else if (isOtherFd(this->_fds[d].fd)) {
+            cout << "otherFd: " << this->_fds[d].fd << "    ";
+        }
     }
+    if (this->_fds.size() > 2)
+        cout << endl;
 }
 
 void printInsideIf(string a, string b, size_t i, int fd, enum cState num) {
@@ -235,9 +231,6 @@ void printInsideIf(string a, string b, size_t i, int fd, enum cState num) {
             cout << "SEND" << endl;
             break;
         case 9:
-            cout << "CLEANUP" << endl;
-            break;
-        case 10:
             cout << "CLOSE" << endl;
             break;
         default:
@@ -252,7 +245,7 @@ void    Servers::start() {
         if (ret == -1)
             cerr << "poll failed" << endl;
         else {
-            //printFDS();
+            // printFDS();
             for (size_t i = 0; i < this->_fds.size(); i++) {
                 if (isServerFd(this->_fds[i].fd)) {
                     ServerBlock* serverBlock = getFdsServerBlock(this->_fds[i].fd);
@@ -262,13 +255,15 @@ void    Servers::start() {
                     }
                 }
                 else if (isClientFd(this->_fds[i].fd)) {
-                    Connection* connection = getFdsClient(this->_fds[i].fd); 
+                    Connection* connection = getFdsClient(this->_fds[i].fd);
+                    connection->activityCheck();
                     if (connection && connection->getNextState() != EXECFD && connection->getNextState() != DELFD) {
-                        // if (connection->isIdleTimeOut() {
-                        //     closeConnection(*connection, i);
-                        // }
-                        if (this->_fds[i].revents & POLLIN && connection->getNextState() == READ) {
+                        if (this->_fds[i].revents & POLLIN && connection->getNextState() != SEND) {
                             // printInsideIf("isClientFd", "if (this->_fds[i].revents & POLLIN)", i, this->_fds[i].fd, connection->getNextState());
+                            if (connection->getActiveFlag() == false) {
+                                connection->setActiveFlag(true);
+                                connection->updateTimeStamp(); //where else should i update timestamp?
+                            }
                             handleExistingConnection(*connection);
                         }
                         else if (this->_fds[i].revents & POLLOUT && connection->getNextState() != READ) {
@@ -287,10 +282,6 @@ void    Servers::start() {
                 }
                 else if (isOtherFd(this->_fds[i].fd)) {
                     Connection* connection = getOtherFdsClient(this->_fds[i].fd);
-                    // if (connection->isIdleTimeOut()) {
-                    //     deleteOtherFd(*connection, i);
-                    //     //delete the connection and fd of this otherFd, or set statuscode and reset
-                    // }
                     if (connection && ((connection->getNextState() == EXECFD || connection->getNextState() == DELFD))) {
                         if (this->_fds[i].revents & POLLIN && connection->getNextState() == EXECFD) {
                             // printInsideIf("isOtherFd", "if (this->_fds[i].revents & POLLIN)", i, this->_fds[i].fd, connection->getNextState());
