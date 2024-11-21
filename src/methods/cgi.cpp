@@ -37,7 +37,7 @@ void	executeCGI(Connection& connection) {
 			connection.setHandleStatusCode(true);
 			connection.setNextState(DELFD);
 			connection.setBytesRead(0);
-			connection.getResponse().setFullResponse("");
+			connection.getResponse().setBody(""); //not fullResponse
 			//reset any used values. (cgi class)
 			return ;
 		}
@@ -48,7 +48,7 @@ void	executeCGI(Connection& connection) {
 			return ;
 		}
 		buffer.resize(bytes);
-		connection.getResponse().addToFullResponse(buffer);
+		connection.getResponse().addToBody(buffer); //not add to full response
 		connection.addBytesRead(bytes);
 		return ;
 	}
@@ -56,8 +56,6 @@ void	executeCGI(Connection& connection) {
 
 void	cgiMethod(Connection& connection) {
 	if (connection.getCgi().getCgiStage() == CGI_ON) {
-		if (!createCgiData(connection))
-			return ;
 		if (!createCgiFds(connection))
 			return ;
 		if (!forkCgi(connection))

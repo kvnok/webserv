@@ -48,8 +48,6 @@ void    Servers::deleteOtherFd(Connection& connection, size_t& i) {
         connection.setNextState(STATUSCODE);
     else if (connection.getCgi().getCgiStage() == CGI_FDREAD)
         connection.setNextState(PREPEXEC);
-    else if (connection.getCgi().getCgiStage() == CGI_DONE)
-        connection.setNextState(SEND);
     else
         connection.setNextState(RESPONSE);
     //if cgi, also close other fd's and exit pid

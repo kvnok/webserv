@@ -42,6 +42,5 @@ class	Cgi {
 		void	reset();
 };
 
-bool	creatCgiArg(Connection& connection);
 bool	createCgiFds(Connection& connection);
 bool	forkCgi(Connection& connection);

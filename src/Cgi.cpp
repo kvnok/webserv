@@ -77,6 +77,7 @@ bool	createCgiFds(Connection& connection) {
 
 bool	forkCgi(Connection& connection) {
 	pid_t pid = fork();
+	connection.getCgi().setPid(pid);
 	if (pid < 0) {
 		close(connection.getCgi().getInputRead());
 		close(connection.getCgi().getInputWrite());
@@ -101,10 +102,47 @@ bool	forkCgi(Connection& connection) {
 		close(connection.getCgi().getOutputRead());
 		close(connection.getCgi().getOutputWrite());
 
-		execl(PYTHON_CGI, connection.getRequest().getPath().c_str(), NULL);
-		//handle exit/fail
-		exit(1);
+    	string path = connection.getRequest().getPath();
+    	string body = connection.getRequest().getBody();
+    	string name = connection.getRequest().getFileName();
+		string body_size = to_string(connection.getRequest().getBody().size());
+
+		vector<char *> args;
+		 args.push_back(const_cast<char*>(PYTHON_CGI));
+    	args.push_back(const_cast<char*>(path.c_str()));
+   		args.push_back(const_cast<char*>(name.c_str()));
+    	args.push_back(const_cast<char*>(body_size.c_str()));
+    	args.push_back(nullptr);
+		string path_info = "PATH_INFO=" + path;
+    	vector<char*> env;
+    	env.push_back(const_cast<char*>(path_info.c_str()));
+    	env.push_back(nullptr);
+		if (execve(args[0], args.data(), env.data()) == -1)
+			exit(1);
 	}
-	connection.getCgi().setPid(pid);
+	else {
+		connection.getCgi().setPid(pid);
+		int status = -1;
+		if (waitpid(pid, &status, WNOHANG) == -1)
+        {
+            connection.getRequest().setStatusCode(500);
+            connection.getCgi().setCgiStage(CGI_OFF);;
+			connection.setHandleStatusCode(true);
+			connection.setNextState(DELFD);
+			//clean up all fds/pid from cgi
+			return (false);
+        }
+		else {
+			if (status < 200)
+				connection.getRequest().setStatusCode(500);
+			else
+				connection.getRequest().setStatusCode(status);
+            connection.getCgi().setCgiStage(CGI_OFF);
+			connection.setHandleStatusCode(true);
+			connection.setNextState(DELFD);
+			//clean up all fds/pid from cgi
+			return (false);
+		}
+	}
 	return (true);
 }
