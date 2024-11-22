@@ -29,7 +29,7 @@ static void	parseCgiResponse(Connection& connection) {
 			string value(j + 2, i); //+2 for the ": "
 			if (key != "Content-Type")
 				throw runtime_error("500");
-			if (mimeTypes.find(value) == mimeTypes.end())
+			if (mimeCgi.find(value) == mimeCgi.end())
 				connection.getResponse().addHeader(key, "text/plain");
 			else
 				connection.getResponse().addHeader(key, value);

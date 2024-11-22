@@ -8,6 +8,17 @@ using namespace std;
 
 class Connection;
 
+const set<string> mimeCgi = {
+	{"text/html"},
+	{"text/plain"},
+	{"image/jpeg"},
+	{"image/jpeg"},
+	{"application/pdf"},
+	{"application/zip"},
+	{"image/x-icon"},
+	{"text/css"}
+};
+
 enum cgiStage {CGI_OFF, CGI_ON, CGI_FDWRITE, CGI_FDREAD, CGI_DONE, CGI_WRITE, CGI_READ};
 
 class	Cgi {
