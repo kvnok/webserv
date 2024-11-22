@@ -48,29 +48,36 @@ static bool	checkParent(Connection& connection) {
 	if (result == -1) {
 		connection.getRequest().setStatusCode(500);
 		connection.setHandleStatusCode(true);
+		connection.getCgi().setPid(-1);
+		connection.getCgi().resetFds();
 		return (false);
 	}
 	if (result == connection.getCgi().getPid())
     {
 		if (WIFEXITED(status)) {
+			connection.getCgi().setPid(-1);
+			connection.getCgi().resetFds();
 			cout << "child exits normaly: " << status << endl;
 			return (true);
 		}
 		else if (WEXITSTATUS(status)) {
+			connection.getCgi().setPid(-1);
 			cout << "child exits with exitcode: " << status << endl;
 			connection.getRequest().setStatusCode(status);
 		} 
-		else
+		else {
+			kill(connection.getCgi().getPid(), SIGTERM);
    	    	connection.getRequest().setStatusCode(500);
+		}
 		connection.setHandleStatusCode(true);
+		connection.getCgi().resetFds();
 		return (false);
    	}
 	else {
-		connection.getRequest().setStatusCode(500);
-		connection.setHandleStatusCode(true);
-		connection.getCgi().resetPid();
-		return (false);
+		kill(connection.getCgi().getPid(), SIGTERM);
+		connection.getCgi().setPid(-1);
 	}
+	connection.getCgi().resetFds();
 	return (true);
 }
 
@@ -79,8 +86,10 @@ static void readFromCgi(Connection& connection) {
 	int		fd = connection.getOtherFD();
 	ssize_t bytes = read(fd, &buffer[0], BUFFER_SIZE);
 	if (bytes < 0) {
-		connection.getRequest().setStatusCode(500);
-		connection.setHandleStatusCode(true);
+		if (checkParent(connection)) {
+			connection.getRequest().setStatusCode(500);
+			connection.setHandleStatusCode(true);
+		}
 		connection.setNextState(DELFD);
 		connection.getCgi().reset();
 		return ;
@@ -107,8 +116,10 @@ static void	writeToCgi(Connection& connection) {
 		chunkSize = BUFFER_SIZE;
 	ssize_t bytes = write(fd, cgiData.data() + connection.getBytesWritten(), chunkSize);
 	if (bytes == -1) {
-		connection.getRequest().setStatusCode(500);
-		connection.setHandleStatusCode(true);
+		if (checkParent(connection)) {
+			connection.getRequest().setStatusCode(500);
+			connection.setHandleStatusCode(true);
+		}
 		connection.setNextState(DELFD);
 		connection.getCgi().reset();
 		return ;

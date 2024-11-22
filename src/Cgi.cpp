@@ -51,18 +51,24 @@ void	Cgi::resetPid() {
 	this->_pid = -1;
 }
 
-void	Cgi::resetFd(int& fd) {
-	if (fd > 0 && fcntl(fd, F_GETFD))
-		close (fd);
-	fd = -1;
+void	Cgi::resetFds() {
+	if (this->_inputRead > 0 && fcntl(this->_inputRead, F_GETFD) != -1)
+		close (this->_inputRead);
+	this->_inputRead = -1;
+	if (this->_inputWrite > 0 && fcntl(this->_inputWrite, F_GETFD) != -1)
+		close (this->_inputWrite);
+	this->_inputWrite = -1;
+	if (this->_outputRead > 0 && fcntl(this->_outputRead, F_GETFD) != -1)
+		close (this->_outputRead);
+	this->_outputRead = -1;
+	if (this->_outputWrite > 0 && fcntl(this->_outputWrite, F_GETFD) != -1)
+		close (this->_outputWrite);
+	this->_outputWrite = -1;
 }
 
 void	Cgi::reset() {
 	this->resetPid();
-	this->resetFd(this->_inputRead);
-	this->resetFd(this->_inputWrite);
-	this->resetFd(this->_outputRead);
-	this->resetFd(this->_outputWrite);
+	this->resetFds();
 	this->_cgiBody = "";
 	this->_cgiStage = CGI_OFF;
 }

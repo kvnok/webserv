@@ -19,7 +19,8 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
         if (this->_connections[j].getFd() == connection.getFd() && this->_fds[i].fd == connection.getFd()) {
             for (size_t k = 0; k < this->_fds.size(); k++) {
                 if (this->_fds[k].fd == connection.getOtherFD()) {
-                    close(connection.getOtherFD());
+                    if (fcntl(connection.getOtherFD(), F_GETFD) != -1)
+                        close(connection.getOtherFD());
                     this->_fds.erase(this->_fds.begin() + k);
                     connection.setOtherFD(-1);
                     if (k <= i)
@@ -27,7 +28,8 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
                     break ;
                 }
             }
-            close(connection.getFd());
+            if (fcntl(connection.getFd(), F_GETFD) != -1)
+                close(connection.getFd());
             connection.reset();
             this->_fds.erase(this->_fds.begin() + i);
             this->_connections.erase(this->_connections.begin() + j);
@@ -39,7 +41,8 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
 }
 
 void    Servers::deleteOtherFd(Connection& connection, size_t& i) {
-    close(connection.getOtherFD());
+    if (fcntl(connection.getOtherFD(), F_GETFD) != -1)
+        close(connection.getOtherFD());
     this->_fds.erase(this->_fds.begin() + i);
     connection.setOtherFD(-1);
     i--;
@@ -188,7 +191,7 @@ void Servers::printFDS() {
             cout << "client: " << this->_fds[d].fd << "    ";
         }
         else if (isOtherFd(this->_fds[d].fd)) {
-            cout << "otherFd: " << this->_fds[d].fd << "    ";
+            cout << RED << "otherFd: " << this->_fds[d].fd << RESET << "    ";
         }
     }
     if (this->_fds.size() > 2)
@@ -201,8 +204,7 @@ void    Servers::start() {
         if (ret == -1)
             cerr << "poll failed" << endl;
         else {
-            if (this->_fds.size() > 4)
-                printFDS();
+            // printFDS();
             for (size_t i = 0; i < this->_fds.size(); i++) {
                 if (isServerFd(this->_fds[i].fd)) {
                     ServerBlock* serverBlock = getFdsServerBlock(this->_fds[i].fd);

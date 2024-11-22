@@ -15,7 +15,7 @@ Servers* globalServer = nullptr;
 static void	closeAllPollFd() {
 	if (globalServer) {
         for (size_t i = 0; i < globalServer->get_fds().size(); i++) {
-            if (fcntl(globalServer->get_fds()[i].fd, F_GETFD))
+            if (fcntl(globalServer->get_fds()[i].fd, F_GETFD) != -1)
 				close(globalServer->get_fds()[i].fd);
         }
     }

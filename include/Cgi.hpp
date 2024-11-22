@@ -55,6 +55,6 @@ class	Cgi {
 		cgiStage		getCgiStage() const;
 
 		void	resetPid();
-		void	resetFd(int& fd);
+		void	resetFds();
 		void	reset();
 };
