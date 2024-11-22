@@ -96,7 +96,6 @@ static void check_locs(Request &request, string &folder, string &file, string &p
 	else if (!file.empty()) { // check for file
 		if (loc.get_is_cgi() == true)
 		{
-			//cout << "identified that its an CGI" << endl;
 			request.setIsCGI(true);
 			request.setCGIExtension(loc.get_cgi_extension());
 		}
@@ -106,7 +105,7 @@ static void check_locs(Request &request, string &folder, string &file, string &p
 			stream.close();
 		}
 		else // can't open file part of the path
-			request.setStatusCode(404); //CHECK
+			request.setStatusCode(404);
 		if (stream.is_open())
 			stream.close();
 	}

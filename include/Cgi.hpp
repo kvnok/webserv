@@ -18,6 +18,7 @@ class	Cgi {
 		int			_outputRead;
 		int			_outputWrite;
 		cgiStage	_cgiStage;
+		string		_cgiBody;
 		Cgi(const Cgi& other);
 	
 	public:
@@ -30,13 +31,16 @@ class	Cgi {
 		void	setInputWrite(int const fd);
 		void	setOutputRead(int const fd);
 		void	setOutputWrite(int const fd);
+		void	setCgiBody(string const body);
+		void	addToCgiBody(string const part);
 		void	setCgiStage(const cgiStage stage);
 
 		pid_t			getPid() const;
 		int				getInputRead() const;
 		int				getInputWrite() const;
 		int				getOutputRead() const;
-		int				getOutputWrite() const;			
+		int				getOutputWrite() const;
+		string			getCgiBody() const;		
 		cgiStage		getCgiStage() const;
 
 		void	reset();

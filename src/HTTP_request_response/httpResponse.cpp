@@ -80,20 +80,17 @@ void    sendResponse(Connection& connection) {
     size_t chunkSize = fullResponse.size() - response.getBytesSend();
     if (chunkSize > BUFFER_SIZE)
         chunkSize = BUFFER_SIZE;
-    ssize_t bytes = send(clientSocket, fullResponse.c_str() + response.getBytesSend(), chunkSize, MSG_NOSIGNAL); //ignore SIGPIPE, it will retrun -1, we will close the connection and a new one will be openend
+    ssize_t bytes = send(clientSocket, fullResponse.c_str() + response.getBytesSend(), chunkSize, MSG_NOSIGNAL);
     if (bytes == -1) {   
-        // cout << "fd: " << connection.getFd() << " set to close response -1 for: " << connection.getRequest().getPath() << ", for port: " << connection.getServer().getPort() << endl;
         connection.setNextState(CLOSE);
         return ;
     }
     response.addBytesSend(bytes);
     if (response.getBytesSend() >= fullResponse.size()) {
         if (connection.getResponse().getHeaderValue("Connection") == "close") {
-            // cout << "fd: " << connection.getFd() << " close after response for: " << connection.getRequest().getPath() << ", for port: " << connection.getServer().getPort() << endl;
             connection.setNextState(CLOSE);
         }
         else {
-            // cout << "fd: " << connection.getFd() << " cleanup after response for: " << connection.getRequest().getPath() << ", for port: " << connection.getServer().getPort() << endl;
             connection.setActiveFlag(false);
             connection.updateTimeStamp();
             connection.reset();
@@ -102,42 +99,31 @@ void    sendResponse(Connection& connection) {
     return ;
 }
 
-// void creatCgiResponse() {
-//     if error
-//         set statuscode, 
-//         response.reset();
-//         reset response values
-//         set handle status code flag == true h
-//         set nextState(connection) to STATUSCODE;
-
-// }
 
 void    createResponse(Connection& connection) {
     Response&   response = connection.getResponse();
     Request&    request = connection.getRequest();
 
-    // if (connection.getCgi().getCgiStage() == CGI_DONE)
-    //     createCgiResponse();
-    // else {
-        response.setClientSocket(connection.getFd());
-        response.setVersion(request.getVersion());
-        response.setStatusCode(request.getStatusCode());
+    response.setClientSocket(connection.getFd());
+    response.setVersion(request.getVersion());
+    response.setStatusCode(request.getStatusCode());
+    if (response.getHeaderValue("Content-Type").empty()) {
         string const path = request.getPath();
         string extension = path.substr(path.find_last_of("."));
-
         auto i = mimeTypes.find(extension);
         if (i != mimeTypes.end())
             response.addHeader("Content-Type", i->second);
         else
             response.addHeader("Content-Type", "text/plain");
+    }
+    if (response.getHeaderValue("Content-Length").empty())
         response.addHeader("Content-Length", to_string(response.getBody().size()));
-        string const state = request.getHeaderValue("Connection");
-        if (state.empty())
-            response.addHeader("Connection", "keep-alive");
-        else
-            response.addHeader("Connection", state);
-        response.createFullResponse();
-    // }
+    string const state = request.getHeaderValue("Connection");
+    if (state.empty())
+        response.addHeader("Connection", "keep-alive");
+    else
+        response.addHeader("Connection", state);
+    response.createFullResponse();
     connection.setNextState(SEND);
     return ;
 }
