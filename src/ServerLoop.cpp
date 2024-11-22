@@ -28,6 +28,7 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
                 }
             }
             close(connection.getFd());
+            connection.reset();
             this->_fds.erase(this->_fds.begin() + i);
             this->_connections.erase(this->_connections.begin() + j);
             i--;
@@ -74,7 +75,8 @@ void    Servers::addFdToPoll(Connection& connection) {
             connection.getRequest().setStatusCode(500);
             connection.setHandleStatusCode(true);
             connection.setNextState(STATUSCODE);
-            //if cgi, also close other fd's and exit pid
+            if (connection.getCgi().getCgiStage() != CGI_OFF)
+                connection.getCgi().reset();
             return ;
     }
     this->_fds.push_back({connection.getOtherFD(), POLLIN | POLLOUT, 0});
@@ -119,7 +121,7 @@ void    Servers::handleExistingConnection(Connection& connection) {
         case EXECFD:
             executeMethod(connection);
             break ;
-        case DELFD: // could swap state for a flag, added function in fd loop
+        case DELFD:
             break ;
         case RESPONSE:
             createResponse(connection);
@@ -127,7 +129,7 @@ void    Servers::handleExistingConnection(Connection& connection) {
         case SEND:
             sendResponse(connection);
             break ;
-        case CLOSE: // could swap state for a flag, added function in fd loop
+        case CLOSE:
             break ;
     }
 }

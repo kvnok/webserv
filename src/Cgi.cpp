@@ -1,5 +1,4 @@
 #include "Cgi.hpp"
-#include "Connection.hpp"
 
 Cgi::Cgi() {
 	_pid = -1;
@@ -11,7 +10,7 @@ Cgi::Cgi() {
 	_cgiStage = CGI_OFF;
 }
 
-Cgi::~Cgi() {} //close open fd?
+Cgi::~Cgi() { this->reset(); }
 
 Cgi&	Cgi::operator=(const Cgi& other) {
 	if (this != &other) {
@@ -43,91 +42,27 @@ int			Cgi::getOutputWrite() const { return (this->_outputWrite); }
 string		Cgi::getCgiBody() const { return (this->_cgiBody); }			
 cgiStage	Cgi::getCgiStage() const { return (this->_cgiStage); }
 
-void	Cgi::reset() {
-	//add check for closing open fds;
+void	Cgi::resetPid() {
+	if (this->_pid == -1)
+		return ;
+	if (kill(this->_pid, 0) == 0) {
+		kill(this->_pid, SIGKILL);
+	}
 	this->_pid = -1;
-	this->_inputRead = -1;
-	this->_inputWrite = -1;
-	this->_outputRead = -1;
-	this->_outputWrite = -1;
+}
+
+void	Cgi::resetFd(int& fd) {
+	if (fd > 0 && fcntl(fd, F_GETFD))
+		close (fd);
+	fd = -1;
+}
+
+void	Cgi::reset() {
+	this->resetPid();
+	this->resetFd(this->_inputRead);
+	this->resetFd(this->_inputWrite);
+	this->resetFd(this->_outputRead);
+	this->resetFd(this->_outputWrite);
 	this->_cgiBody = "";
 	this->_cgiStage = CGI_OFF;
-}
-
-bool	createCgiFds(Connection& connection) {
-	int input[2];
-	int	output[2];
-
-	if (pipe(input) == -1) {
-		connection.getCgi().setCgiStage(CGI_OFF);
-		connection.getRequest().setStatusCode(500);
-		connection.setHandleStatusCode(true);
-		connection.setNextState(STATUSCODE);
-		return (false);
-	}
-	if (pipe(output) == -1) {
-		close(input[0]);
-		close(input[1]);
-		connection.getCgi().setCgiStage(CGI_OFF);
-		connection.getRequest().setStatusCode(500);
-		connection.setHandleStatusCode(true);
-		connection.setNextState(STATUSCODE);
-		return (false);
-	}
-	connection.getCgi().setInputRead(input[0]);
-	connection.getCgi().setInputWrite(input[1]);
-	connection.getCgi().setOutputRead(output[0]);
-	connection.getCgi().setOutputWrite(output[1]);
-	return (true);
-}
-
-bool	forkCgi(Connection& connection) {
-	pid_t pid = fork();
-	connection.getCgi().setPid(pid);
-	if (pid < 0) {
-		close(connection.getCgi().getInputRead());
-		close(connection.getCgi().getInputWrite());
-		close(connection.getCgi().getOutputRead());
-		close(connection.getCgi().getOutputWrite());
-		connection.getCgi().setInputRead(-1);
-		connection.getCgi().setInputWrite(-1);
-		connection.getCgi().setOutputRead(-1);
-		connection.getCgi().setOutputWrite(-1);
-		connection.getCgi().setCgiStage(CGI_OFF);
-		connection.getRequest().setStatusCode(500);
-		connection.setHandleStatusCode(true);
-		connection.setNextState(STATUSCODE);
-		return (false);
-	}
-	else if (pid == 0) {
-		dup2(connection.getCgi().getInputRead(), STDIN_FILENO);
-		dup2(connection.getCgi().getOutputWrite(), STDOUT_FILENO);
-
-		close(connection.getCgi().getInputRead());
-		close(connection.getCgi().getInputWrite());
-		close(connection.getCgi().getOutputRead());
-		close(connection.getCgi().getOutputWrite());
-
-    	string path = connection.getRequest().getPath();
-    	string body = connection.getRequest().getBody();
-    	string name = connection.getRequest().getFileName();
-		string body_size = to_string(connection.getRequest().getBody().size());
-
-		vector<char *> args;
-		 args.push_back(const_cast<char*>(PYTHON_CGI));
-    	args.push_back(const_cast<char*>(path.c_str()));
-		
-   		args.push_back(const_cast<char*>(name.c_str()));
-    	args.push_back(const_cast<char*>(body_size.c_str()));
-    	args.push_back(nullptr);
-		string path_info = "PATH_INFO=" + path;
-    	vector<char*> env;
-    	env.push_back(const_cast<char*>(path_info.c_str()));
-    	env.push_back(nullptr);
-		if (execve(args[0], args.data(), env.data()) == -1)
-			exit(500);
-	}
-	else
-		connection.getCgi().setPid(pid);
-	return (true);
 }

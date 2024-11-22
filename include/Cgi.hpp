@@ -54,8 +54,7 @@ class	Cgi {
 		string			getCgiBody() const;		
 		cgiStage		getCgiStage() const;
 
+		void	resetPid();
+		void	resetFd(int& fd);
 		void	reset();
 };
-
-bool	createCgiFds(Connection& connection);
-bool	forkCgi(Connection& connection);
