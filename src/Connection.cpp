@@ -90,7 +90,9 @@ bool			Connection::getActiveFlag() const { return (this->_activeFlag); }
 
 void			Connection::activityCheck() {
 	auto now = chrono::steady_clock::now();
+	// cout << RED << "now: " << chrono::duration_cast<chrono::milliseconds>(now.time_since_epoch()).count() << RESET << endl;
 	long duration = chrono::duration_cast<chrono::milliseconds>(now - this->_lastActive).count();
+	// cout << YEL << "duration: " << duration << RESET << endl;
 	if (this->_activeFlag == false && duration >= IDLE_LIMIT) {
 		// cout << "closed, duration: " << duration << " milliseconds" << endl;
 		// cout << "fd: " << this->getFd() << " of serverport: " << this->getServer().getPort() << endl;
