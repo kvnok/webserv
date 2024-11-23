@@ -18,7 +18,10 @@ static void	parseCgiResponse(Connection& connection) {
 		try {
 			auto i = find(data.begin(), data.end(), '\n');
 			if (i == data.end())
+			{
+				cout << "data: " << data << endl;
 				throw runtime_error("500");
+			}
 			auto j = find(data.begin(), i, ':');
 			if (j == i)
 				throw runtime_error("500");
@@ -202,17 +205,18 @@ static bool	forkCgi(Connection& connection) {
 		string body_size = to_string(connection.getRequest().getBody().size());
 
 		vector<char *> args;
-		args.push_back(const_cast<char*>(PYTHON_CGI));
     	args.push_back(const_cast<char*>(path.c_str()));
-   		args.push_back(const_cast<char*>(name.c_str()));
-    	args.push_back(const_cast<char*>(body_size.c_str()));
-    	args.push_back(nullptr);
-		string path_info = "PATH_INFO=" + path;
+    	vector<string> env_strings;
+    	env_strings.push_back("PATH_INFO=" + path);
+    	env_strings.push_back("FILE_NAME=" + name);
+    	env_strings.push_back("BODY_SIZE=" + to_string(body.size()));
+
     	vector<char*> env;
-    	env.push_back(const_cast<char*>(path_info.c_str()));
+    	for (const auto& s : env_strings)
+    	    env.push_back(const_cast<char*>(s.c_str()));
     	env.push_back(nullptr);
-		if (execve(args[0], args.data(), env.data()) == -1)
-			exit(500);
+    	if (execve(args[0], args.data(), env.data()) == -1)
+    	    exit(500);
 	}
 	return (true);
 }
