@@ -10,7 +10,6 @@ void    Servers::handleNewConnection(size_t i) {
         close(clientSocket);
         return ;
     }
-    // cout << "Created fd: " << clientSocket << " for: " << this->_serverBlocks[i].getPort() << endl;
     this->_fds.push_back({clientSocket, POLLIN | POLLOUT, 0});
     this->_connections.emplace_back(clientSocket, this->_serverBlocks[i]);
 }
@@ -20,7 +19,8 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
         if (this->_connections[j].getFd() == connection.getFd() && this->_fds[i].fd == connection.getFd()) {
             for (size_t k = 0; k < this->_fds.size(); k++) {
                 if (this->_fds[k].fd == connection.getOtherFD()) {
-                    close(connection.getOtherFD());
+                    if (fcntl(connection.getOtherFD(), F_GETFD) != -1)
+                        close(connection.getOtherFD());
                     this->_fds.erase(this->_fds.begin() + k);
                     connection.setOtherFD(-1);
                     if (k <= i)
@@ -28,8 +28,9 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
                     break ;
                 }
             }
-            // cout << "Closed fd: " << connection.getFd() << " for port: " << connection.getServer().getPort() << endl;
-            close(connection.getFd());
+            if (fcntl(connection.getFd(), F_GETFD) != -1)
+                close(connection.getFd());
+            connection.reset();
             this->_fds.erase(this->_fds.begin() + i);
             this->_connections.erase(this->_connections.begin() + j);
             i--;
@@ -40,7 +41,8 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
 }
 
 void    Servers::deleteOtherFd(Connection& connection, size_t& i) {
-    close(connection.getOtherFD());
+    if (fcntl(connection.getOtherFD(), F_GETFD) != -1)
+        close(connection.getOtherFD());
     this->_fds.erase(this->_fds.begin() + i);
     connection.setOtherFD(-1);
     i--;
@@ -76,7 +78,8 @@ void    Servers::addFdToPoll(Connection& connection) {
             connection.getRequest().setStatusCode(500);
             connection.setHandleStatusCode(true);
             connection.setNextState(STATUSCODE);
-            //if cgi, also close other fd's and exit pid
+            if (connection.getCgi().getCgiStage() != CGI_OFF)
+                connection.getCgi().reset();
             return ;
     }
     this->_fds.push_back({connection.getOtherFD(), POLLIN | POLLOUT, 0});
@@ -121,7 +124,7 @@ void    Servers::handleExistingConnection(Connection& connection) {
         case EXECFD:
             executeMethod(connection);
             break ;
-        case DELFD: // could swap state for a flag, added function in fd loop
+        case DELFD:
             break ;
         case RESPONSE:
             createResponse(connection);
@@ -129,7 +132,7 @@ void    Servers::handleExistingConnection(Connection& connection) {
         case SEND:
             sendResponse(connection);
             break ;
-        case CLOSE: // could swap state for a flag, added function in fd loop
+        case CLOSE:
             break ;
     }
 }
@@ -188,52 +191,11 @@ void Servers::printFDS() {
             cout << "client: " << this->_fds[d].fd << "    ";
         }
         else if (isOtherFd(this->_fds[d].fd)) {
-            cout << "otherFd: " << this->_fds[d].fd << "    ";
+            cout << RED << "otherFd: " << this->_fds[d].fd << RESET << "    ";
         }
     }
     if (this->_fds.size() > 2)
         cout << endl;
-}
-
-void printInsideIf(string a, string b, size_t i, int fd, enum cState num) {
-    cout << "-------" << i << " = " << fd << "-------" << endl;
-    cout << a << endl;
-    cout << b << endl;
-    switch(num) {
-        case 0:
-            cout << "READ" << endl;
-            break;
-        case 1:
-            cout << "PATH" << endl;
-            break;
-        case 2:
-            cout << "PREPEXEC" << endl;
-            break;
-        case 3:
-            cout << "STATUSCODE" << endl;
-            break;
-        case 4:
-            cout << "SETFD" << endl;
-            break;
-        case 5:
-            cout << "EXECFD" << endl;
-            break;
-        case 6:
-            cout << "DELFD" << endl;
-            break;
-        case 7:
-            cout << "RESPONSE" << endl;
-            break;
-        case 8:
-            cout << "SEND" << endl;
-            break;
-        case 9:
-            cout << "CLOSE" << endl;
-            break;
-        default:
-            break;
-    }
-    cout << "--------------" << endl;
 }
 
 void    Servers::start() {
@@ -256,23 +218,19 @@ void    Servers::start() {
                     connection->activityCheck();
                     if (connection && connection->getNextState() != EXECFD && connection->getNextState() != DELFD) {
                         if (this->_fds[i].revents & POLLIN && connection->getNextState() != SEND) {
-                            // printInsideIf("isClientFd", "if (this->_fds[i].revents & POLLIN)", i, this->_fds[i].fd, connection->getNextState());
                             if (connection->getActiveFlag() == false) {
                                 connection->setActiveFlag(true);
-                                connection->updateTimeStamp(); //where else should i update timestamp?
+                                connection->updateTimeStamp();
                             }
                             handleExistingConnection(*connection);
                         }
                         else if (this->_fds[i].revents & POLLOUT && connection->getNextState() != READ) {
-                            // printInsideIf("isClientFd", "else if (this->_fds[i].revents & POLLOUT)", i, this->_fds[i].fd, connection->getNextState());
                             handleExistingConnection(*connection);
                         }
                         else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-                            // printInsideIf("isClientFd", "else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL))", i, this->_fds[i].fd, connection->getNextState());
                             connection->setNextState(CLOSE);
                         }
                         if (connection->getNextState() == CLOSE) {
-                            // printInsideIf("isClientFd", "if (connection->getNextState() == CLOSE)", i, this->_fds[i].fd, connection->getNextState());
                             closeConnection(*connection, i);
                         }
                     }
@@ -281,19 +239,15 @@ void    Servers::start() {
                     Connection* connection = getOtherFdsClient(this->_fds[i].fd);
                     if (connection && ((connection->getNextState() == EXECFD || connection->getNextState() == DELFD))) {
                         if (this->_fds[i].revents & POLLIN && connection->getNextState() == EXECFD) {
-                            // printInsideIf("isOtherFd", "if (this->_fds[i].revents & POLLIN)", i, this->_fds[i].fd, connection->getNextState());
                             handleExistingConnection(*connection);
                         }
                         else if (this->_fds[i].revents & POLLOUT && connection->getNextState() == EXECFD) {
-                            // printInsideIf("isOtherFd", "else if (this->_fds[i].revents & POLLOUT)", i, this->_fds[i].fd, connection->getNextState());
                             handleExistingConnection(*connection);
                         }
                         else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-                            // printInsideIf("isOtherFd", "else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL))", i, this->_fds[i].fd, connection->getNextState());
                             connection->setNextState(DELFD);
                         }
                         if (connection->getNextState() == DELFD) {
-                            // printInsideIf("isOtherFd", "if (connection->getNextState() == DELFD)", i, this->_fds[i].fd, connection->getNextState());
                             deleteOtherFd(*connection, i);
                         }
                     }

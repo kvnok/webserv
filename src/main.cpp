@@ -12,18 +12,24 @@
 
 Servers* globalServer = nullptr;
 
-static void	signalHandler(int signum) {
-	if (signum == SIGINT && globalServer) {
+static void	closeAllPollFd() {
+	if (globalServer) {
         for (size_t i = 0; i < globalServer->get_fds().size(); i++) {
-            close(globalServer->get_fds()[i].fd);
+            if (fcntl(globalServer->get_fds()[i].fd, F_GETFD) != -1)
+				close(globalServer->get_fds()[i].fd);
         }
+    }
+}
+
+static void	signalHandler(int signum) {
+	if (signum == SIGINT) {
+		closeAllPollFd();
 		exit (0);
     }
 }
 
-
+//CHECK add signal(SIGPIPE, SIG_IGN); to make sure we dont exit? 
 int main(int argc, char **argv) {
-	//signal(SIGPIPE, SIG_IGN); 
 	signal(SIGINT, signalHandler);
 	try
 	{
@@ -48,6 +54,7 @@ int main(int argc, char **argv) {
 		servers.start();
 	} catch (exception &e) {
 		//also need to close fd's if they are open?
+		void	closePollFd();
 		cerr << RED << "Exception: " << e.what() << RESET << endl;
 	}
 	// here we want to delete all post requests and stuff, do we?

@@ -8,6 +8,17 @@ using namespace std;
 
 class Connection;
 
+const set<string> mimeCgi = {
+	{"text/html"},
+	{"text/plain"},
+	{"image/jpeg"},
+	{"image/jpeg"},
+	{"application/pdf"},
+	{"application/zip"},
+	{"image/x-icon"},
+	{"text/css"}
+};
+
 enum cgiStage {CGI_OFF, CGI_ON, CGI_FDWRITE, CGI_FDREAD, CGI_DONE, CGI_WRITE, CGI_READ};
 
 class	Cgi {
@@ -18,6 +29,7 @@ class	Cgi {
 		int			_outputRead;
 		int			_outputWrite;
 		cgiStage	_cgiStage;
+		string		_cgiBody;
 		Cgi(const Cgi& other);
 	
 	public:
@@ -30,17 +42,19 @@ class	Cgi {
 		void	setInputWrite(int const fd);
 		void	setOutputRead(int const fd);
 		void	setOutputWrite(int const fd);
+		void	setCgiBody(string const body);
+		void	addToCgiBody(string const part);
 		void	setCgiStage(const cgiStage stage);
 
 		pid_t			getPid() const;
 		int				getInputRead() const;
 		int				getInputWrite() const;
 		int				getOutputRead() const;
-		int				getOutputWrite() const;			
+		int				getOutputWrite() const;
+		string			getCgiBody() const;		
 		cgiStage		getCgiStage() const;
 
+		void	resetPid();
+		void	resetFds();
 		void	reset();
 };
-
-bool	createCgiFds(Connection& connection);
-bool	forkCgi(Connection& connection);
