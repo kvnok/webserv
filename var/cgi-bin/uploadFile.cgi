@@ -1,10 +1,9 @@
 #!/usr/bin/python3
-
 import os
 import sys
 
 def create_storage_directory():
-    storage_path = "www/CGIStorage/"
+    storage_path = "var/CGIStorage/"
     if not os.path.exists(storage_path):
         try:
             os.makedirs(storage_path)
@@ -21,7 +20,18 @@ def save_file(storage_path, file_name, file_content):
     try:
         with open(file_path, 'wb') as file:
             file.write(file_content)
-        print(f"201")
+        if file_name.endswith(".ico") or file_name.endswith(".jpg") or file_name.endswith(".jpeg"):
+            relative_path = "../" + file_path.split("var/")[1]
+            print("Content-Type: text/html")
+            print(f"Content-Length: {len(file_content)}")
+            print()
+            print(f"<html><body>")
+            print(f"<h1>{file_name} uploaded successfully!</h1>")
+            print(f"<p>File path: {relative_path}</p>")
+            print(f"<img src='{relative_path}' style='width: 10%; height: 10%'>")
+            print("</body></html>")
+        else:
+            print(f"201")
     except Exception as e:
         print(f"500")
         sys.exit(-1)

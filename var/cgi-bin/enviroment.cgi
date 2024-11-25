@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import os
-print("Content-Type: text/html")
+print(f"Content-Type: text/html")
 print("<html><body><h1>Environment Variables</h1><ol>")
 for key, value in sorted(os.environ.items()):
 	print(f"<li>{key}={value}</li>")

@@ -31,9 +31,16 @@
         </section>
         <section>
             <h2>Test Post with cgi</h2>
-            <form action="../cgi-bin/uploadFile.cgi" method="post" enctype="multipart/form-data">
+            <form action="/cgi-bin/uploadFile.cgi" method="post" enctype="multipart/form-data">
                 <input type="file" id="fileInput" name="file" required>
                 <button type="submit">Upload</button>
+            </form>
+        </section>
+        <section>
+            <h2>Test Delete with cgi</h2>
+            <form action="../cgi-bin/delete_file.cgi" method="post">
+                <input type="file" id="fileInput" name="file" required>
+                <button type="submit">Delete</button>
             </form>
         </section>
     </main>
