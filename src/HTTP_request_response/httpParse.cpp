@@ -82,7 +82,6 @@ static bool	parseRequestLine(const string line, Request& request) {
 	}
 	request.setMethod(requestLine[0]);
 	request.setPath(requestLine[1]);
-	cout << "Path of request: " << request.getPath() << endl;
 	request.setVersion(requestLine[2]);
 	if (!validateMethod(request.getMethod(), request) || !validateVersion(request.getVersion(), request) \
 		|| !validatePath(request.getPath(), request))
