@@ -131,7 +131,6 @@ void	readRequest(Connection& connection) {
 void	parsePath(Connection& connection) {
 	if (connection.getRequest().getStatusCode() == 200) 
 		request_path_handler(connection);
-	cout << "after pathHandler: " << connection.getRequest().getPath() << endl;
 	if (connection.getRequest().getStatusCode() != 200) {
 		connection.setHandleStatusCode(true);
 		connection.setNextState(STATUSCODE);

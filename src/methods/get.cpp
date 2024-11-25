@@ -29,6 +29,7 @@ void	getMethod(Connection& connection) {
 	if (connection.getRequest().getIsAutoindex() == true) {
 		connection.getResponse().setBody(do_autoindex(connection.getRequest().getPath()));
 		connection.setHandleStatusCode(false);
+		connection.getResponse().addHeader("Content-Type", "text/html");
 		connection.setNextState(RESPONSE);
 	}
 	else {

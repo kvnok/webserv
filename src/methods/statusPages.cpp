@@ -27,6 +27,8 @@ void	executeStatusCode(Connection& connection) {
 
 void	getStatusCodePage(Connection& connection) {
 	connection.setHandleStatusCode(false);
+	connection.getResponse().getHeaders().clear();
+	connection.getResponse().setBody("");
 	int statusCode = connection.getRequest().getStatusCode();
 	connection.getRequest().setPath(connection.getServer().getErrorPages()[statusCode]);
 	

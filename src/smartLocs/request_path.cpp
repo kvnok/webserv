@@ -20,26 +20,16 @@ static void parse_path(string &path, string &folder, string &file) {
 }
 
 static void check_locs(Request &request, string &folder, string &file, string &path, smartLocs sLocs) {
-	cout << "check_locs" << endl;
-	// print smartLocs
-	// map<string, Loc> locs = sLocs.get_locs();
-	// for (map<string, Loc>::iterator it = locs.begin(); it != locs.end(); it++) {
-	// 	cout << "loc: " << it->first << endl;
-	// }
-	// cout << "folder: " << folder << endl;
 	Loc loc;
 	try {
 		loc = sLocs.get_loc(folder);
 	}
 	catch (invalid_argument &e) {
-		cout << "loc not found" << endl;
 		request.setStatusCode(404);
 		return;
 	}
-	cout << "loc found" << endl;
 	vector<string> deny = loc.get_deny();
 	if (find(deny.begin(), deny.end(), request.getMethod()) != deny.end()) {
-		cout << "deny" << endl;
 		request.setStatusCode(403);
 		return ;
 	}
@@ -50,10 +40,8 @@ static void check_locs(Request &request, string &folder, string &file, string &p
 
 	if (file.empty()) { // no file, check for index
 		if (request.getMethod() == "POST") {
-			cout << "POST" << endl;
 			if (request.getStatusCode() >= 200 && request.getStatusCode() < 399) {
 				path = loc.get_root();
-				cout << "POST path: " << path << endl;
 			}
 			return ;
 		}
@@ -97,7 +85,6 @@ static void check_locs(Request &request, string &folder, string &file, string &p
 }
 
 static void check_baseline(Request &request, string &file, string &path, ServerBlock server) {
-	cout << "check_baseline" << endl;
 	string root = server.getRoot();
 	string root_and_file = root + "/" + file;
 	root_and_file = regex_replace(root_and_file, regex("//+"), "/");
