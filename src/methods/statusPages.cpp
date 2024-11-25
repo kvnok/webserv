@@ -22,11 +22,6 @@ void	executeStatusCode(Connection& connection) {
 	buffer.resize(bytes);
 	connection.getResponse().addToBody(buffer);
 	connection.addBytesRead(bytes);
-	if (bytes < BUFFER_SIZE || (bytes == BUFFER_SIZE && buffer[BUFFER_SIZE - 1] == '\0')) {
-		connection.setHandleStatusCode(false);
-		connection.setBytesRead(0);
-		connection.setNextState(DELFD);
-	}
 	return ;
 }
 

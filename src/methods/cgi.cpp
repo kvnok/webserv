@@ -96,15 +96,11 @@ static void readFromCgi(Connection& connection) {
 	}
 	else if (bytes == 0) {
 		connection.getCgi().setCgiStage(CGI_DONE);
+		return ;
 	}
-	else  {
-		buffer.resize(bytes);
-		connection.getCgi().addToCgiBody(buffer);
-		connection.addBytesRead(bytes);
-		if (bytes < BUFFER_SIZE || (bytes == BUFFER_SIZE && buffer[BUFFER_SIZE - 1] == '\0')) {
-			connection.getCgi().setCgiStage(CGI_DONE);
-		}
-	}
+	buffer.resize(bytes);
+	connection.getCgi().addToCgiBody(buffer);
+	connection.addBytesRead(bytes);
 }
 
 static void	writeToCgi(Connection& connection) {
@@ -188,13 +184,12 @@ static bool	forkCgi(Connection& connection) {
 		return (false);
 	}
 	else if (pid == 0) {
-		dup2(connection.getCgi().getInputRead(), STDIN_FILENO);
-		dup2(connection.getCgi().getOutputWrite(), STDOUT_FILENO);
-
-		close(connection.getCgi().getInputRead());
 		close(connection.getCgi().getInputWrite());
+		dup2(connection.getCgi().getInputRead(), STDIN_FILENO);
+		//close(connection.getCgi().getInputRead());
 		close(connection.getCgi().getOutputRead());
-		close(connection.getCgi().getOutputWrite());
+		dup2(connection.getCgi().getOutputWrite(), STDOUT_FILENO);
+		//close(connection.getCgi().getOutputWrite());
 
     	string path = connection.getRequest().getPath();
     	string body = connection.getRequest().getBody();
@@ -226,11 +221,13 @@ void	cgiMethod(Connection& connection) {
 		connection.getCgi().setCgiStage(CGI_FDWRITE);
 	}
 	if (connection.getCgi().getCgiStage() == CGI_FDWRITE) {
+		//close(connection.getCgi().getInputRead());
 		connection.setOtherFD(connection.getCgi().getInputWrite());
 		connection.setNextState(SETFD);
 		connection.getCgi().setCgiStage(CGI_WRITE);
 	}
 	else if (connection.getCgi().getCgiStage() == CGI_FDREAD) {
+		//close(connection.getCgi().getOutputWrite());
 		connection.setOtherFD(connection.getCgi().getOutputRead());
 		connection.setNextState(SETFD);
 		connection.getCgi().setCgiStage(CGI_READ);
