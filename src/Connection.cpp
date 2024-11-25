@@ -36,8 +36,6 @@ Connection& Connection::operator=(const Connection& other) {
 
 Connection::~Connection() {}
 
-void	Connection::setRequest(Request request) { this->_request = request; }
-void	Connection::setResponse(Response response) { this->_response = response; }
 void	Connection::setNextState(const cState nextState) { this->_nextState = nextState; }
 void	Connection::setBuffer(const vector<char> buffer) { this->_buffer = buffer; }
 void	Connection::setServer(const ServerBlock server) { this->_server = server; }
@@ -102,14 +100,11 @@ void			Connection::activityCheck() {
 		// cout << "statuscode 503, duration : " << duration << " milliseconds" << endl;
 		// cout << "fd: " << this->getFd() << " of serverport: " << this->getServer().getPort() << endl;
 		this->_request.setStatusCode(504);
-		if (this->_nextState == DELFD || this->_nextState == EXECFD)
+		if (this->_nextState == DELFD || this->_nextState == EXECFD) //if (this->_otherFd != -1)
 			this->_nextState = DELFD;
 		else
-			this->_nextState = STATUSCODE;
-		this->_bRead = 0;
-		this->_bWritten = 0;
+			this->_nextState = PREPEXEC;
 		this->_handleStatusCode = true;
-		this->_response.reset();
 		this->updateTimeStamp();
 	}
 }

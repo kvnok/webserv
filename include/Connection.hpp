@@ -13,7 +13,7 @@ using namespace std;
 #define IDLE_LIMIT  60000 //1 minute
 #define ACTIVE_LIMIT 60000 // 1 minute
 
-enum cState {READ, PATH, PREPEXEC, STATUSCODE, SETFD, EXECFD, DELFD, RESPONSE, SEND, CLOSE};
+enum cState {READ, PATH, PREPEXEC, EXECFD, DELFD, RESPONSE, SEND, CLOSE};
 
 class Connection {
 	private:
@@ -39,8 +39,6 @@ class Connection {
 
 		Connection& operator=(const Connection& other);
 
-		void	setRequest(Request request); //we dont use it
-		void	setResponse(Response response);//we dont use it
 		void	setNextState(const cState nextState);
 		void	setOtherFD(const int otherFD);
 		void	setHandleStatusCode(const bool flag);

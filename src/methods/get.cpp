@@ -6,17 +6,16 @@ void	executeGet(Connection& connection) {
 	int		fd = connection.getOtherFD();
 	ssize_t bytes = read(fd, &buffer[0], BUFFER_SIZE);
 	if (bytes < 0) {
-		connection.getResponse().setBody("");
-		connection.setBytesRead(0);
 		connection.getRequest().setStatusCode(500);
 		connection.setHandleStatusCode(true);
 		connection.setNextState(DELFD);
+		close(connection.getOtherFD());
 		return ;
 	}
 	else if (bytes == 0) {
 		connection.setHandleStatusCode(false);
-		connection.setBytesRead(0);
 		connection.setNextState(DELFD);
+		close(connection.getOtherFD());
 		return ;
 	}
 	buffer.resize(bytes);
@@ -42,12 +41,12 @@ void	getMethod(Connection& connection) {
 			else
 				connection.getRequest().setStatusCode(500);
 			connection.setHandleStatusCode(true);
-			connection.setNextState(STATUSCODE);
+			connection.setNextState(PREPEXEC);
 		}
     	else {
     	    connection.setOtherFD(fd);
 			connection.setHandleStatusCode(false);
-			connection.setNextState(SETFD);
+			connection.setNextState(EXECFD);
     	}
 	}
 	return ;

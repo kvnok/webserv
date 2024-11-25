@@ -52,17 +52,17 @@ void	Cgi::resetPid() {
 }
 
 void	Cgi::resetFds() {
-	if (this->_inputRead > 0 && fcntl(this->_inputRead, F_GETFD) != -1)
-		close (this->_inputRead);
+	if (this->_inputRead != -1)
+		close(this->_inputRead);
 	this->_inputRead = -1;
-	if (this->_inputWrite > 0 && fcntl(this->_inputWrite, F_GETFD) != -1)
-		close (this->_inputWrite);
+	if (this->_inputWrite != -1)
+		close(this->_inputWrite);
 	this->_inputWrite = -1;
-	if (this->_outputRead > 0 && fcntl(this->_outputRead, F_GETFD) != -1)
-		close (this->_outputRead);
+	if (this->_outputRead != -1)
+		close(this->_outputRead);
 	this->_outputRead = -1;
-	if (this->_outputWrite > 0 && fcntl(this->_outputWrite, F_GETFD) != -1)
-		close (this->_outputWrite);
+	if (this->_outputWrite != -1)
+		close(this->_outputWrite);
 	this->_outputWrite = -1;
 }
 

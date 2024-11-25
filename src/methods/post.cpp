@@ -11,16 +11,16 @@ void    executePost(Connection& connection) {
     if (written == -1) {
         connection.getRequest().setStatusCode(500);
         remove(connection.getRequest().getPath().c_str()); //delete file which we made, because writing error
-        connection.setBytesWritten(0);
         connection.setHandleStatusCode(true);
         connection.setNextState(DELFD);
+        close(connection.getOtherFD());
         return ;
     }
     connection.addBytesWritten(written);
     if (connection.getBytesWritten() >= body.size()) {
-        connection.setBytesWritten(0);
         connection.setHandleStatusCode(true); // now open 201, and get the body
         connection.setNextState(DELFD);
+        close(connection.getOtherFD());
     }
     return ;
 }
@@ -32,28 +32,28 @@ void    postMethod(Connection& connection) {
     if (!filesystem::is_directory(storage) || access(storage.c_str(), W_OK) == -1) { //is not a dir or dir has no writing rights, so 403 forbidden
         connection.getRequest().setStatusCode(403);
         connection.setHandleStatusCode(true);
-        connection.setNextState(STATUSCODE);
+        connection.setNextState(PREPEXEC);
         return ;
     }
     string  fullPath = storage + '/' + file; //CHECK check if this is correct
     if (access(fullPath.c_str(), F_OK) == 0) { //file already exists, so conflict status 409
         connection.getRequest().setStatusCode(409);
         connection.setHandleStatusCode(true);
-        connection.setNextState(STATUSCODE);
+        connection.setNextState(PREPEXEC);
         return ;
     }
     int fd = open(fullPath.c_str(), O_CREAT | O_WRONLY, 0644);
     if (fd == -1) {
 		connection.getRequest().setStatusCode(500);
         connection.setHandleStatusCode(true);
-        connection.setNextState(STATUSCODE);
+        connection.setNextState(PREPEXEC);
     }
     else {
         connection.getRequest().setPath(fullPath);
         connection.getRequest().setStatusCode(201);
         connection.setOtherFD(fd);
         connection.setHandleStatusCode(false); //first write, after that get 201 page
-        connection.setNextState(SETFD);
+        connection.setNextState(EXECFD);
     }
     return ;
 }
