@@ -52,14 +52,12 @@ static bool	checkParent(Connection& connection) {
 		connection.getRequest().setStatusCode(500);
 		connection.setHandleStatusCode(true);
 		connection.getCgi().setPid(-1);
-		connection.getCgi().resetFds();
 		return (false);
 	}
 	if (result == connection.getCgi().getPid())
     {
 		if (WIFEXITED(status)) {
 			connection.getCgi().setPid(-1);
-			connection.getCgi().resetFds();
 			cout << "child exits normaly: " << status << endl;
 			return (true);
 		}
@@ -73,14 +71,12 @@ static bool	checkParent(Connection& connection) {
    	    	connection.getRequest().setStatusCode(500);
 		}
 		connection.setHandleStatusCode(true);
-		connection.getCgi().resetFds();
 		return (false);
    	}
 	else {
 		kill(connection.getCgi().getPid(), SIGTERM);
 		connection.getCgi().setPid(-1);
 	}
-	connection.getCgi().resetFds();
 	return (true);
 }
 
@@ -88,6 +84,7 @@ static void readFromCgi(Connection& connection) {
 	string	buffer(BUFFER_SIZE, '\0');
 	int		fd = connection.getOtherFD();
 	ssize_t bytes = read(fd, &buffer[0], BUFFER_SIZE);
+	cout << bytes << " READ" << endl;
 	if (bytes < 0) {
 		if (checkParent(connection)) {
 			connection.getRequest().setStatusCode(500);
@@ -99,14 +96,19 @@ static void readFromCgi(Connection& connection) {
 	}
 	else if (bytes == 0) {
 		connection.getCgi().setCgiStage(CGI_DONE);
+		connection.getCgi().setOutputRead(-1);
+		close(connection.getOtherFD());
+		return ;
 	}
-	else  {
-		buffer.resize(bytes);
-		connection.getCgi().addToCgiBody(buffer);
-		connection.addBytesRead(bytes);
-		if (bytes < BUFFER_SIZE || (bytes == BUFFER_SIZE && buffer[BUFFER_SIZE - 1] == '\0')) {
-			connection.getCgi().setCgiStage(CGI_DONE);
-		}
+	buffer.resize(bytes);
+	connection.getCgi().addToCgiBody(buffer);
+	connection.addBytesRead(bytes);
+	if (bytes < BUFFER_SIZE || (bytes == BUFFER_SIZE && buffer[BUFFER_SIZE - 1] == '\0')) {
+		cout << "END OF FILE" << endl;
+		connection.getCgi().setCgiStage(CGI_DONE);
+		connection.getCgi().setOutputRead(-1);
+		close(connection.getOtherFD());
+		return ;
 	}
 }
 
@@ -130,7 +132,10 @@ static void	writeToCgi(Connection& connection) {
 	connection.addBytesWritten(bytes);
 	if (connection.getBytesWritten() >= cgiData.size()) {
 		connection.getCgi().setCgiStage(CGI_FDREAD);
+		connection.setHandleStatusCode(false);
 		connection.setNextState(DELFD);
+		connection.getCgi().setInputWrite(-1);
+		close(connection.getOtherFD());
 	}
 	return ;
 }
@@ -142,10 +147,13 @@ void	executeCGI(Connection& connection) {
 	else if (connection.getCgi().getCgiStage() == CGI_READ) {
 		readFromCgi(connection);
 		if (connection.getCgi().getCgiStage() == CGI_DONE) {
-			if (checkParent(connection))
+			if (checkParent(connection)) {
+				cout << "parse: " << YEL << connection.getCgi().getCgiBody() << RESET << endl;
 				parseCgiResponse(connection);
+			}
+			else
+				cout << "No parse" << RED << connection.getCgi().getCgiBody() << RESET << endl;
 			connection.setNextState(DELFD);
-			connection.getCgi().reset();
 		}
 	}
 }
@@ -160,7 +168,7 @@ static bool	createCgiFds(Connection& connection) {
 		connection.getCgi().setCgiStage(CGI_OFF);
 		connection.getRequest().setStatusCode(500);
 		connection.setHandleStatusCode(true);
-		connection.setNextState(STATUSCODE);
+		connection.setNextState(PREPEXEC);
 		return (false);
 	}
 	if (pipe(output) == -1) {
@@ -169,7 +177,7 @@ static bool	createCgiFds(Connection& connection) {
 		connection.getCgi().setCgiStage(CGI_OFF);
 		connection.getRequest().setStatusCode(500);
 		connection.setHandleStatusCode(true);
-		connection.setNextState(STATUSCODE);
+		connection.setNextState(PREPEXEC);
 		return (false);
 	}
 	connection.getCgi().setInputRead(input[0]);
@@ -187,16 +195,17 @@ static bool	forkCgi(Connection& connection) {
 		connection.getCgi().setCgiStage(CGI_OFF);
 		connection.getRequest().setStatusCode(500);
 		connection.setHandleStatusCode(true);
-		connection.setNextState(STATUSCODE);
+		connection.setNextState(PREPEXEC);
 		return (false);
 	}
 	else if (pid == 0) {
-		dup2(connection.getCgi().getInputRead(), STDIN_FILENO);
-		dup2(connection.getCgi().getOutputWrite(), STDOUT_FILENO);
-
-		close(connection.getCgi().getInputRead());
+		//write to cgi
 		close(connection.getCgi().getInputWrite());
+		dup2(connection.getCgi().getInputRead(), STDIN_FILENO);
+		close(connection.getCgi().getInputRead());
+		//read from cgi
 		close(connection.getCgi().getOutputRead());
+		dup2(connection.getCgi().getOutputWrite(), STDOUT_FILENO);
 		close(connection.getCgi().getOutputWrite());
 
     	string path = connection.getRequest().getPath();
@@ -218,6 +227,12 @@ static bool	forkCgi(Connection& connection) {
     	if (execve(args[0], args.data(), env.data()) == -1)
     	    exit(500);
 	}
+	else {
+		close(connection.getCgi().getInputRead());
+		close(connection.getCgi().getOutputWrite());
+		connection.getCgi().setInputRead(-1);
+		connection.getCgi().setOutputWrite(-1);
+	}
 	return (true);
 }
 
@@ -231,12 +246,14 @@ void	cgiMethod(Connection& connection) {
 	}
 	if (connection.getCgi().getCgiStage() == CGI_FDWRITE) {
 		connection.setOtherFD(connection.getCgi().getInputWrite());
-		connection.setNextState(SETFD);
+		connection.setHandleStatusCode(false);
+		connection.setNextState(EXECFD);
 		connection.getCgi().setCgiStage(CGI_WRITE);
 	}
 	else if (connection.getCgi().getCgiStage() == CGI_FDREAD) {
 		connection.setOtherFD(connection.getCgi().getOutputRead());
-		connection.setNextState(SETFD);
+		connection.setHandleStatusCode(false);
+		connection.setNextState(EXECFD);
 		connection.getCgi().setCgiStage(CGI_READ);
 	}
 }
