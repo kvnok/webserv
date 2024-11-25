@@ -11,7 +11,7 @@ using namespace std;
 
 #define BUFFER_SIZE 10000
 #define IDLE_LIMIT  60000 //1 minute
-#define ACTIVE_LIMIT 10000 // 10 seconds
+#define ACTIVE_LIMIT 60000 // 1 minute
 
 enum cState {READ, PATH, PREPEXEC, STATUSCODE, SETFD, EXECFD, DELFD, RESPONSE, SEND, CLOSE};
 
