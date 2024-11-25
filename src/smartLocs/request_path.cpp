@@ -19,50 +19,27 @@ static void parse_path(string &path, string &folder, string &file) {
 	}
 }
 
-static void check_baseline(Request &request, string &file, string &path, ServerBlock server) {
-	string root = server.getRoot();
-	string root_and_file = root + "/" + file;
-	root_and_file = regex_replace(root_and_file, regex("//+"), "/");
-
-	if (file.empty()) { // no file, check for index
-		string root_and_index = root + "/" + server.getIndex();
-		root_and_index = regex_replace(root_and_index, regex("//+"), "/");
-		ifstream stream(root_and_index);
-		if (stream.is_open() && is_directory(root_and_index) == false) {
-			path = root_and_index;
-			stream.close();
-		}
-		else // can't open index
-			request.setStatusCode(404);
-		if (stream.is_open())
-			stream.close();
-	}
-	else if (!file.empty()) { // check for file
-		ifstream stream(root_and_file);
-		// check if file is a folder
-
-		if (stream.is_open() && (is_directory(root_and_file) == false || (is_directory(root_and_file) && request.getMethod() == "POST"))) {
-			path = root_and_file;
-			stream.close();
-		}
-		else // can't open file part of the path
-			request.setStatusCode(404);
-		if (stream.is_open())
-			stream.close();
-	}
-}
-
 static void check_locs(Request &request, string &folder, string &file, string &path, smartLocs sLocs) {
+	cout << "check_locs" << endl;
+	// print smartLocs
+	// map<string, Loc> locs = sLocs.get_locs();
+	// for (map<string, Loc>::iterator it = locs.begin(); it != locs.end(); it++) {
+	// 	cout << "loc: " << it->first << endl;
+	// }
+	// cout << "folder: " << folder << endl;
 	Loc loc;
 	try {
 		loc = sLocs.get_loc(folder);
 	}
 	catch (invalid_argument &e) {
+		cout << "loc not found" << endl;
 		request.setStatusCode(404);
 		return;
 	}
+	cout << "loc found" << endl;
 	vector<string> deny = loc.get_deny();
 	if (find(deny.begin(), deny.end(), request.getMethod()) != deny.end()) {
+		cout << "deny" << endl;
 		request.setStatusCode(403);
 		return ;
 	}
@@ -72,6 +49,14 @@ static void check_locs(Request &request, string &folder, string &file, string &p
 	root_and_file = regex_replace(root_and_file, regex("//+"), "/");
 
 	if (file.empty()) { // no file, check for index
+		if (request.getMethod() == "POST") {
+			cout << "POST" << endl;
+			if (request.getStatusCode() >= 200 && request.getStatusCode() < 399) {
+				path = loc.get_root();
+				cout << "POST path: " << path << endl;
+			}
+			return ;
+		}
 		if (loc.get_index() != "")
 		{
 			string root_and_index = root + "/" + loc.get_index();
@@ -100,6 +85,52 @@ static void check_locs(Request &request, string &folder, string &file, string &p
 			request.setCGIExtension(loc.get_cgi_extension());
 		}
 		ifstream stream(root_and_file);
+		if (stream.is_open() && is_directory(root_and_file) == false) {
+			path = root_and_file;
+			stream.close();
+		}
+		else // can't open file part of the path
+			request.setStatusCode(404);
+		if (stream.is_open())
+			stream.close();
+	}
+}
+
+static void check_baseline(Request &request, string &file, string &path, ServerBlock server) {
+	cout << "check_baseline" << endl;
+	string root = server.getRoot();
+	string root_and_file = root + "/" + file;
+	root_and_file = regex_replace(root_and_file, regex("//+"), "/");
+
+	// check if file is a folder
+	string folder = "/" + file;
+	smartLocs sLocs = server.getSmartLocs();
+	Loc loc;
+	string empty = "";
+	try {
+		loc = sLocs.get_loc(folder);
+		check_locs(request, folder, empty, path, sLocs);
+		return ;
+	}
+	catch (invalid_argument &e) {}
+
+	if (file.empty()) { // no file, check for index
+		string root_and_index = root + "/" + server.getIndex();
+		root_and_index = regex_replace(root_and_index, regex("//+"), "/");
+		ifstream stream(root_and_index);
+		if (stream.is_open() && is_directory(root_and_index) == false) {
+			path = root_and_index;
+			stream.close();
+		}
+		else // can't open index
+			request.setStatusCode(404);
+		if (stream.is_open())
+			stream.close();
+	}
+	else if (!file.empty()) { // check for file
+		ifstream stream(root_and_file);
+		// check if file is a folder
+
 		if (stream.is_open() && is_directory(root_and_file) == false) {
 			path = root_and_file;
 			stream.close();
