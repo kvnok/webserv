@@ -19,8 +19,7 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
         if (this->_connections[j].getFd() == connection.getFd() && this->_fds[i].fd == connection.getFd()) {
             for (size_t k = 0; k < this->_fds.size(); k++) {
                 if (this->_fds[k].fd == connection.getOtherFD()) {
-                    if (fcntl(connection.getOtherFD(), F_GETFD) != -1)
-                        close(connection.getOtherFD());
+                    close(connection.getOtherFD()); //how can i check if this is still open?
                     this->_fds.erase(this->_fds.begin() + k);
                     connection.setOtherFD(-1);
                     if (k <= i)
@@ -28,8 +27,7 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
                     break ;
                 }
             }
-            if (fcntl(connection.getFd(), F_GETFD) != -1)
-                close(connection.getFd());
+            close(connection.getFd());
             connection.reset();
             this->_fds.erase(this->_fds.begin() + i);
             this->_connections.erase(this->_connections.begin() + j);
@@ -41,13 +39,11 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
 }
 
 void    Servers::deleteOtherFd(Connection& connection, size_t& i) {
-    if (fcntl(connection.getOtherFD(), F_GETFD) != -1)
-        close(connection.getOtherFD());
     this->_fds.erase(this->_fds.begin() + i);
     connection.setOtherFD(-1);
     i--;
     if (connection.getHandleStatusCode() == true)
-        connection.setNextState(STATUSCODE);
+        connection.setNextState(PREPEXEC);
     else if (connection.getCgi().getCgiStage() == CGI_FDREAD)
         connection.setNextState(PREPEXEC);
     else
@@ -55,7 +51,9 @@ void    Servers::deleteOtherFd(Connection& connection, size_t& i) {
 }
 
 void	Servers::prepExec(Connection& connection) {
-    if (connection.getRequest().getIsCGI() == true)
+    if (connection.getHandleStatusCode() == true)
+        getStatusCodePage(connection);
+    else if (connection.getRequest().getIsCGI() == true)
         cgiMethod(connection);
     else if (connection.getRequest().getMethod() == "DELETE")
         deleteMethod(connection);
@@ -66,28 +64,27 @@ void	Servers::prepExec(Connection& connection) {
     else {
         connection.getRequest().setStatusCode(500);
         connection.setHandleStatusCode(true);
-        connection.setNextState(STATUSCODE);
+        getStatusCodePage(connection);
     }
-    return;
-}
-
-void    Servers::addFdToPoll(Connection& connection) {
-    if (fcntl(connection.getOtherFD(), F_SETFL, O_NONBLOCK) == -1) {
+    if (connection.getNextState() == EXECFD) {
+        if (fcntl(connection.getOtherFD(), F_SETFL, O_NONBLOCK) == -1) {
             close(connection.getOtherFD());
             connection.setOtherFD(-1);
             connection.getRequest().setStatusCode(500);
             connection.setHandleStatusCode(true);
-            connection.setNextState(STATUSCODE);
+            connection.setNextState(PREPEXEC);
             if (connection.getCgi().getCgiStage() != CGI_OFF)
                 connection.getCgi().reset();
             return ;
+        }
+        this->_fds.push_back({connection.getOtherFD(), POLLIN | POLLOUT, 0});
     }
-    this->_fds.push_back({connection.getOtherFD(), POLLIN | POLLOUT, 0});
-    connection.setNextState(EXECFD);
+    // if (connection.getNextState() == PREPEXEC)
+    //     prepExec(connection);
+    return;
 }
 
 void    Servers::executeMethod(Connection& connection) {
-    //reset bytes written/read and response._body, if an error occures
     if (connection.getHandleStatusCode() == true)
         executeStatusCode(connection);
     else if (connection.getRequest().getIsCGI() == true)
@@ -114,12 +111,6 @@ void    Servers::handleExistingConnection(Connection& connection) {
             break ;
         case PREPEXEC:
             prepExec(connection);
-            break ;
-        case STATUSCODE:
-            getStatusCodePage(connection);
-            break ;
-        case SETFD:
-            addFdToPoll(connection);
             break ;
         case EXECFD:
             executeMethod(connection);
@@ -213,24 +204,18 @@ void printInsideIf(string a, string b, size_t i, int fd, enum cState num) {
             cout << "PREPEXEC" << endl;
             break;
         case 3:
-            cout << "STATUSCODE" << endl;
-            break;
-        case 4:
-            cout << "SETFD" << endl;
-            break;
-        case 5:
             cout << "EXECFD" << endl;
             break;
-        case 6:
+        case 4:
             cout << "DELFD" << endl;
             break;
-        case 7:
+        case 5:
             cout << "RESPONSE" << endl;
             break;
-        case 8:
+        case 6:
             cout << "SEND" << endl;
             break;
-        case 9:
+        case 7:
             cout << "CLOSE" << endl;
             break;
         default:
@@ -293,6 +278,9 @@ void    Servers::start() {
                         }
                         else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                             // printInsideIf("isOtherFd", "else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL))", i, this->_fds[i].fd, connection->getNextState());
+                            connection->getRequest().setStatusCode(500);
+                            connection->setHandleStatusCode(true);
+                            close(this->_fds[i].fd);
                             connection->setNextState(DELFD);
                         }
                         if (connection->getNextState() == DELFD) {

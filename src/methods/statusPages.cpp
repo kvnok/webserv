@@ -6,8 +6,6 @@ void	executeStatusCode(Connection& connection) {
 	int		fd = connection.getOtherFD();
 	ssize_t bytes = read(fd, &buffer[0], BUFFER_SIZE);
 	if (bytes < 0) {
-		connection.getResponse().setBody("");
-		connection.setBytesRead(0);
 		connection.getRequest().setStatusCode(500);
 		connection.setHandleStatusCode(true);
 		connection.setNextState(DELFD);
@@ -15,25 +13,22 @@ void	executeStatusCode(Connection& connection) {
 	}
 	else if (bytes == 0) {
 		connection.setHandleStatusCode(false);
-		connection.setBytesRead(0);
 		connection.setNextState(DELFD);
 		return ;
 	}
 	buffer.resize(bytes);
 	connection.getResponse().addToBody(buffer);
 	connection.addBytesRead(bytes);
-	if (bytes < BUFFER_SIZE || (bytes == BUFFER_SIZE && buffer[BUFFER_SIZE - 1] == '\0')) {
-		connection.setHandleStatusCode(false);
-		connection.setBytesRead(0);
-		connection.setNextState(DELFD);
-	}
 	return ;
 }
 
 void	getStatusCodePage(Connection& connection) {
 	connection.setHandleStatusCode(false);
+	connection.setBytesRead(0);
+	connection.setBytesWritten(0);
 	connection.getResponse().getHeaders().clear();
 	connection.getResponse().setBody("");
+
 	int statusCode = connection.getRequest().getStatusCode();
 	connection.getRequest().setPath(connection.getServer().getErrorPages()[statusCode]);
 	
@@ -57,13 +52,13 @@ void	getStatusCodePage(Connection& connection) {
 		else {
 			connection.setOtherFD(lastTryFD);
 			connection.setHandleStatusCode(true);
-			connection.setNextState(SETFD);
+			connection.setNextState(EXECFD);
 		}
 	}
 	else {
 		connection.setOtherFD(fd);
 		connection.setHandleStatusCode(true);
-		connection.setNextState(SETFD);
+		connection.setNextState(EXECFD);
 	}
 	return ;
 }
