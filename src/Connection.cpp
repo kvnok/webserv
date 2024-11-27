@@ -10,8 +10,8 @@ Connection::Connection(const int fd, const ServerBlock serverBlock) {
 	this->_bRead = 0;
 	this->_bWritten = 0;
 	this->_server = serverBlock;
-	this->_lastActive = chrono::steady_clock::now();
-	this->_activeFlag = false;
+	this->updateAllTimeStamps();
+	this->_keepAlive = true;
 }
 Connection::Connection(const Connection& other) { *this = other; }
 
@@ -28,13 +28,14 @@ Connection& Connection::operator=(const Connection& other) {
 		this->_request = other._request;
 		this->_server = other._server;
 		this->_response = other._response;
-		this->_lastActive = other._lastActive;
-		this->_activeFlag = other._activeFlag;
+		this->_timeStamp = other._timeStamp;
+		this->_activityStamp = other._activityStamp;
+		this->_keepAlive = other._keepAlive;
 	}
 	return *this;
 }
 
-Connection::~Connection() {}
+Connection::~Connection() { this->reset(); }
 
 void	Connection::setNextState(const cState nextState) { this->_nextState = nextState; }
 void	Connection::setBuffer(const vector<char> buffer) { this->_buffer = buffer; }
@@ -78,45 +79,91 @@ void			Connection::clearBuffer() {
 	}
 }
 
-void			Connection::updateTimeStamp() {
-	this->_lastActive = chrono::steady_clock::now();
+void			Connection::updateAllTimeStamps() {
+	this->_timeStamp = chrono::steady_clock::now();
+	this->_activityStamp = chrono::steady_clock::now();
 	return ;
 }
 
-void			Connection::setActiveFlag(const bool flag) { this->_activeFlag = flag; }
-bool			Connection::getActiveFlag() const { return (this->_activeFlag); }
+void			Connection::updateActivityStamp() {
+	this->_activityStamp = chrono::steady_clock::now();
+	return ;
+}
 
-void			Connection::activityCheck() {
+void			Connection::setKeepAlive(const bool flag) { this->_keepAlive = flag; }
+bool			Connection::getKeepAlive() const { return (this->_keepAlive); }
+
+bool			Connection::activityStampTimeOut(long limit) const {
 	auto now = chrono::steady_clock::now();
-	// cout << RED << "now: " << chrono::duration_cast<chrono::milliseconds>(now.time_since_epoch()).count() << RESET << endl;
-	long duration = chrono::duration_cast<chrono::milliseconds>(now - this->_lastActive).count();
-	// cout << YEL << "duration: " << duration << RESET << endl;
-	if (this->_activeFlag == false && duration >= IDLE_LIMIT) {
-		// cout << "closed, duration: " << duration << " milliseconds" << endl;
-		// cout << "fd: " << this->getFd() << " of serverport: " << this->getServer().getPort() << endl;
-		this->_nextState = CLOSE;
+	long duration = chrono::duration_cast<chrono::milliseconds>(now - this->_activityStamp).count();
+	return (duration >= limit);	
+}
+
+bool			Connection::timeStampTimeOut(long limit) const {
+	auto now = chrono::steady_clock::now();
+	long duration = chrono::duration_cast<chrono::milliseconds>(now - this->_timeStamp).count();
+	return (duration >= limit);
+}
+
+void			Connection::handleTimeOut(const int statusCode) {
+	//cout << "TIMEOUT for: " << this->_fd << " or " << this->_otherFD << " in state: " << this->_nextState << " with statuscode: " << statusCode << endl;
+	this->_request.setStatusCode(statusCode);
+	if (this->_otherFD != -1) {
+		if (this->_otherFD == this->_cgi.getOutputRead()) {
+			this->_cgi.setOutputRead(-1);
+			this->_cgi.reset();
+		}
+		else if (this->_otherFD == this->_cgi.getInputWrite()) {
+			this->_cgi.setInputWrite(-1);
+			this->_cgi.reset();
+		}
+		this->_nextState = DELFD;
 	}
-	else if (this->_activeFlag == true && duration >= ACTIVE_LIMIT) {
-		// cout << "statuscode 503, duration : " << duration << " milliseconds" << endl;
-		// cout << "fd: " << this->getFd() << " of serverport: " << this->getServer().getPort() << endl;
-		this->_request.setStatusCode(504);
-		if (this->_nextState == DELFD || this->_nextState == EXECFD) //if (this->_otherFd != -1)
-			this->_nextState = DELFD;
-		else
-			this->_nextState = PREPEXEC;
-		this->_handleStatusCode = true;
-		this->updateTimeStamp();
+	else
+		this->_nextState = PREPEXEC;
+	this->_handleStatusCode = true;
+}
+
+void			Connection::checkTimeOuts() {
+	if (this->_handleStatusCode == true) {
+		//could implement something to detect a loop and send an emergancy 500 if detected?
+		return ;
+	}
+	if (this->_nextState == READ) {
+		if (this->timeStampTimeOut(REQUEST_TIMEOUT))
+			this->handleTimeOut(408);
+	}
+	else if (this->_cgi.getCgiStage() != CGI_OFF && this->_cgi.getCgiStage() != CGI_DONE) {
+		if (this->timeStampTimeOut(CGI_TIMEOUT))
+			this->handleTimeOut(504);
+	}
+	else if (this->_nextState == EXECFD) {
+		if (this->timeStampTimeOut(POSTGET_TIMEOUT)) {
+			if (this->_request.getMethod() == "GET")
+				this->handleTimeOut(408);
+			else
+				this->handleTimeOut(500);
+		}
+	}
+	else if (this->_nextState == RESPONSE) {
+		if (this->timeStampTimeOut(RESPONSE_TIMEOUT)) {
+			this->handleTimeOut(504); //correct?
+			this->getResponse().reset();
+			//how to cut of a response that is busy sending stuf, send a terminating '\0'? or a signal?
+		}
 	}
 }
 
 void			Connection::reset() {
 	this->_buffer.clear();
-	this->_buffer.resize(0);
+	this->_buffer.resize(0);	
+	this->_cgi.reset();
 	this->_request.reset();
 	this->_response.reset();
-	this->_cgi.reset();
 	this->_nextState = READ;
 	this->_handleStatusCode = false;
 	this->_bRead = 0;
 	this->_bWritten = 0;
+	this->_keepAlive = true;
+	updateAllTimeStamps();
 }

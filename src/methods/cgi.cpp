@@ -32,6 +32,7 @@ static void	parseCgiResponse(Connection& connection) {
 				connection.getResponse().addHeader(key, value);
 			string body(i + 1, data.end());
 			connection.getResponse().setBody(body);
+			//cout << YEL << connection.getResponse().getBody() << RESET << endl;
 			connection.getResponse().addHeader("Content-Length", to_string(body.size()));
 			connection.setHandleStatusCode(false);
 		} catch (...) {
@@ -41,10 +42,10 @@ static void	parseCgiResponse(Connection& connection) {
 	}
 }
 
-static bool	checkParent(Connection& connection) {
+static bool	reapChild(Connection& connection) {
 	int status = 0;
 	pid_t result = waitpid(connection.getCgi().getPid(), &status, WNOHANG);
-	
+
 	if (result == -1) {
 		connection.getRequest().setStatusCode(500);
 		connection.setHandleStatusCode(true);
@@ -55,12 +56,10 @@ static bool	checkParent(Connection& connection) {
     {
 		if (WIFEXITED(status)) {
 			connection.getCgi().setPid(-1);
-			cout << "child exits normaly: " << status << endl;
 			return (true);
 		}
 		else if (WEXITSTATUS(status)) {
-			connection.getCgi().setPid(-1);
-			cout << "child exits with exitcode: " << status << endl;
+			//cout << "status code on child exit: " << status << endl;
 			connection.getRequest().setStatusCode(status);
 		} 
 		else {
@@ -68,43 +67,38 @@ static bool	checkParent(Connection& connection) {
    	    	connection.getRequest().setStatusCode(500);
 		}
 		connection.setHandleStatusCode(true);
+		connection.getCgi().setPid(-1);
 		return (false);
    	}
-	else {
-		kill(connection.getCgi().getPid(), SIGTERM);
-		connection.getCgi().setPid(-1);
-	}
-	return (true);
+	kill(connection.getCgi().getPid(), SIGTERM);
+	connection.getCgi().setPid(-1);
+	return (false);
 }
 
 static void readFromCgi(Connection& connection) {
 	string	buffer(BUFFER_SIZE, '\0');
 	int		fd = connection.getOtherFD();
 	ssize_t bytes = read(fd, &buffer[0], BUFFER_SIZE);
-	cout << bytes << " READ" << endl;
 	if (bytes < 0) {
-		if (checkParent(connection)) {
+		if (reapChild(connection)) {
 			connection.getRequest().setStatusCode(500);
 			connection.setHandleStatusCode(true);
 		}
 		connection.setNextState(DELFD);
-		connection.getCgi().reset();
+		connection.getCgi().setOutputRead(-1);
 		return ;
 	}
 	else if (bytes == 0) {
 		connection.getCgi().setCgiStage(CGI_DONE);
 		connection.getCgi().setOutputRead(-1);
-		close(connection.getOtherFD());
 		return ;
 	}
 	buffer.resize(bytes);
 	connection.getCgi().addToCgiBody(buffer);
 	connection.addBytesRead(bytes);
 	if (bytes < BUFFER_SIZE || (bytes == BUFFER_SIZE && buffer[BUFFER_SIZE - 1] == '\0')) {
-		cout << "END OF FILE" << endl;
 		connection.getCgi().setCgiStage(CGI_DONE);
 		connection.getCgi().setOutputRead(-1);
-		close(connection.getOtherFD());
 		return ;
 	}
 }
@@ -118,12 +112,12 @@ static void	writeToCgi(Connection& connection) {
 		chunkSize = BUFFER_SIZE;
 	ssize_t bytes = write(fd, cgiData.data() + connection.getBytesWritten(), chunkSize);
 	if (bytes == -1) {
-		if (checkParent(connection)) {
+		if (reapChild(connection)) {
 			connection.getRequest().setStatusCode(500);
 			connection.setHandleStatusCode(true);
 		}
 		connection.setNextState(DELFD);
-		connection.getCgi().reset();
+		connection.getCgi().setInputWrite(-1);
 		return ;
 	}
 	connection.addBytesWritten(bytes);
@@ -132,7 +126,6 @@ static void	writeToCgi(Connection& connection) {
 		connection.setHandleStatusCode(false);
 		connection.setNextState(DELFD);
 		connection.getCgi().setInputWrite(-1);
-		close(connection.getOtherFD());
 	}
 	return ;
 }
@@ -144,12 +137,11 @@ void	executeCGI(Connection& connection) {
 	else if (connection.getCgi().getCgiStage() == CGI_READ) {
 		readFromCgi(connection);
 		if (connection.getCgi().getCgiStage() == CGI_DONE) {
-			if (checkParent(connection)) {
-				cout << "parse: " << YEL << connection.getCgi().getCgiBody() << RESET << endl;
+			if (reapChild(connection)) {
 				parseCgiResponse(connection);
 			}
-			else
-				cout << "No parse" << RED << connection.getCgi().getCgiBody() << RESET << endl;
+			connection.getCgi().setOutputRead(-1);
+			//set CGI to OFF? since we are completely done
 			connection.setNextState(DELFD);
 		}
 	}
@@ -181,14 +173,16 @@ static bool	createCgiFds(Connection& connection) {
 	connection.getCgi().setInputWrite(input[1]);
 	connection.getCgi().setOutputRead(output[0]);
 	connection.getCgi().setOutputWrite(output[1]);
+	//cout << "new fds for cgi: " << connection.getCgi().getInputWrite() << " for write, and " << connection.getCgi().getOutputRead() << " for read" << endl;
 	return (true);
 }
 
 static bool	forkCgi(Connection& connection) {
 	pid_t pid = fork();
+	
+	//cout << "NEW PID: " <<  pid << endl;
 	connection.getCgi().setPid(pid);
 	if (pid < 0) {
-		connection.getCgi().reset();
 		connection.getCgi().setCgiStage(CGI_OFF);
 		connection.getRequest().setStatusCode(500);
 		connection.setHandleStatusCode(true);
@@ -223,12 +217,11 @@ static bool	forkCgi(Connection& connection) {
 		if (execve(args[0], args.data(), env.data()) == -1)
 			exit(500);
 	}
-	else {
-		close(connection.getCgi().getInputRead());
-		close(connection.getCgi().getOutputWrite());
-		connection.getCgi().setInputRead(-1);
-		connection.getCgi().setOutputWrite(-1);
-	}
+	close(connection.getCgi().getInputRead());
+	close(connection.getCgi().getOutputWrite());
+	connection.getCgi().setInputRead(-1);
+	connection.getCgi().setOutputWrite(-1);
+	// CHECK is this correct?
 	return (true);
 }
 

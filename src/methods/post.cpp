@@ -13,14 +13,12 @@ void    executePost(Connection& connection) {
         remove(connection.getRequest().getPath().c_str()); //delete file which we made, because writing error
         connection.setHandleStatusCode(true);
         connection.setNextState(DELFD);
-        close(connection.getOtherFD());
         return ;
     }
     connection.addBytesWritten(written);
     if (connection.getBytesWritten() >= body.size()) {
         connection.setHandleStatusCode(true); // now open 201, and get the body
         connection.setNextState(DELFD);
-        close(connection.getOtherFD());
     }
     return ;
 }

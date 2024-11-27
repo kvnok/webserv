@@ -111,19 +111,23 @@ void	readRequest(Connection& connection) {
     }
     buffer.resize(bytes);
     connection.addToBuffer(buffer);
-    if (connection.getRequest().getReadState() == START)
-        hasAllHeaders(connection.getBuffer(), connection.getRequest());
+    if (connection.getRequest().getReadState() == START) {
+		hasAllHeaders(connection.getBuffer(), connection.getRequest());
+	}
     if (connection.getRequest().getReadState() == HEADERS) {
         checkHeaders(connection.getBuffer(), connection.getRequest());
         connection.clearBuffer();
     }
-    if (connection.getRequest().getReadState() == CHUNKED_BODY)
-        checkChunkedBody(connection);
-    if (connection.getRequest().getReadState() == CONTENT_LENGTH_BODY)
-        checkContentLengthBody(connection);
+    if (connection.getRequest().getReadState() == CHUNKED_BODY) {	
+		checkChunkedBody(connection);
+	}
+    if (connection.getRequest().getReadState() == CONTENT_LENGTH_BODY) {
+		checkContentLengthBody(connection);
+	}
     if (connection.getRequest().getReadState() == DONE) {
         connection.getBuffer().clear();
         connection.getBuffer().resize(0);
+		connection.updateActivityStamp();
         connection.setNextState(PATH);
     }
 }
@@ -143,4 +147,3 @@ void	parsePath(Connection& connection) {
 	}
 	return ;
 }
-

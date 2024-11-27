@@ -2,7 +2,7 @@
 #pragma once
 
 #include "httpRequest.hpp"
-#include "ServerBlock.hpp" //for send()
+#include "ServerBlock.hpp"
 #include <iostream>
 #include <string>
 #include <map>
@@ -57,10 +57,7 @@ class Response {
 		string				getHeaderValue(const string& value) const;
 
 		void				reset();
-		void				setFullResponse(string const fullResponse);
-		void				addToFullResponse(string const part);
 		void				createFullResponse();			
 };
 
-void	createResponse(Connection& connection);
-void	sendResponse(Connection& connection);
+void	responder(Connection& connection);
