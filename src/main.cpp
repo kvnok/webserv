@@ -42,7 +42,6 @@ static void	signalHandler(int signum) {
     }
 }
 
-//CHECK add signal(SIGPIPE, SIG_IGN); to make sure we dont exit? 
 int main(int argc, char **argv) {
 	signal(SIGINT, signalHandler);
 	try
