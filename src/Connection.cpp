@@ -106,7 +106,6 @@ bool			Connection::timeStampTimeOut(long limit) const {
 }
 
 void			Connection::handleTimeOut(const int statusCode) {
-	//cout << "TIMEOUT for: " << this->_fd << " or " << this->_otherFD << " in state: " << this->_nextState << " with statuscode: " << statusCode << endl;
 	this->_request.setStatusCode(statusCode);
 	if (this->_otherFD != -1) {
 		if (this->_otherFD == this->_cgi.getOutputRead()) {
@@ -126,7 +125,6 @@ void			Connection::handleTimeOut(const int statusCode) {
 
 void			Connection::checkTimeOuts() {
 	if (this->_handleStatusCode == true) {
-		//could implement something to detect a loop and send an emergancy 500 if detected?
 		return ;
 	}
 	if (this->_nextState == READ) {
@@ -147,9 +145,8 @@ void			Connection::checkTimeOuts() {
 	}
 	else if (this->_nextState == RESPONSE) {
 		if (this->timeStampTimeOut(RESPONSE_TIMEOUT)) {
-			this->handleTimeOut(504); //correct?
+			this->handleTimeOut(504);
 			this->getResponse().reset();
-			//how to cut of a response that is busy sending stuf, send a terminating '\0'? or a signal?
 		}
 	}
 }

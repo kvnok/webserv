@@ -3,4 +3,4 @@ import json
 data = {"name": "John", "age": 30, "city": "New York"}
 print("Content-Type: application/json")    
 print()                             
-print(json.dumps(data))
+print(json.dumps(data), end="")

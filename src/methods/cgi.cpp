@@ -8,9 +8,7 @@ static void	parseHeadersCgi(Connection& connection) {
 	if (i < data.end()) {
 		connection.getCgi().setHeadersParsed(true);
 		string headers(data.begin(), i);
-		// cout << RED << headers << endl;
 		string newBody(i + limit.size(), data.end());
-		// cout << YEL << newBody << RESET << endl;
 		connection.getCgi().setCgiBody(newBody);
 		try {
 			auto j = find(headers.begin(), headers.end(), '\n');
@@ -44,7 +42,7 @@ static void	parseHeadersCgi(Connection& connection) {
 			connection.getCgi().setOutputRead(-1);				
 		}
 	}
-	else if (data.size() == 4 && data[3] == '\0') {
+	else if (data.size() == 3 && data[3] == '\0') {
 		try {
 			int status = stoi(data);
 			if (status < 100 || status > 511)
@@ -200,7 +198,6 @@ static bool	createCgiFds(Connection& connection) {
 	connection.getCgi().setInputWrite(input[1]);
 	connection.getCgi().setOutputRead(output[0]);
 	connection.getCgi().setOutputWrite(output[1]);
-	//cout << "new fds for cgi: " << connection.getCgi().getInputWrite() << " for write, and " << connection.getCgi().getOutputRead() << " for read" << endl;
 	return (true);
 }
 

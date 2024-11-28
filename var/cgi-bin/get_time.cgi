@@ -7,4 +7,4 @@ content_html = f"<html><body><h1><br><br><br><br>Current time: {formatted_time}<
 print(f"Content-Type: text/html")
 print(f"Content-Length: {len(content_html)}")
 print()
-print(f"{content_html}")
+print(f"{content_html}", end="")

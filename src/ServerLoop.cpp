@@ -147,26 +147,12 @@ void    Servers::handleExistingConnection(Connection& connection) {
         connection.checkTimeOuts(); //check timeouts
 }
 
-void Servers::printFDS() {
-    for (size_t d = 0; d < this->_fds.size(); d++) {
-        if (isClientFd(this->_fds[d].fd)) {
-            cout << "client: " << this->_fds[d].fd << "    ";
-        }
-        else if (isOtherFd(this->_fds[d].fd)) {
-            cout << RED << "otherFd: " << this->_fds[d].fd << RESET << "    ";
-        }
-    }
-    if (this->_fds.size() > 2)
-        cout << endl;
-}
-
 void    Servers::start() {
     while (true) {
         int ret = poll(this->_fds.data(), this->_fds.size(), 0);
         if (ret == -1)
             cerr << "poll failed" << endl;
         else {
-            // printFDS();
             for (size_t i = 0; i < this->_fds.size(); i++) {
                 if (isServerFd(this->_fds[i].fd)) {
                     ServerBlock* serverBlock = getFdsServerBlock(this->_fds[i].fd);
@@ -192,11 +178,9 @@ void    Servers::start() {
                             connection->setNextState(CLOSE);
                         }
                         if (connection->getKeepAlive() == true && connection->timeStampTimeOut(KEEPALIVE_TIMEOUT)) {
-                            //cout << "KeepAlive Timeout on: " << connection->getFd() << endl;
                             connection->setNextState(CLOSE);
                         }
                         else if (connection->getKeepAlive() == false && connection->timeStampTimeOut(ACTIVE_TIMEOUT)) {
-                            //cout << "KeepAlive Timeout on: " << connection->getFd() << endl;
                             connection->handleTimeOut(500);
                         }
                         if (connection->getNextState() == CLOSE) {
@@ -219,7 +203,6 @@ void    Servers::start() {
                             connection->setNextState(DELFD);
                         }
                         if (connection->getKeepAlive() == false && connection->timeStampTimeOut(ACTIVE_TIMEOUT)) {
-                            //cout << "KeepAlive Timeout on: " << connection->getFd() << endl;
                             connection->handleTimeOut(500);
                         }
                         if (connection->getNextState() == DELFD) {
