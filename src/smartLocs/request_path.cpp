@@ -29,6 +29,7 @@ static void check_locs(Request &request, string &folder, string &file, string &p
 		request.setStatusCode(404);
 		return;
 	}
+	// cout << "loc found" << endl;
 	vector<string> deny = loc.get_deny();
 	if (find(deny.begin(), deny.end(), request.getMethod()) != deny.end()) {
 		request.setStatusCode(403);
@@ -38,8 +39,11 @@ static void check_locs(Request &request, string &folder, string &file, string &p
 	string root = loc.get_root();
 	string root_and_file = root + "/" + file;
 	root_and_file = regex_replace(root_and_file, regex("//+"), "/");
-
+	// cout << "root and file: " << root_and_file << endl;
+	// cout << "root: " << root << endl;
+	// cout << "file: " << file << endl;
 	if (file.empty()) { // no file, check for index
+		// cout << "file empty" << endl;
 		if (request.getMethod() == "POST") {
 			if (request.getStatusCode() >= 200 && request.getStatusCode() < 399) {
 				path = loc.get_root();
@@ -48,15 +52,19 @@ static void check_locs(Request &request, string &folder, string &file, string &p
 		}
 		if (loc.get_index() != "")
 		{
+			// cout << "index not empty" << endl;
 			string root_and_index = root + "/" + loc.get_index();
 			root_and_index = regex_replace(root_and_index, regex("//+"), "/");
+			// cout << "root and index: " << root_and_index << endl;
 			ifstream stream(root_and_index);
 			if (stream.is_open() && is_directory(root_and_index) == false) {
+				// cout << "index is open" << endl;
 				path = root_and_index;
 				stream.close();
 			}
-			else // can't open index;
+			else {
 				request.setStatusCode(404);
+			}
 			if (stream.is_open())
 				stream.close();
 		}
@@ -68,6 +76,7 @@ static void check_locs(Request &request, string &folder, string &file, string &p
 			request.setStatusCode(404);
 	}
 	else if (!file.empty()) { // check for file
+		// cout << "file not empty" << endl;
 		if (loc.get_is_cgi() == true)
 		{
 			request.setIsCGI(true);
@@ -172,7 +181,10 @@ void request_path_handler(Connection& connection) {
 	sLocs.set_locs(serverBlock.getSmartLocs().get_locs());
 
 	if (is_this_a_redirect(folder, file, sLocs)) {
+		// cout << "redirecting" << endl;
 		do_the_redirect(request, folder, sLocs);
+		// cout << "path after: " << path << endl;
+		// cout << "folder after: " << folder << endl;
 		file = "";
 	}
 	if (folder == "/" || folder == "")
