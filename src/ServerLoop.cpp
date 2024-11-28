@@ -143,8 +143,6 @@ void    Servers::handleExistingConnection(Connection& connection) {
         case CLOSE:
             break ;
     }
-    if (connection.getKeepAlive() == false)
-        connection.checkTimeOuts(); //check timeouts
 }
 
 void    Servers::start() {
@@ -181,9 +179,12 @@ void    Servers::start() {
                             cout << "timeout keepalive" << endl;
                             connection->setNextState(CLOSE);
                         }
-                        else if (connection->getKeepAlive() == false && connection->timeStampTimeOut(ACTIVE_TIMEOUT)) {
-                            cout << "timeout active in clientfd" << endl;
-                            connection->handleTimeOut(500);
+                        if (connection->getKeepAlive() == false) {
+                            connection->checkTimeOuts(); //check timeouts
+                            if (connection->getRequest().getStatusCode() == 408 || connection->getRequest().getStatusCode() == 504) {
+                                this->_fds[i].events = POLLOUT;
+                                cout << "timeout in clientfd" << endl;
+                            }
                         }
                         if (connection->getNextState() == CLOSE) {
                             closeConnection(*connection, i);
@@ -204,9 +205,11 @@ void    Servers::start() {
                             connection->setHandleStatusCode(true);
                             connection->setNextState(DELFD);
                         }
-                        if (connection->getKeepAlive() == false && connection->timeStampTimeOut(ACTIVE_TIMEOUT)) {
-                            cout << "timeout active in otherfd" << endl;
-                            connection->handleTimeOut(500);
+                        if (connection->getKeepAlive() == false) {
+                            connection->checkTimeOuts(); //check timeouts
+                            if (connection->getRequest().getStatusCode() == 408 || connection->getRequest().getStatusCode() == 504) {
+                                cout << "timeout in otherfd" << endl;
+                            }
                         }
                         if (connection->getNextState() == DELFD) {
                             deleteOtherFd(*connection, i);

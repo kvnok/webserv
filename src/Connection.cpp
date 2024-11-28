@@ -100,6 +100,8 @@ bool			Connection::activityStampTimeOut(long limit) const {
 }
 
 bool			Connection::timeStampTimeOut(long limit) const {
+	if (this->_handleStatusCode == true)
+		return (false);
 	auto now = chrono::steady_clock::now();
 	long duration = chrono::duration_cast<chrono::milliseconds>(now - this->_timeStamp).count();
 	return (duration >= limit);
@@ -134,20 +136,6 @@ void			Connection::checkTimeOuts() {
 	else if (this->_cgi.getCgiStage() != CGI_OFF && this->_cgi.getCgiStage() != CGI_DONE) {
 		if (this->timeStampTimeOut(CGI_TIMEOUT)) {
 			this->handleTimeOut(504);
-		}
-	}
-	else if (this->_nextState == EXECFD) {
-		if (this->timeStampTimeOut(POSTGET_TIMEOUT)) {
-			if (this->_request.getMethod() == "GET")
-				this->handleTimeOut(408);
-			else
-				this->handleTimeOut(500);
-		}
-	}
-	else if (this->_nextState == RESPONSE) {
-		if (this->timeStampTimeOut(RESPONSE_TIMEOUT)) {
-			this->handleTimeOut(504);
-			this->getResponse().reset();
 		}
 	}
 }
