@@ -10,7 +10,7 @@ Connection::Connection(const int fd, const ServerBlock serverBlock) {
 	this->_bRead = 0;
 	this->_bWritten = 0;
 	this->_server = serverBlock;
-	this->updateAllTimeStamps();
+	this->updateTimeStamp();
 	this->_keepAlive = true;
 }
 Connection::Connection(const Connection& other) { *this = other; }
@@ -29,7 +29,6 @@ Connection& Connection::operator=(const Connection& other) {
 		this->_server = other._server;
 		this->_response = other._response;
 		this->_timeStamp = other._timeStamp;
-		this->_activityStamp = other._activityStamp;
 		this->_keepAlive = other._keepAlive;
 	}
 	return *this;
@@ -79,27 +78,15 @@ void			Connection::clearBuffer() {
 	}
 }
 
-void			Connection::updateAllTimeStamps() {
+void			Connection::updateTimeStamp() {
 	this->_timeStamp = chrono::steady_clock::now();
-	this->_activityStamp = chrono::steady_clock::now();
-	return ;
-}
-
-void			Connection::updateActivityStamp() {
-	this->_activityStamp = chrono::steady_clock::now();
 	return ;
 }
 
 void			Connection::setKeepAlive(const bool flag) { this->_keepAlive = flag; }
 bool			Connection::getKeepAlive() const { return (this->_keepAlive); }
 
-bool			Connection::activityStampTimeOut(long limit) const {
-	auto now = chrono::steady_clock::now();
-	long duration = chrono::duration_cast<chrono::milliseconds>(now - this->_activityStamp).count();
-	return (duration >= limit);	
-}
-
-bool			Connection::timeStampTimeOut(long limit) const {
+bool			Connection::checkTimeOut(long limit) const {
 	if (this->_handleStatusCode == true)
 		return (false);
 	auto now = chrono::steady_clock::now();
@@ -125,17 +112,18 @@ void			Connection::handleTimeOut(const int statusCode) {
 	this->_handleStatusCode = true;
 }
 
-void			Connection::checkTimeOuts() {
-	if (this->_handleStatusCode == true) {
+void			Connection::timeOutCheck() {
+	if (this->_handleStatusCode == true)
 		return ;
-	}
 	if (this->_nextState == READ) {
-		if (this->timeStampTimeOut(REQUEST_TIMEOUT))
+		if (this->checkTimeOut(REQUEST_TIMEOUT))
 			this->handleTimeOut(408);
 	}
-	else if (this->_cgi.getCgiStage() != CGI_OFF && this->_cgi.getCgiStage() != CGI_DONE) {
-		if (this->timeStampTimeOut(CGI_TIMEOUT)) {
-			this->handleTimeOut(504);
+	if (this->_nextState == EXECFD) {
+		if (this->_cgi.getCgiStage() != CGI_OFF && this->_cgi.getCgiStage() != CGI_DONE) {
+			if (this->checkTimeOut(CGI_TIMEOUT)) {
+				this->handleTimeOut(504);
+			}
 		}
 	}
 }
@@ -151,5 +139,5 @@ void			Connection::reset() {
 	this->_bRead = 0;
 	this->_bWritten = 0;
 	this->_keepAlive = true;
-	updateAllTimeStamps();
+	updateTimeStamp();
 }

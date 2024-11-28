@@ -34,7 +34,6 @@ class Connection {
 		Response		_response;
 		bool			_keepAlive;
 		chrono::steady_clock::time_point	_timeStamp;
-		chrono::steady_clock::time_point	_activityStamp;
 		Connection();
 
 	public:
@@ -71,12 +70,10 @@ class Connection {
 
 		void			setKeepAlive(const bool flag);
 		bool			getKeepAlive() const;
-		void			updateAllTimeStamps();
-		void			updateActivityStamp();
-		bool			activityStampTimeOut(long limit) const;
-		bool			timeStampTimeOut(long limit) const;
-		void			checkTimeOuts();
+		void			updateTimeStamp();
+		bool			checkTimeOut(long limit) const;;
 		void			handleTimeOut(const int statusCode);
+		void			timeOutCheck();
 		void			reset();
 };
 
