@@ -47,7 +47,6 @@ void	getStatusCodePage(Connection& connection) {
 			connection.getRequest().setPath("500.html");
 			string content = lastResortBody();
 			connection.getResponse().setBody(content);
-			connection.updateActivityStamp();
 			connection.setNextState(RESPONSE);
 		}
 		else {

@@ -55,7 +55,6 @@ void    Servers::deleteOtherFd(Connection& connection, size_t& i) {
         else if (connection.getCgi().getCgiStage() == CGI_FDREAD)
             connection.setNextState(PREPEXEC);
         else {
-            connection.updateActivityStamp();
             connection.setNextState(RESPONSE);
         }
     }
@@ -79,7 +78,6 @@ void	Servers::prepExec(Connection& connection) {
         connection.setHandleStatusCode(true);
         getStatusCodePage(connection);
     }
-    connection.updateActivityStamp(); //check if this is oke
     if (connection.getNextState() == EXECFD) {
         if (fcntl(connection.getOtherFD(), F_SETFL, O_NONBLOCK) == -1) {
             close(connection.getOtherFD());
@@ -99,8 +97,6 @@ void	Servers::prepExec(Connection& connection) {
         //cout << "new otherFd: " << connection.getOtherFD() << " from: " << connection.getFd() << endl;
         this->_fds.push_back({connection.getOtherFD(), POLLIN | POLLOUT, 0});
     }
-    // if (connection.getNextState() == PREPEXEC)
-    //     prepExec(connection);
     return;
 }
 
@@ -143,8 +139,6 @@ void    Servers::handleExistingConnection(Connection& connection) {
         case CLOSE:
             break ;
     }
-    if (connection.getKeepAlive() == false)
-        connection.checkTimeOuts(); //check timeouts
 }
 
 void    Servers::start() {
@@ -177,13 +171,14 @@ void    Servers::start() {
                         else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                             connection->setNextState(CLOSE);
                         }
-                        if (connection->getKeepAlive() == true && connection->timeStampTimeOut(KEEPALIVE_TIMEOUT)) {
+                        if (connection->getKeepAlive() == true && connection->timeStampTimeOut(TIMEOUT)) {
                             cout << "timeout keepalive" << endl;
                             connection->setNextState(CLOSE);
                         }
-                        else if (connection->getKeepAlive() == false && connection->timeStampTimeOut(ACTIVE_TIMEOUT)) {
+                        else if (connection->getKeepAlive() == false && connection->timeStampTimeOut(TIMEOUT)) {
                             cout << "timeout active in clientfd" << endl;
-                            connection->handleTimeOut(500);
+                            this->_fds[i].events = POLLOUT;
+                            connection->handleTimeOut(504);
                         }
                         if (connection->getNextState() == CLOSE) {
                             closeConnection(*connection, i);
@@ -204,9 +199,9 @@ void    Servers::start() {
                             connection->setHandleStatusCode(true);
                             connection->setNextState(DELFD);
                         }
-                        if (connection->getKeepAlive() == false && connection->timeStampTimeOut(ACTIVE_TIMEOUT)) {
+                        if (connection->getKeepAlive() == false && connection->timeStampTimeOut(TIMEOUT)) {
                             cout << "timeout active in otherfd" << endl;
-                            connection->handleTimeOut(500);
+                            connection->handleTimeOut(504);
                         }
                         if (connection->getNextState() == DELFD) {
                             deleteOtherFd(*connection, i);

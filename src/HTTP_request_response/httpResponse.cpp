@@ -112,7 +112,9 @@ static void    createResponse(Connection& connection) {
     if (response.getHeaderValue("Content-Length").empty())
         response.addHeader("Content-Length", to_string(response.getBody().size()));
     string const state = request.getHeaderValue("Connection");
-    if (state.empty())
+    if (connection.getRequest().getStatusCode() == 504)
+        response.addHeader("Connection", "close");
+    else if (state.empty())
         response.addHeader("Connection", "keep-alive");
     else
         response.addHeader("Connection", state);
