@@ -135,7 +135,7 @@ void	readRequest(Connection& connection) {
 void	parsePath(Connection& connection) {
 	if (connection.getRequest().getStatusCode() == 200) 
 		request_path_handler(connection);
-	if (connection.getRequest().getStatusCode() != 200) {
+	if (connection.getRequest().getStatusCode() < 200 || connection.getRequest().getStatusCode() >= 400) {
 		connection.setHandleStatusCode(true);
 		connection.setNextState(PREPEXEC);
 	}
