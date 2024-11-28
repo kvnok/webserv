@@ -1,9 +1,50 @@
 #include "Connection.hpp"
 
-static void	parseCgiResponse(Connection& connection) {
+static void	parseHeadersCgi(Connection& connection) {
 	string data = connection.getCgi().getCgiBody();
 
-	if (data.size() == 4) {
+	string limit = "\n\n";
+	auto i = search(data.begin(), data.end(), limit.begin(), limit.end());
+	if (i < data.end()) {
+		connection.getCgi().setHeadersParsed(true);
+		string headers(data.begin(), i);
+		// cout << RED << headers << endl;
+		string newBody(i + limit.size(), data.end());
+		// cout << YEL << newBody << RESET << endl;
+		connection.getCgi().setCgiBody(newBody);
+		try {
+			auto j = find(headers.begin(), headers.end(), '\n');
+			auto k = find(headers.begin(), j, ':');
+			if (k == headers.end())
+				throw runtime_error("header error");
+			auto l = headers.begin();
+			while (k < j) {
+				string key(l, k);
+				string value(k + 2, j); //+2 for ": "
+				if (key == "Content-Length") {
+					unsigned long cl = stoul(value);
+					connection.getCgi().setCgiCL(cl);
+				}
+				if (key == "Content-Type" && mimeCgi.find(value) == mimeCgi.end())
+					connection.getResponse().addHeader(key, "text/plain");
+				else
+					connection.getResponse().addHeader(key, value);
+				if (j == headers.end())
+					break ;
+				l = j + 1;
+				j = find(l, headers.end(), '\n');
+				k = find(l, j, ':');
+				if (k == headers.end())
+					throw runtime_error("header error");
+			}
+		} catch (...) {
+			connection.getRequest().setStatusCode(500);
+			connection.setHandleStatusCode(true);
+			connection.getCgi().setCgiStage(CGI_DONE);
+			connection.getCgi().setOutputRead(-1);				
+		}
+	}
+	else if (data.size() == 4 && data[3] == '\0') {
 		try {
 			int status = stoi(data);
 			if (status < 100 || status > 511)
@@ -13,33 +54,10 @@ static void	parseCgiResponse(Connection& connection) {
 			connection.getRequest().setStatusCode(500);
 		}
 		connection.setHandleStatusCode(true);
+		connection.getCgi().setCgiStage(CGI_DONE);
+		connection.getCgi().setOutputRead(-1);
 	}
-	else {
-		try {
-			auto i = find(data.begin(), data.end(), '\n');
-			if (i == data.end())
-				throw runtime_error("500");
-			auto j = find(data.begin(), i, ':');
-			if (j == i)
-				throw runtime_error("500");
-			string key(data.begin(), j);
-			string value(j + 2, i); //+2 for the ": "
-			if (key != "Content-Type")
-				throw runtime_error("500");
-			if (mimeCgi.find(value) == mimeCgi.end())
-				connection.getResponse().addHeader(key, "text/plain");
-			else
-				connection.getResponse().addHeader(key, value);
-			string body(i + 1, data.end());
-			connection.getResponse().setBody(body);
-			//cout << YEL << connection.getResponse().getBody() << RESET << endl;
-			connection.getResponse().addHeader("Content-Length", to_string(body.size()));
-			connection.setHandleStatusCode(false);
-		} catch (...) {
-			connection.getRequest().setStatusCode(500);
-			connection.setHandleStatusCode(true);
-		}
-	}
+	return ;
 }
 
 static bool	reapChild(Connection& connection) {
@@ -58,10 +76,8 @@ static bool	reapChild(Connection& connection) {
 			connection.getCgi().setPid(-1);
 			return (true);
 		}
-		else if (WEXITSTATUS(status)) {
-			//cout << "status code on child exit: " << status << endl;
-			connection.getRequest().setStatusCode(status);
-		} 
+		else if (WEXITSTATUS(status))
+			connection.getRequest().setStatusCode(500);
 		else {
 			kill(connection.getCgi().getPid(), SIGTERM);
    	    	connection.getRequest().setStatusCode(500);
@@ -96,10 +112,23 @@ static void readFromCgi(Connection& connection) {
 	buffer.resize(bytes);
 	connection.getCgi().addToCgiBody(buffer);
 	connection.addBytesRead(bytes);
-	if (bytes < BUFFER_SIZE || (bytes == BUFFER_SIZE && buffer[BUFFER_SIZE - 1] == '\0')) {
-		connection.getCgi().setCgiStage(CGI_DONE);
-		connection.getCgi().setOutputRead(-1);
-		return ;
+	if (connection.getCgi().getHeadersParsed() == false)
+		parseHeadersCgi(connection);
+	if (connection.getCgi().getHeadersParsed() == true) {
+		if (connection.getCgi().getCgiCL() != 0 || connection.getResponse().getHeaderValue("Content-Length") == "0") {
+			if (connection.getCgi().getCgiCL() == connection.getCgi().getCgiBody().size()) {
+				connection.getResponse().setBody(connection.getCgi().getCgiBody());
+				connection.getCgi().setCgiStage(CGI_DONE);
+				connection.getCgi().setOutputRead(-1);
+				return ;
+			}
+		}
+		else if (bytes < BUFFER_SIZE || (bytes == BUFFER_SIZE && buffer[BUFFER_SIZE - 1] == '\0')) {
+			connection.getResponse().setBody(connection.getCgi().getCgiBody());
+			connection.getCgi().setCgiStage(CGI_DONE);
+			connection.getCgi().setOutputRead(-1);
+			return ;
+		}
 	}
 }
 
@@ -137,11 +166,9 @@ void	executeCGI(Connection& connection) {
 	else if (connection.getCgi().getCgiStage() == CGI_READ) {
 		readFromCgi(connection);
 		if (connection.getCgi().getCgiStage() == CGI_DONE) {
-			if (reapChild(connection)) {
-				parseCgiResponse(connection);
-			}
+			reapChild(connection);
 			connection.getCgi().setOutputRead(-1);
-			//set CGI to OFF? since we are completely done
+			//connection.getCgi().setCgiStage() = CGI_OFF; //set CGI to OFF? since we are completely done
 			connection.setNextState(DELFD);
 		}
 	}
