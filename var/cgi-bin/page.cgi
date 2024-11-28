@@ -1,11 +1,4 @@
 #!/usr/bin/env python3
 
-print("Content-type: text/html\n")
-print("<html>")
-print("<head>")
-print("<title>My First CGI</title>")
-print("</head>")
-print("<body>")
-print("<h1>Hello, world!</h1>")
-print("</body>")
-print("</html>")
+print("Content-type: text/html")
+print("<html><body><h1><br><br><br><br>Hello World</h1></body></html>")
