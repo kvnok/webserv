@@ -23,13 +23,15 @@ enum cgiStage {CGI_OFF, CGI_ON, CGI_FDWRITE, CGI_FDREAD, CGI_DONE, CGI_WRITE, CG
 
 class	Cgi {
 	private:
-		pid_t		_pid;
-		int   		_inputRead;
-		int			_inputWrite;
-		int			_outputRead;
-		int			_outputWrite;
-		cgiStage	_cgiStage;
-		string		_cgiBody;
+		pid_t			_pid;
+		int   			_inputRead;
+		int				_inputWrite;
+		int				_outputRead;
+		int				_outputWrite;
+		cgiStage		_cgiStage;
+		string			_cgiBody;
+		unsigned long	_cgiCL;
+		bool			_headersParsed;
 		Cgi(const Cgi& other);
 	
 	public:
@@ -44,7 +46,9 @@ class	Cgi {
 		void	setOutputWrite(int const fd);
 		void	setCgiBody(string const body);
 		void	addToCgiBody(string const part);
-		void	setCgiStage(const cgiStage stage);
+		void	setCgiStage(cgiStage const stage);
+		void	setCgiCL(unsigned long const contentLength);
+		void	setHeadersParsed(bool const parsed);
 
 		pid_t			getPid() const;
 		int				getInputRead() const;
@@ -53,6 +57,8 @@ class	Cgi {
 		int				getOutputWrite() const;
 		string			getCgiBody() const;		
 		cgiStage		getCgiStage() const;
+		unsigned long	getCgiCL() const;
+		bool			getHeadersParsed() const;
 
 		void	resetPid();
 		void	resetFds();

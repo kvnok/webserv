@@ -9,13 +9,11 @@ void	executeGet(Connection& connection) {
 		connection.getRequest().setStatusCode(500);
 		connection.setHandleStatusCode(true);
 		connection.setNextState(DELFD);
-		close(connection.getOtherFD());
 		return ;
 	}
 	else if (bytes == 0) {
 		connection.setHandleStatusCode(false);
 		connection.setNextState(DELFD);
-		close(connection.getOtherFD());
 		return ;
 	}
 	buffer.resize(bytes);
@@ -29,6 +27,7 @@ void	getMethod(Connection& connection) {
 		connection.getResponse().setBody(do_autoindex(connection.getRequest().getPath()));
 		connection.setHandleStatusCode(false);
 		connection.getResponse().addHeader("Content-Type", "text/html");
+		connection.updateActivityStamp();
 		connection.setNextState(RESPONSE);
 	}
 	else {
