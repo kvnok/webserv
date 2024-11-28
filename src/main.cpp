@@ -12,18 +12,32 @@
 
 Servers* globalServer = nullptr;
 
-static void	closeAllPollFd() {
+static void	resetAllConnections() {
 	if (globalServer) {
-        for (size_t i = 0; i < globalServer->get_fds().size(); i++) {
-			if (globalServer->get_fds()[i].fd != -1)
-				close(globalServer->get_fds()[i].fd);
-        }
+		//cout << "Closing all connections" << endl;
+		for (size_t j = 0; j < globalServer->get_connections().size(); j++) {
+			//cout << "closed connection with fd: " << globalServer->get_connections()[j].getFd() << endl;
+			if (globalServer->get_connections()[j].getFd() != -1)
+				close(globalServer->get_connections()[j].getFd());
+			if (globalServer->get_connections()[j].getOtherFD() != -1)
+				close(globalServer->get_connections()[j].getOtherFD());
+			globalServer->get_connections()[j].reset();
+		}
     }
+}
+
+static void	closeServers() {
+	if (globalServer) {
+		for (size_t j = 0; j < globalServer->get_serverBlocks().size(); j++)
+			if (globalServer->get_serverBlocks()[j].getFd() == globalServer->get_fds()[j].fd)
+				close(globalServer->get_serverBlocks()[j].getFd());
+	}
 }
 
 static void	signalHandler(int signum) {
 	if (signum == SIGINT) {
-		closeAllPollFd();
+		resetAllConnections();
+		closeServers();
 		exit (0);
     }
 }
@@ -54,7 +68,8 @@ int main(int argc, char **argv) {
 		servers.start();
 	} catch (exception &e) {
 		//also need to close fd's if they are open?
-		void	closePollFd();
+		resetAllConnections();
+		closeServers();
 		cerr << RED << "Exception: " << e.what() << RESET << endl;
 	}
 	// here we want to delete all post requests and stuff, do we?

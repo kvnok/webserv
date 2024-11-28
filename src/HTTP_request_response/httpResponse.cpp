@@ -69,7 +69,7 @@ void    Response::reset() {
     return ;
 }
 
-void    sendResponse(Connection& connection) {
+static void    sendResponse(Connection& connection) {
     Response&   response = connection.getResponse();
     int         clientSocket = response.getClientSocket();
     string      fullResponse = response.getFullResponse();   
@@ -78,26 +78,22 @@ void    sendResponse(Connection& connection) {
     if (chunkSize > BUFFER_SIZE)
         chunkSize = BUFFER_SIZE;
     ssize_t bytes = send(clientSocket, fullResponse.c_str() + response.getBytesSend(), chunkSize, MSG_NOSIGNAL);
+    // cout << bytes << " send of the total: " << fullResponse.size() << endl;
     if (bytes == -1) {   
         connection.setNextState(CLOSE);
         return ;
     }
     response.addBytesSend(bytes);
     if (response.getBytesSend() >= fullResponse.size()) {
-        if (connection.getResponse().getHeaderValue("Connection") == "close") {
+        if (connection.getResponse().getHeaderValue("Connection") == "close")
             connection.setNextState(CLOSE);
-        }
-        else {
-            connection.setActiveFlag(false);
-            connection.updateTimeStamp();
+        else
             connection.reset();
-        }
     }
     return ;
 }
 
-
-void    createResponse(Connection& connection) {
+static void    createResponse(Connection& connection) {
     Response&   response = connection.getResponse();
     Request&    request = connection.getRequest();
 
@@ -121,6 +117,13 @@ void    createResponse(Connection& connection) {
     else
         response.addHeader("Connection", state);
     response.createFullResponse();
-    connection.setNextState(SEND);
+    cout << "response for: " << connection.getRequest().getPath() << endl;
+    return ;
+}
+
+void    responder(Connection& connection) {
+    if (connection.getResponse().getFullResponse().empty())
+        createResponse(connection);
+    sendResponse(connection);
     return ;
 }

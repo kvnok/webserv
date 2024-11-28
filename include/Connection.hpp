@@ -10,10 +10,17 @@
 using namespace std;
 
 #define BUFFER_SIZE 10000
-#define IDLE_LIMIT  60000 //1 minute
-#define ACTIVE_LIMIT 60000 // 1 minute
 
-enum cState {READ, PATH, PREPEXEC, EXECFD, DELFD, RESPONSE, SEND, CLOSE};
+// timeout limits
+#define KEEPALIVE_TIMEOUT 60000 //60 sec
+#define ACTIVE_TIMEOUT 60000 //60 sec
+#define REQUEST_TIMEOUT 10000 //10 sec
+#define CGI_TIMEOUT 30000 //30 sec
+#define POSTGET_TIMEOUT 30000 //30 sec
+#define RESPONSE_TIMEOUT 10000 //10 sec
+
+
+enum cState {READ, PATH, PREPEXEC, EXECFD, DELFD, RESPONSE, CLOSE};
 
 class Connection {
 	private:
@@ -28,8 +35,9 @@ class Connection {
 		Request			_request;
 		ServerBlock		_server;
 		Response		_response;
-		bool			_activeFlag;
-		chrono::steady_clock::time_point	_lastActive;
+		bool			_keepAlive;
+		chrono::steady_clock::time_point	_timeStamp;
+		chrono::steady_clock::time_point	_activityStamp;
 		Connection();
 
 	public:
@@ -64,10 +72,14 @@ class Connection {
 		size_t			getBytesWritten() const;
 		vector<char>	getBuffer() const;
 
-		void			setActiveFlag(const bool flag);
-		bool			getActiveFlag() const;
-		void			updateTimeStamp();
-		void			activityCheck();
+		void			setKeepAlive(const bool flag);
+		bool			getKeepAlive() const;
+		void			updateAllTimeStamps();
+		void			updateActivityStamp();
+		bool			activityStampTimeOut(long limit) const;
+		bool			timeStampTimeOut(long limit) const;
+		void			checkTimeOuts();
+		void			handleTimeOut(const int statusCode);
 		void			reset();
 };
 

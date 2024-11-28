@@ -21,5 +21,4 @@ void	deleteMethod(Connection& connection) {
 		}
 	}
 	connection.setHandleStatusCode(true);
-	connection.setNextState(PREPEXEC);
 }
