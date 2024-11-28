@@ -8,42 +8,43 @@ def create_storage_directory():
         try:
             os.makedirs(storage_path)
         except OSError as e:
-            print(f"500")
+            print(f"500", end="")
             sys.exit(-1)
     return storage_path
 
 def save_file(storage_path, file_name, file_content):
     file_path = os.path.join(storage_path, file_name)
     if os.path.exists(file_path):
-        print(f"409")
+        print(f"409", end="")
         sys.exit(-1)
     try:
         with open(file_path, 'wb') as file:
             file.write(file_content)
         if file_name.endswith(".ico") or file_name.endswith(".jpg") or file_name.endswith(".jpeg"):
             relative_path = "../" + file_path.split("var/")[1]
+            content_html = f"<html><body>"
+            content_html += f"<h1>{file_name} uploaded successfully!</h1>"
+            content_html += f"<p>File path: {relative_path}</p>"
+            content_html += f"<img src='{relative_path}' style='width: 10%; height: 10%'>"
+            content_html += f"</body></html>"
             print("Content-Type: text/html")
-            print(f"Content-Length: {len(file_content)}")
+            print(f"Content-Length: {len(content_html)}")
             print()
-            print(f"<html><body>")
-            print(f"<h1>{file_name} uploaded successfully!</h1>")
-            print(f"<p>File path: {relative_path}</p>")
-            print(f"<img src='{relative_path}' style='width: 10%; height: 10%'>")
-            print("</body></html>")
+            print(f"{content_html}", end="")
         else:
-            print(f"201")
+            print("201", end="")
     except Exception as e:
-        print(f"500")
+        print(f"500", end="")
         sys.exit(-1)
 
 def main():
     if len(sys.argv) != 1:
-        print("500")
+        print("500", end="")
         sys.exit(-1)
     file_name = os.getenv('FILE_NAME')
     file_size = int(os.getenv('BODY_SIZE'))
     if not file_name or not file_size:
-        print("400")
+        print("500", end="")
         sys.exit(-1)
     data = b""
     bytes_read = 0
