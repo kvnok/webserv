@@ -178,9 +178,11 @@ void    Servers::start() {
                             connection->setNextState(CLOSE);
                         }
                         if (connection->getKeepAlive() == true && connection->timeStampTimeOut(KEEPALIVE_TIMEOUT)) {
+                            cout << "timeout keepalive" << endl;
                             connection->setNextState(CLOSE);
                         }
                         else if (connection->getKeepAlive() == false && connection->timeStampTimeOut(ACTIVE_TIMEOUT)) {
+                            cout << "timeout active in clientfd" << endl;
                             connection->handleTimeOut(500);
                         }
                         if (connection->getNextState() == CLOSE) {
@@ -203,6 +205,7 @@ void    Servers::start() {
                             connection->setNextState(DELFD);
                         }
                         if (connection->getKeepAlive() == false && connection->timeStampTimeOut(ACTIVE_TIMEOUT)) {
+                            cout << "timeout active in otherfd" << endl;
                             connection->handleTimeOut(500);
                         }
                         if (connection->getNextState() == DELFD) {

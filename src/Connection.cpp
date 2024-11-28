@@ -132,8 +132,9 @@ void			Connection::checkTimeOuts() {
 			this->handleTimeOut(408);
 	}
 	else if (this->_cgi.getCgiStage() != CGI_OFF && this->_cgi.getCgiStage() != CGI_DONE) {
-		if (this->timeStampTimeOut(CGI_TIMEOUT))
+		if (this->timeStampTimeOut(CGI_TIMEOUT)) {
 			this->handleTimeOut(504);
+		}
 	}
 	else if (this->_nextState == EXECFD) {
 		if (this->timeStampTimeOut(POSTGET_TIMEOUT)) {
