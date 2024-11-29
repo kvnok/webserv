@@ -5,7 +5,6 @@ static bool	parseHeaders(istringstream &headerStream, string line, Request& requ
 	size_t	totLen = 0;
 
 	while (getline(headerStream, line) && line != "\r") {
-		cout << "STUKKK HIRERE" << endl;
 		size_t	len = line.length();
 		if (len > 5000 || totLen + len > 8000) {
 			request.setStatusCode(431);
@@ -83,6 +82,7 @@ static bool	parseRequestLine(const string line, Request& request) {
 	}
 	request.setMethod(requestLine[0]);
 	request.setPath(requestLine[1]);
+	cout << "request for: " << request.getPath() << endl;
 	request.setVersion(requestLine[2]);
 	if (!validateMethod(request.getMethod(), request) || !validateVersion(request.getVersion(), request) \
 		|| !validatePath(request.getPath(), request))
@@ -123,7 +123,6 @@ static	void	parsePart(string content, Request& request) {
 			break ;
 		headers[string(start, kvLim)] = string(kvLim + kv.size(), end);
 		start = end + nl.size();
-		cout << "Stuk herer" << endl;
 	}
 	string body(hbPos + hbLim.size(), content.end() - nl.size());
 	if (headers["Content-Disposition"].find("name=\"file\";") != string::npos) {
@@ -161,7 +160,6 @@ void	parseBodyParts(Request& request) {
 		throw runtime_error("400");
 	i += boundary.size();
 	while (true) {
-		cout << "stuk HEHRE" << endl;
 		if (i >= body.end())
 			break ;
 		string	tmpB(i, body.end());
@@ -183,7 +181,6 @@ void	checkChunkedBody(Connection& connection) {
 	const string d = "\r\n";
 	
 	while (true) {
-		cout << "stuk HERREERERE " << endl;
 		if (buf.empty())
 			break ;
 		auto endSize = search(buf.begin(), buf.end(), d.begin(), d.end());

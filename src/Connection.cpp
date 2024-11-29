@@ -119,11 +119,9 @@ void			Connection::timeOutCheck() {
 		if (this->checkTimeOut(REQUEST_TIMEOUT))
 			this->handleTimeOut(408);
 	}
-	if (this->_nextState == EXECFD) {
-		if (this->_cgi.getCgiStage() != CGI_OFF && this->_cgi.getCgiStage() != CGI_DONE) {
-			if (this->checkTimeOut(CGI_TIMEOUT)) {
-				this->handleTimeOut(504);
-			}
+	if (this->_request.getIsCGI() == true && this->_cgi.getCgiStage() != CGI_OFF && this->_cgi.getCgiStage() != CGI_DONE) {
+		if (this->checkTimeOut(CGI_TIMEOUT)) {
+			this->handleTimeOut(504);
 		}
 	}
 }

@@ -20,7 +20,7 @@ static void parse_path(string &path, string &folder, string &file) {
 }
 
 static void check_locs(Request &request, string &folder, string &file, string &path, smartLocs sLocs) {
-	cout << "check_locs" << endl;
+	// cout << "check_locs" << endl;
 	Loc loc;
 	try {
 		loc = sLocs.get_loc(folder);
@@ -95,7 +95,7 @@ static void check_locs(Request &request, string &folder, string &file, string &p
 }
 
 static void check_baseline(Request &request, string &file, string &path, ServerBlock server) {
-	cout << "check_baseline" << endl;
+	// cout << "check_baseline" << endl;
 	string root = server.getRoot();
 	string root_and_file = root + "/" + file;
 	root_and_file = regex_replace(root_and_file, regex("//+"), "/");
@@ -174,9 +174,9 @@ void request_path_handler(Connection& connection) {
 	string folder;
 	string file;
 	parse_path(path, folder, file);
-	cout << "start path: " << path << endl;
-	cout << "folder: " << folder << endl;
-	cout << "file: " << file << endl;
+	// cout << "start path: " << path << endl;
+	// cout << "folder: " << folder << endl;
+	// cout << "file: " << file << endl;
 	smartLocs sLocs;
 	sLocs.set_locs(serverBlock.getSmartLocs().get_locs());
 
@@ -192,5 +192,5 @@ void request_path_handler(Connection& connection) {
 	else
 		check_locs(request, folder, file, path, sLocs);
 	request.setPath(path);
-	cout << "end path: " << path << endl;
+	// cout << "end path: " << path << endl;
 }

@@ -13,8 +13,8 @@ using namespace std;
 
 // timeout limits
 #define KEEPALIVE_TIMEOUT 60000 //60 sec
-#define REQUEST_TIMEOUT 10 //10 sec
-#define CGI_TIMEOUT 30 //30 sec
+#define REQUEST_TIMEOUT 10000 //10 sec
+#define CGI_TIMEOUT 10000 //30 sec
 
 
 enum cState {READ, PATH, PREPEXEC, EXECFD, DELFD, RESPONSE, CLOSE};

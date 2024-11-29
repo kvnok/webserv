@@ -14,9 +14,7 @@ Servers* globalServer = nullptr;
 
 static void	resetAllConnections() {
 	if (globalServer) {
-		//cout << "Closing all connections" << endl;
 		for (size_t j = 0; j < globalServer->get_connections().size(); j++) {
-			//cout << "closed connection with fd: " << globalServer->get_connections()[j].getFd() << endl;
 			if (globalServer->get_connections()[j].getFd() != -1)
 				close(globalServer->get_connections()[j].getFd());
 			if (globalServer->get_connections()[j].getOtherFD() != -1)
