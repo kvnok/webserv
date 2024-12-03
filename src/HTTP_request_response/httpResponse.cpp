@@ -87,8 +87,15 @@ static void    sendResponse(Connection& connection) {
     if (response.getBytesSend() >= fullResponse.size()) {
         if (connection.getResponse().getHeaderValue("Connection") == "close")
             connection.setNextState(CLOSE);
-        else
-            connection.reset();
+        else {
+            if (connection.getRequest().getStatusCode() != 100)
+                connection.reset();
+            else {
+                connection.getResponse().reset();
+                connection.getRequest().setStatusCode(200);
+                connection.setNextState(WAIT);
+            }
+        }
     }
     return ;
 }
@@ -112,9 +119,7 @@ static void    createResponse(Connection& connection) {
     if (response.getHeaderValue("Content-Length").empty())
         response.addHeader("Content-Length", to_string(response.getBody().size()));
     string const state = request.getHeaderValue("Connection");
-    if (request.getStatusCode() == 504)
-        response.addHeader("Connecion", "keep-alive");
-    else if (state.empty())
+    if (state.empty())
         response.addHeader("Connection", "keep-alive");
     else
         response.addHeader("Connection", state);

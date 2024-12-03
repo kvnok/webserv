@@ -11,7 +11,8 @@ void    Servers::handleNewConnection(size_t i) {
         return ;
     }
     //cout << "handleNewConnection new clientFd: " << clientSocket << endl;
-    this->_fds.push_back({clientSocket, POLLIN | POLLOUT, 0});
+    pollfd x{clientSocket, POLLIN | POLLOUT, 0}; //ass example, could add this to connection
+    this->_fds.push_back(x);
     this->_connections.emplace_back(clientSocket, this->_serverBlocks[i]);
 }
 
@@ -27,12 +28,13 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
                         break ;
                     }
                 }
-                //cout << "deleted otherFd: " << connection.getOtherFD() << " in closeConnection" << endl;
+                cout << "deleted otherFd: " << connection.getOtherFD() << " in closeConnection" << endl;
                 close(connection.getOtherFD());
                 connection.setOtherFD(-1);
             }
-            //cout << "deleted clientFd: " << this->_fds[i].fd << " in closeConnection" << endl; 
-            close(connection.getFd());
+            cout << "deleted clientFd: " << this->_fds[i].fd << "/" << connection.getFd() << " in closeConnection" << endl; 
+            if (close(connection.getFd()) == -1)
+                cout << "close errror" << endl;
             connection.reset();
             this->_fds.erase(this->_fds.begin() + i);
             this->_connections.erase(this->_connections.begin() + j);
@@ -120,6 +122,8 @@ void    Servers::executeMethod(Connection& connection) {
 
 void    Servers::handleExistingConnection(Connection& connection) {
     switch (connection.getNextState()) {
+        case WAIT:
+            break ;
         case READ:
             readRequest(connection);
             break ;
@@ -140,6 +144,7 @@ void    Servers::handleExistingConnection(Connection& connection) {
         case CLOSE:
             break ;
     }
+    connection.timeOutCheck();
 }
 
 void    Servers::start() {
@@ -160,34 +165,41 @@ void    Servers::start() {
                     Connection* connection = getFdsClient(this->_fds[i].fd);
                     if (connection && connection->getNextState() != EXECFD && connection->getNextState() != DELFD) {
                         if (this->_fds[i].revents & POLLIN) {
-                            if (connection->getKeepAlive() == true) {
-                                connection->setKeepAlive(false);
+                            if (connection->getNextState() == WAIT) {
+                                connection->setNextState(READ);
                                 connection->updateTimeStamp();
                             }
                             if (connection->getNextState() == READ)
                                 handleExistingConnection(*connection);
-                            if (connection->getNextState() != READ)
-                                this->_fds[i].events = POLLOUT;
+                            else {
+                                connection->setNextState(READ);
+                                connection->getRequest().setReadState(EMPTY);
+                                handleExistingConnection(*connection);
+                            }
+                            // if (connection->getNextState() != READ)
+                            //     this->_fds[i].events = POLLOUT;
                         }
                         else if (this->_fds[i].revents & POLLOUT) {
-                            if (connection->getNextState() == READ)
-                                this->_fds[i].events = POLLIN;
-                            else
+                            if (connection->getNextState() != READ)
                                 handleExistingConnection(*connection);
+                            else {
+                                if (connection->getRequest().getStatusCode() >= 400)
+                                    connection->setNextState(PATH);
+                                else
+                                    connection->setNextState(WAIT);
+                            }
+                            // if (connection->getNextState() == READ)
+                            //     this->_fds[i].events = POLLIN;
+                            // else
+                            //     handleExistingConnection(*connection);
                         }
                         else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                             connection->setNextState(CLOSE);
                         }
-                        if (connection->getKeepAlive() == true && connection->checkTimeOut(KEEPALIVE_TIMEOUT)) {
-                            cout << "timeout keepalive" << endl;
+                        else if (connection->getNextState() != READ && connection->getNextState() != RESPONSE)
+                            handleExistingConnection(*connection);
+                        if (connection->getNextState() == WAIT && connection->isTimeOut(KEEPALIVE_TIMEOUT)) {
                             connection->setNextState(CLOSE);
-                        }
-                        if (connection->getKeepAlive() == false) {
-                            connection->timeOutCheck(); //check timeouts
-                            if (connection->getRequest().getStatusCode() == 408 || connection->getRequest().getStatusCode() == 504) {
-                                this->_fds[i].events = POLLOUT;
-                                cout << "timeout in clientfd" << endl;
-                            }
                         }
                         if (connection->getNextState() == CLOSE) {
                             closeConnection(*connection, i);
@@ -207,12 +219,6 @@ void    Servers::start() {
                             connection->getRequest().setStatusCode(500);
                             connection->setHandleStatusCode(true);
                             connection->setNextState(DELFD);
-                        }
-                        if (connection->getKeepAlive() == false) {
-                            connection->timeOutCheck(); //check timeouts
-                            if (connection->getRequest().getStatusCode() == 408 || connection->getRequest().getStatusCode() == 504) {
-                                cout << "timeout in otherfd" << endl;
-                            }
                         }
                         if (connection->getNextState() == DELFD) {
                             deleteOtherFd(*connection, i);

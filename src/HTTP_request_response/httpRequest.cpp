@@ -100,13 +100,13 @@ void	Request::reset() {
 }
 
 void	readRequest(Connection& connection) {
-    vector<char> buffer(BUFFER_SIZE);
+	vector<char> buffer(BUFFER_SIZE);
     ssize_t bytes = recv(connection.getFd(), buffer.data(), buffer.size(), 0);
-    if (bytes < 0) {
-        return ;
+	if (bytes < 0) {
+	    return ;
     }
     else if (bytes == 0) {
-        connection.setNextState(CLOSE);
+		connection.setNextState(CLOSE);
         return ;
     }
     buffer.resize(bytes);
@@ -117,12 +117,24 @@ void	readRequest(Connection& connection) {
     if (connection.getRequest().getReadState() == HEADERS) {
         checkHeaders(connection.getBuffer(), connection.getRequest());
         connection.clearBuffer();
+		if (connection.getRequest().getStatusCode() == 100) {
+			connection.getResponse().setVersion(connection.getRequest().getVersion());
+			connection.getResponse().setClientSocket(connection.getFd());
+			connection.getResponse().setStatusCode(100);
+			connection.getResponse().createFullResponse();
+			connection.setNextState(RESPONSE);
+			return ;
+		}
     }
     if (connection.getRequest().getReadState() == CHUNKED_BODY) {	
 		checkChunkedBody(connection);
 	}
     if (connection.getRequest().getReadState() == CONTENT_LENGTH_BODY) {
 		checkContentLengthBody(connection);
+	}
+	if (connection.getRequest().getReadState() == EMPTY) {
+		connection.getBuffer().clear();
+		connection.getBuffer().resize(0);
 	}
     if (connection.getRequest().getReadState() == DONE) {
         connection.getBuffer().clear();
@@ -134,6 +146,7 @@ void	readRequest(Connection& connection) {
 void	parsePath(Connection& connection) {
 	if (connection.getRequest().getStatusCode() == 200) 
 		request_path_handler(connection);
+	cout << "after path handler: " << connection.getRequest().getPath() << " and statuscode: " << connection.getRequest().getStatusCode() << endl;
 	if (connection.getRequest().getStatusCode() < 200 || connection.getRequest().getStatusCode() >= 400) {
 		connection.setHandleStatusCode(true);
 		connection.setNextState(PREPEXEC);

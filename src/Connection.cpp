@@ -4,19 +4,18 @@
 
 Connection::Connection(const int fd, const ServerBlock serverBlock) {
 	this->_fd = fd;
-	this->_nextState = READ;
+	this->_nextState = WAIT;
 	this->_otherFD = -1;
 	this->_handleStatusCode = false;
 	this->_bRead = 0;
 	this->_bWritten = 0;
 	this->_server = serverBlock;
 	this->updateTimeStamp();
-	this->_keepAlive = true;
 }
 Connection::Connection(const Connection& other) { *this = other; }
 
 Connection& Connection::operator=(const Connection& other) {
-	if (this != &other) {
+	if (this != &other) { 
 		this->_fd = other._fd;
 		this->_nextState = other._nextState;
 		this->_buffer = other._buffer;
@@ -29,7 +28,6 @@ Connection& Connection::operator=(const Connection& other) {
 		this->_server = other._server;
 		this->_response = other._response;
 		this->_timeStamp = other._timeStamp;
-		this->_keepAlive = other._keepAlive;
 	}
 	return *this;
 }
@@ -83,10 +81,7 @@ void			Connection::updateTimeStamp() {
 	return ;
 }
 
-void			Connection::setKeepAlive(const bool flag) { this->_keepAlive = flag; }
-bool			Connection::getKeepAlive() const { return (this->_keepAlive); }
-
-bool			Connection::checkTimeOut(long limit) const {
+bool			Connection::isTimeOut(long limit) const {
 	if (this->_handleStatusCode == true)
 		return (false);
 	auto now = chrono::steady_clock::now();
@@ -94,34 +89,34 @@ bool			Connection::checkTimeOut(long limit) const {
 	return (duration >= limit);
 }
 
-void			Connection::handleTimeOut(const int statusCode) {
-	this->_request.setStatusCode(statusCode);
-	if (this->_otherFD != -1) {
-		if (this->_otherFD == this->_cgi.getOutputRead()) {
-			this->_cgi.setOutputRead(-1);
-			this->_cgi.reset();
-		}
-		else if (this->_otherFD == this->_cgi.getInputWrite()) {
-			this->_cgi.setInputWrite(-1);
-			this->_cgi.reset();
-		}
-		this->_nextState = DELFD;
-	}
-	else
-		this->_nextState = PREPEXEC;
-	this->_handleStatusCode = true;
-}
-
 void			Connection::timeOutCheck() {
 	if (this->_handleStatusCode == true)
 		return ;
 	if (this->_nextState == READ) {
-		if (this->checkTimeOut(REQUEST_TIMEOUT))
-			this->handleTimeOut(408);
+		if (this->isTimeOut(REQUEST_TIMEOUT)) {
+			this->_handleStatusCode = true;
+			this->_request.setStatusCode(408);
+			this->_request.setReadState(EMPTY);
+		}
 	}
 	if (this->_request.getIsCGI() == true && this->_cgi.getCgiStage() != CGI_OFF && this->_cgi.getCgiStage() != CGI_DONE) {
-		if (this->checkTimeOut(CGI_TIMEOUT)) {
-			this->handleTimeOut(504);
+		if (this->isTimeOut(CGI_TIMEOUT)) {
+			this->_request.setStatusCode(504);
+			this->_handleStatusCode = true;
+			if (this->_otherFD != -1) {
+				if (this->_otherFD == this->_cgi.getOutputRead()) {
+					this->_cgi.setOutputRead(-1);
+					this->_cgi.reset();
+				}
+				else if (this->_otherFD == this->_cgi.getInputWrite()) {
+					this->_cgi.setInputWrite(-1);
+					this->_cgi.reset();
+				}
+				this->_nextState = DELFD;
+			}
+			else
+				this->_nextState = PREPEXEC;
+			this->_handleStatusCode = true;
 		}
 	}
 }
@@ -132,10 +127,9 @@ void			Connection::reset() {
 	this->_cgi.reset();
 	this->_request.reset();
 	this->_response.reset();
-	this->_nextState = READ;
+	this->_nextState = WAIT;
 	this->_handleStatusCode = false;
 	this->_bRead = 0;
 	this->_bWritten = 0;
-	this->_keepAlive = true;
 	updateTimeStamp();
 }

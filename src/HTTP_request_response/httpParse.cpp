@@ -191,8 +191,8 @@ void	checkChunkedBody(Connection& connection) {
 			chunkSize = stoul(string(buf.begin(), endSize), nullptr, 16);
 		} catch (...) {
 			connection.getRequest().setStatusCode(500);
-			connection.getRequest().setReadState(DONE);
-			break ;
+			connection.getRequest().setReadState(EMPTY);
+			return ;
 		}
 		if (chunkSize == 0) {
 			if (connection.getRequest().getMultipartFlag()) {
@@ -200,6 +200,8 @@ void	checkChunkedBody(Connection& connection) {
 					parseBodyParts(connection.getRequest());
 				} catch (...) {
 					connection.getRequest().setStatusCode(400);
+					connection.getRequest().setReadState(EMPTY);
+					return ;
 				}
 			}
 			connection.getRequest().setReadState(DONE);
@@ -210,7 +212,7 @@ void	checkChunkedBody(Connection& connection) {
 			break ;
 		if (connection.getServer().getMaxBody() != 0 && fullChunkSize > connection.getServer().getMaxBody()) {
 			connection.getRequest().setStatusCode(413);
-			connection.getRequest().setReadState(DONE);
+			connection.getRequest().setReadState(EMPTY);
 			return ;
 		}
 		auto chunkStart = endSize + d.size();
@@ -226,7 +228,7 @@ void	checkContentLengthBody(Connection& connection) {
 
 	if (connection.getServer().getMaxBody() != 0 && readLength > connection.getServer().getMaxBody()) {
 		connection.getRequest().setStatusCode(413);
-		connection.getRequest().setReadState(DONE);
+		connection.getRequest().setReadState(EMPTY);
 		return ;
 	}
 	if (connection.getBuffer().size() >= readLength) {
@@ -237,6 +239,8 @@ void	checkContentLengthBody(Connection& connection) {
 				parseBodyParts(connection.getRequest());
 			} catch (...) {
 				connection.getRequest().setStatusCode(400);
+				connection.getRequest().setReadState(EMPTY);
+				return ;
 			}
 		}
 		connection.getRequest().setReadState(DONE);
@@ -251,11 +255,11 @@ void	checkHeaders(const vector<char> requestData, Request& request) {
 
 	if (!getline(requestStream, line)) {
 		request.setStatusCode(400);
-		request.setReadState(DONE);
+		request.setReadState(EMPTY);
 		return ;
 	}
 	if (!parseRequestLine(line, request) || !parseHeaders(requestStream, line, request)) {
-		request.setReadState(DONE);
+		request.setReadState(EMPTY);
 		return ;
 	}
 
@@ -263,18 +267,18 @@ void	checkHeaders(const vector<char> requestData, Request& request) {
 		request.setMultipartFlag(true);
 	else if (suportedCTypes.find(request.getHeaderValue("Content-Type")) == suportedCTypes.end()) {
 		request.setStatusCode(415);
-		request.setReadState(DONE);
+		request.setReadState(EMPTY);
 		return ;
 	}
 	if (request.getMethod() == "POST" && !request.getMultipartFlag()) {
 		request.setStatusCode(400);
-		request.setReadState(DONE);
+		request.setReadState(EMPTY);
 		return ;
 	}
 	if (request.getHeaderValue("Transfer-Encoding") == "chunked") {
 		if (!request.getHeaderValue("Content-Length").empty()) {
 			request.setStatusCode(400);
-			request.setReadState(DONE);
+			request.setReadState(EMPTY);
 			return ;
 		}
 		request.setReadState(CHUNKED_BODY);
@@ -285,13 +289,17 @@ void	checkHeaders(const vector<char> requestData, Request& request) {
 			request.setContentLength(cLength);
 		} catch (...) {
 			request.setStatusCode(500);
-			request.setReadState(DONE);
+			request.setReadState(EMPTY);
 			return ;
 		}
 		request.setReadState(CONTENT_LENGTH_BODY);
 	}
 	else
 		request.setReadState(DONE);
+	if (request.getHeaderValue("Expect") == "100-continue") {
+		if (request.getStatusCode() == 200)
+			request.setStatusCode(100);
+	}
 	return ;
 }
 

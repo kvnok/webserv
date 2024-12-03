@@ -14,10 +14,10 @@ using namespace std;
 // timeout limits
 #define KEEPALIVE_TIMEOUT 60000 //60 sec
 #define REQUEST_TIMEOUT 10000 //10 sec
-#define CGI_TIMEOUT 10000 //30 sec
+#define CGI_TIMEOUT 10000 //10 sec
 
 
-enum cState {READ, PATH, PREPEXEC, EXECFD, DELFD, RESPONSE, CLOSE};
+enum cState {WAIT, READ, PATH, PREPEXEC, EXECFD, DELFD, RESPONSE, CLOSE};
 
 class Connection {
 	private:
@@ -32,7 +32,6 @@ class Connection {
 		Request			_request;
 		ServerBlock		_server;
 		Response		_response;
-		bool			_keepAlive;
 		chrono::steady_clock::time_point	_timeStamp;
 		Connection();
 
@@ -68,11 +67,8 @@ class Connection {
 		size_t			getBytesWritten() const;
 		vector<char>	getBuffer() const;
 
-		void			setKeepAlive(const bool flag);
-		bool			getKeepAlive() const;
 		void			updateTimeStamp();
-		bool			checkTimeOut(long limit) const;;
-		void			handleTimeOut(const int statusCode);
+		bool			isTimeOut(long limit) const;;
 		void			timeOutCheck();
 		void			reset();
 };
