@@ -14,6 +14,7 @@ ServerBlock::ServerBlock( void ) {
     this->_opt = 1;
     this->_serverFd = 0;
     this->max_clients = MAX_CLIENTS;
+    this->num_of_clients = 0;
 }
 
 vector<string>      ServerBlock::getServerName() { return this->_server_names; }
@@ -29,6 +30,10 @@ int                 ServerBlock::getMaxClients() { return this->max_clients; }
 string              ServerBlock::getCurrentPath() { return this->_currentPath; }
 vector<Location>    ServerBlock::getLocations() { return this->_locations; }
 smartLocs           ServerBlock::getSmartLocs() { return this->_smartLocs; }
+unsigned int        ServerBlock::getNumOfClients() { return this->num_of_clients; }
+
+void                ServerBlock::incrementNumOfClients() { this->num_of_clients += 1; }
+void                ServerBlock::decrementNumOfClients() { if (this->num_of_clients > 0) {this->num_of_clients -= 1;} }
 
 void                ServerBlock::setSmartLocs(pServerBlock &block) { this->_smartLocs = smartLocs(block); }
 
@@ -49,6 +54,7 @@ ServerBlock::ServerBlock(pServerBlock& block) {
     this->setSocket();
     smartLocs temp_smartLocs(block);
     this->_smartLocs.set_locs(temp_smartLocs.get_locs());
+    this->num_of_clients = 0;
 }
 
 void ServerBlock::setBind() {
@@ -102,6 +108,7 @@ ServerBlock& ServerBlock::operator=(const ServerBlock& other) {
         this->max_clients = other.max_clients;
         this->_currentPath = other._currentPath;
         this->_smartLocs = other._smartLocs;
+        this->num_of_clients = other.num_of_clients;
     }
     return *this;
 }

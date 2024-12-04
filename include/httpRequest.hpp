@@ -20,7 +20,7 @@ using namespace std;
 
 #define ARG_MAX_SIZE 4
 
-enum readState {START, HEADERS, CHUNKED_BODY, CONTENT_LENGTH_BODY, EMPTY, DONE};
+enum readState {START, HEADERS, CHUNKED_BODY, CONTENT_LENGTH_BODY, DONE};
 
 const set<string> suportedCTypes = {
 	{"text/html"},

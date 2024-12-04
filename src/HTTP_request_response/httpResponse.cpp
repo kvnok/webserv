@@ -11,7 +11,7 @@ Response::Response() {
     _fullResponse = "";
 }
 
-Response::~Response() { }
+Response::~Response() { this->_header.clear(); }
 
 Response&	Response::operator=(const Response& other) {
 	if (this != &other) {

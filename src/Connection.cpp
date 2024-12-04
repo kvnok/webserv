@@ -32,7 +32,22 @@ Connection& Connection::operator=(const Connection& other) {
 	return *this;
 }
 
-Connection::~Connection() { this->reset(); }
+Connection::~Connection() { 
+	if (this->_otherFD != -1) {
+		if (this->_otherFD == this->_cgi.getInputWrite())
+			this->_cgi.setInputWrite(-1);
+		else if (this->_otherFD == this->_cgi.getOutputRead())
+			this->_cgi.setOutputRead(-1);
+		close(this->_otherFD);
+	}
+	if (this->_fd != -1) {
+		if (shutdown(this->_fd, SHUT_RDWR) == -1)
+			cout << YEL << "shutdown fail: " << strerror(errno) << RESET << endl;
+		if (close(this->_fd) == -1)
+			cout << YEL << "terminate fd failed: " << strerror(errno) << RESET << endl;
+	}
+	this->_buffer.clear();
+ }
 
 void	Connection::setNextState(const cState nextState) { this->_nextState = nextState; }
 void	Connection::setBuffer(const vector<char> buffer) { this->_buffer = buffer; }
@@ -96,7 +111,6 @@ void			Connection::timeOutCheck() {
 		if (this->isTimeOut(REQUEST_TIMEOUT)) {
 			this->_handleStatusCode = true;
 			this->_request.setStatusCode(408);
-			this->_request.setReadState(EMPTY);
 		}
 	}
 	if (this->_request.getIsCGI() == true && this->_cgi.getCgiStage() != CGI_OFF && this->_cgi.getCgiStage() != CGI_DONE) {

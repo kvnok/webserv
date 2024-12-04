@@ -23,7 +23,7 @@ class Connection {
 	private:
 		int				_fd;
 		cState			_nextState;
-		vector<char>	_buffer; //use string instead of vector?
+		vector<char>	_buffer;
 		int				_otherFD;
 		bool			_handleStatusCode;
 		Cgi				_cgi;
