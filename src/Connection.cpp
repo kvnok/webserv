@@ -41,7 +41,7 @@ Connection::~Connection() {
 		close(this->_otherFD);
 	}
 	if (this->_fd != -1) {
-		if (shutdown(this->_fd, SHUT_RDWR) == -1)
+		if (shutdown(this->_fd, SHUT_WR) == -1)
 			cout << YEL << "shutdown fail: " << strerror(errno) << RESET << endl;
 		if (close(this->_fd) == -1)
 			cout << YEL << "terminate fd failed: " << strerror(errno) << RESET << endl;

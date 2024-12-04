@@ -156,6 +156,9 @@ void    Servers::handleExistingConnection(Connection& connection) {
 }
 
 void    Servers::start() {
+    for (size_t x = 0; x < this->_serverBlocks.size(); x++) {
+        cout << GREEN << this->_serverBlocks[x].getPort() << ", Host: " << this->_serverBlocks[x].getHost() << RESET << endl;
+    }
     while (!stop) {
         int ret = poll(this->_fds.data(), this->_fds.size(), 10);
         if (ret == -1)

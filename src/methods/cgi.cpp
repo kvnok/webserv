@@ -227,6 +227,7 @@ static bool	forkCgi(Connection& connection) {
 
 		vector<char *> args;
     	args.push_back(const_cast<char*>(path.c_str()));
+		args.push_back(nullptr);
     	vector<string> env_strings;
     	env_strings.push_back("PATH_INFO=" + path);
     	env_strings.push_back("FILE_NAME=" + name);
