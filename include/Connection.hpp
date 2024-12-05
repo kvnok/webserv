@@ -12,12 +12,7 @@ using namespace std;
 #define BUFFER_SIZE 10000
 
 // timeout limits
-#define KEEPALIVE_TIMEOUT 60000 //60 sec
-#define ACTIVE_TIMEOUT 60000 //60 sec
-#define REQUEST_TIMEOUT 10000 //10 sec
-#define CGI_TIMEOUT 30000 //30 sec
-#define POSTGET_TIMEOUT 30000 //30 sec
-#define RESPONSE_TIMEOUT 10000 //10 sec
+#define TIMEOUT 10000 //60 sec
 
 
 enum cState {READ, PATH, PREPEXEC, EXECFD, DELFD, RESPONSE, CLOSE};
@@ -37,7 +32,6 @@ class Connection {
 		Response		_response;
 		bool			_keepAlive;
 		chrono::steady_clock::time_point	_timeStamp;
-		chrono::steady_clock::time_point	_activityStamp;
 		Connection();
 
 	public:
@@ -75,8 +69,6 @@ class Connection {
 		void			setKeepAlive(const bool flag);
 		bool			getKeepAlive() const;
 		void			updateAllTimeStamps();
-		void			updateActivityStamp();
-		bool			activityStampTimeOut(long limit) const;
 		bool			timeStampTimeOut(long limit) const;
 		void			checkTimeOuts();
 		void			handleTimeOut(const int statusCode);

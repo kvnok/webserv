@@ -5,7 +5,6 @@ static bool	parseHeaders(istringstream &headerStream, string line, Request& requ
 	size_t	totLen = 0;
 
 	while (getline(headerStream, line) && line != "\r") {
-		cout << "STUKKK HIRERE" << endl;
 		size_t	len = line.length();
 		if (len > 5000 || totLen + len > 8000) {
 			request.setStatusCode(431);

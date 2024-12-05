@@ -127,7 +127,6 @@ void	readRequest(Connection& connection) {
     if (connection.getRequest().getReadState() == DONE) {
         connection.getBuffer().clear();
         connection.getBuffer().resize(0);
-		connection.updateActivityStamp();
         connection.setNextState(PATH);
     }
 }

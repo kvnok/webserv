@@ -42,7 +42,6 @@ static void	signalHandler(int signum) {
     }
 }
 
-//CHECK add signal(SIGPIPE, SIG_IGN); to make sure we dont exit? 
 int main(int argc, char **argv) {
 	signal(SIGINT, signalHandler);
 	try
@@ -67,12 +66,10 @@ int main(int argc, char **argv) {
 		globalServer = &servers;
 		servers.start();
 	} catch (exception &e) {
-		//also need to close fd's if they are open?
 		resetAllConnections();
 		closeServers();
 		cerr << RED << "Exception: " << e.what() << RESET << endl;
 	}
-	// here we want to delete all post requests and stuff, do we?
 	return 0;
 }
 

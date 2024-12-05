@@ -2,7 +2,6 @@ NAME = webserv
 CC = c++ -std=c++17
 HEADER ?= $(shell find ./include -iname "*.hpp")
 FLAGS = -Wall -Wextra -Werror
-FLAGS += -fsanitize=address
 SRCS := $(shell find ./src -iname "*.cpp")
 # to keep the same dir structure in obj as in src
 OBJS := $(patsubst ./src/%.cpp,./obj/%.o,$(SRCS))

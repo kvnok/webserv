@@ -29,7 +29,6 @@ Connection& Connection::operator=(const Connection& other) {
 		this->_server = other._server;
 		this->_response = other._response;
 		this->_timeStamp = other._timeStamp;
-		this->_activityStamp = other._activityStamp;
 		this->_keepAlive = other._keepAlive;
 	}
 	return *this;
@@ -81,33 +80,26 @@ void			Connection::clearBuffer() {
 
 void			Connection::updateAllTimeStamps() {
 	this->_timeStamp = chrono::steady_clock::now();
-	this->_activityStamp = chrono::steady_clock::now();
-	return ;
-}
-
-void			Connection::updateActivityStamp() {
-	this->_activityStamp = chrono::steady_clock::now();
 	return ;
 }
 
 void			Connection::setKeepAlive(const bool flag) { this->_keepAlive = flag; }
 bool			Connection::getKeepAlive() const { return (this->_keepAlive); }
 
-bool			Connection::activityStampTimeOut(long limit) const {
-	auto now = chrono::steady_clock::now();
-	long duration = chrono::duration_cast<chrono::milliseconds>(now - this->_activityStamp).count();
-	return (duration >= limit);	
-}
-
 bool			Connection::timeStampTimeOut(long limit) const {
 	auto now = chrono::steady_clock::now();
 	long duration = chrono::duration_cast<chrono::milliseconds>(now - this->_timeStamp).count();
+	cout << "duration: " << duration << endl;
 	return (duration >= limit);
 }
 
 void			Connection::handleTimeOut(const int statusCode) {
+	if (this->_request.getStatusCode() == 504) {
+		return ;
+	}
 	this->_request.setStatusCode(statusCode);
 	if (this->_otherFD != -1) {
+		cout << "the other fd is closed" << this->_otherFD << endl;
 		if (this->_otherFD == this->_cgi.getOutputRead()) {
 			this->_cgi.setOutputRead(-1);
 			this->_cgi.reset();
@@ -121,35 +113,6 @@ void			Connection::handleTimeOut(const int statusCode) {
 	else
 		this->_nextState = PREPEXEC;
 	this->_handleStatusCode = true;
-}
-
-void			Connection::checkTimeOuts() {
-	if (this->_handleStatusCode == true) {
-		return ;
-	}
-	if (this->_nextState == READ) {
-		if (this->timeStampTimeOut(REQUEST_TIMEOUT))
-			this->handleTimeOut(408);
-	}
-	else if (this->_cgi.getCgiStage() != CGI_OFF && this->_cgi.getCgiStage() != CGI_DONE) {
-		if (this->timeStampTimeOut(CGI_TIMEOUT)) {
-			this->handleTimeOut(504);
-		}
-	}
-	else if (this->_nextState == EXECFD) {
-		if (this->timeStampTimeOut(POSTGET_TIMEOUT)) {
-			if (this->_request.getMethod() == "GET")
-				this->handleTimeOut(408);
-			else
-				this->handleTimeOut(500);
-		}
-	}
-	else if (this->_nextState == RESPONSE) {
-		if (this->timeStampTimeOut(RESPONSE_TIMEOUT)) {
-			this->handleTimeOut(504);
-			this->getResponse().reset();
-		}
-	}
 }
 
 void			Connection::reset() {
