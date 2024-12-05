@@ -39,7 +39,7 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
             cout << GREEN << "close succesfull" << RESET << endl;
         connection.setOtherFD(-1);
     }
-    cout << "deleted clientFd: " << this->_fds[i].fd << "/" << connection.getFd() << "/" << i << " in closeConnection" << endl;
+    cout << RED << "deleted clientFd: " << this->_fds[i].fd << "/" << connection.getFd() << "/" << i << " in closeConnection" << RESET << endl;
     this->_fds.erase(this->_fds.begin() + i);
     connection.getServer().decrementNumOfClients();
     for (size_t j = 0; j < this->_connections.size(); j++) {
@@ -55,7 +55,7 @@ void    Servers::closeConnection(Connection& connection, size_t& i) {
 
 void    Servers::deleteOtherFd(Connection& connection, size_t& i) {
     if (this->_fds[i].fd == connection.getOtherFD()) {
-        //cout << "deleted otherFd: " << this->_fds[i].fd << " in deleteOtherFd, otherfd is from: " << connection.getFd() << endl;
+        cout << RED << "deleted otherFd: " << this->_fds[i].fd << " in deleteOtherFd, otherfd is from: " << connection.getFd() << RESET << endl;
         this->_fds.erase(this->_fds.begin() + i);
         close(connection.getOtherFD());
         connection.setOtherFD(-1);
@@ -103,7 +103,7 @@ void	Servers::prepExec(Connection& connection) {
             }
             return ;
         }
-        //cout << "new otherFd: " << connection.getOtherFD() << " from: " << connection.getFd() << endl;
+        cout << GREEN << "new otherFd: " << connection.getOtherFD() << " from: " << connection.getFd() << RESET << endl;
         this->_fds.push_back({connection.getOtherFD(), POLLIN | POLLOUT, 0});
     }
     // if (connection.getNextState() == PREPEXEC)
@@ -207,7 +207,7 @@ void    Servers::start() {
                             //     handleExistingConnection(*connection);
                         }
                         else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-                            cout << BLU << strerror(errno) << RESET << endl;
+                            cout << BLU << "client" << strerror(errno) << RESET << endl;
                             connection->setNextState(CLOSE);
                         }
                         else if (connection->getNextState() != READ && connection->getNextState() != RESPONSE)
@@ -230,7 +230,7 @@ void    Servers::start() {
                             handleExistingConnection(*connection);
                         }
                         else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-                            cout << BLU << strerror(errno) << RESET << endl;
+                            cout << BLU << "otherfd: " << strerror(errno) << RESET << endl;
                             connection->getRequest().setStatusCode(500);
                             connection->setHandleStatusCode(true);
                             connection->setNextState(DELFD);
