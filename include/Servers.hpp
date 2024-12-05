@@ -39,4 +39,5 @@ class Servers
 		Connection*		getOtherFdsClient(int const fd);
 		
 		void 			printFDS(); //for debug
+		void 			startDebugPrint(string str, size_t i); //for debug
 };

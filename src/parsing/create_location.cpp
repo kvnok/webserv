@@ -45,7 +45,13 @@ void parse_location(RAWSERV &s, Location &location, int &i)
 			break;
 		if (s[i].size() < 2)
 			throw logic_error("directive must have a value");
-		
+		string last = s[i].back();
+		if (last.back() != ';') {
+			cout << "directive: " << s[i][0] << endl;
+			cout << "directive value: " << s[i][1] << endl;
+			cout << "last: " << last << endl;
+			throw logic_error("directive must end with ;");
+		}
 		// is this an allowed directive
 		if (!is_valid_location_directive(s[i][0]))
 			throw logic_error("unknown directive : " + s[i][0]);

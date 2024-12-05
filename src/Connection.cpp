@@ -101,6 +101,7 @@ bool			Connection::isTimeOut(long limit) const {
 		return (false);
 	auto now = chrono::steady_clock::now();
 	long duration = chrono::duration_cast<chrono::milliseconds>(now - this->_timeStamp).count();
+	cout << "duration: " << duration << endl;
 	return (duration >= limit);
 }
 

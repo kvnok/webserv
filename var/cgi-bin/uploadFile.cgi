@@ -41,6 +41,7 @@ def main():
     if len(sys.argv) != 1:
         print("500", end="")
         sys.exit(-1)
+    method = os.getenv('METHOD')
     file_name = os.getenv('FILE_NAME')
     file_size = int(os.getenv('BODY_SIZE'))
     if not file_name or not file_size:

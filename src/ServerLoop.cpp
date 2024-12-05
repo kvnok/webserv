@@ -64,7 +64,7 @@ void    Servers::deleteOtherFd(Connection& connection, size_t& i) {
             connection.setNextState(PREPEXEC);
         else if (connection.getCgi().getCgiStage() == CGI_FDREAD)
             connection.setNextState(PREPEXEC);
-        else
+        else {
             connection.setNextState(RESPONSE);
     }
 }
@@ -106,8 +106,6 @@ void	Servers::prepExec(Connection& connection) {
         cout << GREEN << "new otherFd: " << connection.getOtherFD() << " from: " << connection.getFd() << RESET << endl;
         this->_fds.push_back({connection.getOtherFD(), POLLIN | POLLOUT, 0});
     }
-    // if (connection.getNextState() == PREPEXEC)
-    //     prepExec(connection);
     return;
 }
 
@@ -155,6 +153,22 @@ void    Servers::handleExistingConnection(Connection& connection) {
     connection.timeOutCheck();
 }
 
+void    Servers::startDebugPrint(string s, size_t i) {
+    cout << "startDebugPrint: " << endl;
+    cout << s << endl;
+    cout << "fds[" << i << "]: " << this->_fds[i].fd << " events: " << this->_fds[i].events << " revents: " << this->_fds[i].revents << endl;
+    Connection* connection = getFdsClient(this->_fds[i].fd);
+    if (connection) {
+        cout << "connection fd: " << connection->getFd() << endl;
+        cout << "nextState: " << connection->getNextState() << endl;
+        cout << "keepAlive: " << connection->getKeepAlive() << endl;
+    }
+    else {
+        cout << "connection not found" << endl;
+    }
+    cout << "endDebugPrint" << endl;
+}
+
 void    Servers::start() {
     for (size_t x = 0; x < this->_serverBlocks.size(); x++) {
         cout << GREEN << this->_serverBlocks[x].getPort() << ", Host: " << this->_serverBlocks[x].getHost() << RESET << endl;
@@ -166,22 +180,28 @@ void    Servers::start() {
         else {
             for (size_t i = 0; i < this->_fds.size(); i++) {
                 if (isServerFd(this->_fds[i].fd)) {
+                    // startDebugPrint("isServerFd(this->_fds[i].fd)", i);
                     ServerBlock* serverBlock = getFdsServerBlock(this->_fds[i].fd);
                     if (serverBlock) {
                         if (this->_fds[i].revents & POLLIN) {
+                            // startDebugPrint("serverfd POLLIN", i);
                             handleNewConnection(i);
                         }
                     }
                 }
                 else if (isClientFd(this->_fds[i].fd)) {
+                    startDebugPrint("isClientFd(this->_fds[i].fd)", i);
                     Connection* connection = getFdsClient(this->_fds[i].fd);
                     if (connection && connection->getNextState() != EXECFD && connection->getNextState() != DELFD) {
+                        startDebugPrint("clientfd", i);
                         if (this->_fds[i].revents & POLLIN) {
                             if (connection->getNextState() == WAIT) {
                                 connection->setNextState(READ);
                                 connection->updateTimeStamp();
                             }
+                            startDebugPrint("clientfd POLLIN", i);
                             if (connection->getNextState() != READ) {
+                                startDebugPrint("keepAlive", i);
                                 cout << RED << "pollin on different state: " << connection->getNextState() << RESET << endl;
                                 connection->setNextState(READ);
                                 handleExistingConnection(*connection);
@@ -193,7 +213,8 @@ void    Servers::start() {
                         }
                         else if (this->_fds[i].revents & POLLOUT) {
                             if (connection->getNextState() != READ)
-                                handleExistingConnection(*connection);
+                                startDebugPrint("clientfd POLLOUT", i);
+                            handleExistingConnection(*connection);
                             else {
                                 cout << "read with pollout" << endl;
                                 if (connection->getHandleStatusCode() == true)
@@ -208,34 +229,49 @@ void    Servers::start() {
                         }
                         else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                             cout << BLU << "client" << strerror(errno) << RESET << endl;
+                            startDebugPrint("clientfd POLLERR", i);
                             connection->setNextState(CLOSE);
                         }
                         else if (connection->getNextState() != READ && connection->getNextState() != RESPONSE)
                             handleExistingConnection(*connection);
                         if (connection->getNextState() == WAIT && connection->isTimeOut(KEEPALIVE_TIMEOUT)) {
+                        if (connection->getKeepAlive() == true && connection->timeStampTimeOut(TIMEOUT)) {
+                            startDebugPrint("timeout keepalive", i);
                             connection->setNextState(CLOSE);
                         }
+                        else if (connection->getKeepAlive() == false && connection->timeStampTimeOut(TIMEOUT)) {
+                            startDebugPrint("timeout no keepalive", i);
+                            this->_fds[i].events = POLLOUT;
+                            connection->handleTimeOut(504);
+                        }
                         if (connection->getNextState() == CLOSE) {
+                            startDebugPrint("clientfd CLOSE", i);
                             closeConnection(*connection, i);
                         }
                     }
                 }
                 else if (isOtherFd(this->_fds[i].fd)) {
+                    startDebugPrint("isOtherFd(this->_fds[i].fd)", i);
                     Connection* connection = getOtherFdsClient(this->_fds[i].fd);
                     if (connection && ((connection->getNextState() == EXECFD || connection->getNextState() == DELFD))) {
+                        startDebugPrint("otherfd", i);
                         if (this->_fds[i].revents & POLLIN && connection->getNextState() == EXECFD) {
+                            startDebugPrint("otherfd POLLIN", i);
                             handleExistingConnection(*connection);
                         }
                         else if (this->_fds[i].revents & POLLOUT && connection->getNextState() == EXECFD) {
+                            startDebugPrint("otherfd POLLOUT", i);
                             handleExistingConnection(*connection);
                         }
                         else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                             cout << BLU << "otherfd: " << strerror(errno) << RESET << endl;
+                            startDebugPrint("otherfd POLLERR", i);
                             connection->getRequest().setStatusCode(500);
                             connection->setHandleStatusCode(true);
                             connection->setNextState(DELFD);
                         }
                         if (connection->getNextState() == DELFD) {
+                            startDebugPrint("otherfd DELFD", i);
                             deleteOtherFd(*connection, i);
                         }
                     }
