@@ -55,33 +55,33 @@ void	Cgi::resetPid() {
 	if (this->_pid == -1)
 		return ;
 	if (kill(this->_pid, 0) == 0) {
-		cout << "KILLED PID: " << this->_pid << endl;
+		//cout << "KILLED PID: " << this->_pid << endl;
 		kill(this->_pid, SIGKILL);
 		int status = 0;
 		waitpid(this->_pid, &status, 0);
-		cout << "status code waitpid: " << status << endl;
+		//cout << "status code waitpid: " << status << endl;
 	}
 	this->_pid = -1;
 }
 
 void	Cgi::resetFds() {
 	if (this->_inputRead != -1) {
-		cout << "closed in cgireset: " << this->_inputRead << endl;
+		//cout << "closed in cgireset: " << this->_inputRead << endl;
 		close(this->_inputRead);
 	}
 	this->_inputRead = -1;
 	if (this->_inputWrite != -1) {
-		cout << "closed in cgireset: " << this->_inputWrite << endl;
+		//cout << "closed in cgireset: " << this->_inputWrite << endl;
 		close(this->_inputWrite);
 	}
 	this->_inputWrite = -1;
 	if (this->_outputRead != -1) {
-		cout << "closed in cgireset: " << this->_outputRead << endl;
+		//cout << "closed in cgireset: " << this->_outputRead << endl;
 		close(this->_outputRead);
 	}
 	this->_outputRead = -1;
 	if (this->_outputWrite != -1) {
-		cout << "closed in cgireset: " << this->_outputWrite << endl;
+		//cout << "closed in cgireset: " << this->_outputWrite << endl;
 		close(this->_outputWrite);
 	}
 	this->_outputWrite = -1;

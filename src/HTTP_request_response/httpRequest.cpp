@@ -165,7 +165,7 @@ void	readRequest(Connection& connection) {
 void	parsePath(Connection& connection) {
 	if (connection.getRequest().getStatusCode() == 200) 
 		request_path_handler(connection);
-	cout << "after path handler: " << connection.getRequest().getPath() << " and statuscode: " << connection.getRequest().getStatusCode() << endl;
+	//cout << "after path handler: " << connection.getRequest().getPath() << " and statuscode: " << connection.getRequest().getStatusCode() << endl;
 	if (connection.getRequest().getStatusCode() < 200 || connection.getRequest().getStatusCode() >= 400) {
 		connection.setHandleStatusCode(true);
 		connection.setNextState(PREPEXEC);

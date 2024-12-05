@@ -133,7 +133,7 @@ void s_client_max_body_size(vector<string> &s, pServerBlock &block) {
 		throw invalid_argument("client_max_body_size: invalid number of arguments");
 
 	string str = s[1].substr(0, s[1].size() - 1);
-	cout << "PARSER: CLIENT_MAX_BODY_SIZE STRING: " << str << endl;
+	//cout << "PARSER: CLIENT_MAX_BODY_SIZE STRING: " << str << endl;
 	if (str == "0" || str.length() > 10)
 		throw invalid_argument("client_max_body_size: invalid argument");
 
@@ -184,7 +184,7 @@ void s_client_max_body_size(vector<string> &s, pServerBlock &block) {
 	if (bodySize == 0) {
 		throw invalid_argument("client_max_body_size: invalid number: " + formatNumberPrint(tempBodySize));
 	}
-	cout << "PARSER: CLIENT_MAX_BODY_SIZE: " << formatNumberPrint(bodySize) << endl;
+	//cout << "PARSER: CLIENT_MAX_BODY_SIZE: " << formatNumberPrint(bodySize) << endl;
 	block.set_client_max_body_size(bodySize);
 }
 

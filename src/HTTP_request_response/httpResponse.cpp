@@ -78,7 +78,7 @@ static void    sendResponse(Connection& connection) {
     if (chunkSize > BUFFER_SIZE)
         chunkSize = BUFFER_SIZE;
     ssize_t bytes = send(clientSocket, fullResponse.c_str() + response.getBytesSend(), chunkSize, MSG_NOSIGNAL);
-    // cout << bytes << " send of the total: " << fullResponse.size() << endl;
+    // //cout << bytes << " send of the total: " << fullResponse.size() << endl;
     if (bytes == -1) {   
         connection.setNextState(CLOSE);
         return ;
@@ -126,7 +126,7 @@ static void    createResponse(Connection& connection) {
     else
         response.addHeader("Connection", state);
     response.createFullResponse();
-    cout << "response for: " << connection.getRequest().getPath() << endl;
+    //cout << "response for: " << connection.getRequest().getPath() << endl;
     return ;
 }
 

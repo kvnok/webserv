@@ -201,7 +201,7 @@ static bool	createCgiFds(Connection& connection) {
 static bool	forkCgi(Connection& connection) {
 	pid_t pid = fork();
 	
-	//cout << "NEW PID: " <<  pid << endl;
+	////cout << "NEW PID: " <<  pid << endl;
 	connection.getCgi().setPid(pid);
 	if (pid < 0) {
 		connection.getCgi().setCgiStage(CGI_OFF);

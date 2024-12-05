@@ -13,8 +13,8 @@ void raw_extract(ifstream& file, RAWCONF &raw_config) {
 		if (words.size() == 0) {
 			continue;
 		}
-		// cout << line.size() << ":" << endl;
-		// cout << line << endl;
+		// //cout << line.size() << ":" << endl;
+		// //cout << line << endl;
 		raw_config.push_back(words);
 	}
 }

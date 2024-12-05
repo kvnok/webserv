@@ -9,7 +9,7 @@
 
 using namespace std;
 
-#define BUFFER_SIZE 10000
+#define BUFFER_SIZE 100000
 
 // timeout limits
 #define KEEPALIVE_TIMEOUT 60000 //60 sec

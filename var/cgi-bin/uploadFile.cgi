@@ -44,7 +44,7 @@ def main():
     method = os.getenv('METHOD')
     file_name = os.getenv('FILE_NAME')
     file_size = int(os.getenv('BODY_SIZE'))
-    if file_size:
+    if not file_size:
         print("500", end="")
         sys.exit(-1)
     if not file_name:

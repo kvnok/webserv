@@ -20,7 +20,7 @@ static void parse_path(string &path, string &folder, string &file) {
 }
 
 static void check_locs(Request &request, string &folder, string &file, string &path, smartLocs sLocs) {
-	// cout << "check_locs" << endl;
+	// //cout << "check_locs" << endl;
 	Loc loc;
 	try {
 		loc = sLocs.get_loc(folder);
@@ -29,7 +29,7 @@ static void check_locs(Request &request, string &folder, string &file, string &p
 		request.setStatusCode(404);
 		return;
 	}
-	// cout << "loc found" << endl;
+	// //cout << "loc found" << endl;
 	vector<string> deny = loc.get_deny();
 	if (find(deny.begin(), deny.end(), request.getMethod()) != deny.end()) {
 		request.setStatusCode(403);
@@ -39,11 +39,11 @@ static void check_locs(Request &request, string &folder, string &file, string &p
 	string root = loc.get_root();
 	string root_and_file = root + "/" + file;
 	root_and_file = regex_replace(root_and_file, regex("//+"), "/");
-	// cout << "root and file: " << root_and_file << endl;
-	// cout << "root: " << root << endl;
-	// cout << "file: " << file << endl;
+	// //cout << "root and file: " << root_and_file << endl;
+	// //cout << "root: " << root << endl;
+	// //cout << "file: " << file << endl;
 	if (file.empty()) { // no file, check for index
-		// cout << "file empty" << endl;
+		// //cout << "file empty" << endl;
 		if (request.getMethod() == "POST") {
 			if (request.getStatusCode() >= 200 && request.getStatusCode() < 399) {
 				path = loc.get_root();
@@ -52,13 +52,13 @@ static void check_locs(Request &request, string &folder, string &file, string &p
 		}
 		if (loc.get_index() != "")
 		{
-			// cout << "index not empty" << endl;
+			// //cout << "index not empty" << endl;
 			string root_and_index = root + "/" + loc.get_index();
 			root_and_index = regex_replace(root_and_index, regex("//+"), "/");
-			// cout << "root and index: " << root_and_index << endl;
+			// //cout << "root and index: " << root_and_index << endl;
 			ifstream stream(root_and_index);
 			if (stream.is_open() && is_directory(root_and_index) == false) {
-				// cout << "index is open" << endl;
+				// //cout << "index is open" << endl;
 				path = root_and_index;
 				stream.close();
 			}
@@ -76,7 +76,7 @@ static void check_locs(Request &request, string &folder, string &file, string &p
 			request.setStatusCode(404);
 	}
 	else if (!file.empty()) { // check for file
-		// cout << "file not empty" << endl;
+		// //cout << "file not empty" << endl;
 		if (loc.get_is_cgi() == true)
 		{
 			request.setIsCGI(true);
@@ -95,7 +95,7 @@ static void check_locs(Request &request, string &folder, string &file, string &p
 }
 
 static void check_baseline(Request &request, string &file, string &path, ServerBlock server) {
-	// cout << "check_baseline" << endl;
+	// //cout << "check_baseline" << endl;
 	string root = server.getRoot();
 	string root_and_file = root + "/" + file;
 	root_and_file = regex_replace(root_and_file, regex("//+"), "/");
@@ -174,17 +174,17 @@ void request_path_handler(Connection& connection) {
 	string folder;
 	string file;
 	parse_path(path, folder, file);
-	// cout << "start path: " << path << endl;
-	// cout << "folder: " << folder << endl;
-	// cout << "file: " << file << endl;
+	// //cout << "start path: " << path << endl;
+	// //cout << "folder: " << folder << endl;
+	// //cout << "file: " << file << endl;
 	smartLocs sLocs;
 	sLocs.set_locs(serverBlock.getSmartLocs().get_locs());
 
 	if (is_this_a_redirect(folder, file, sLocs)) {
-		// cout << "redirecting" << endl;
+		// //cout << "redirecting" << endl;
 		do_the_redirect(request, folder, sLocs);
-		// cout << "path after: " << path << endl;
-		// cout << "folder after: " << folder << endl;
+		// //cout << "path after: " << path << endl;
+		// //cout << "folder after: " << folder << endl;
 		file = "";
 	}
 	if (folder == "/" || folder == "")
@@ -192,5 +192,5 @@ void request_path_handler(Connection& connection) {
 	else
 		check_locs(request, folder, file, path, sLocs);
 	request.setPath(path);
-	// cout << "end path: " << path << endl;
+	// //cout << "end path: " << path << endl;
 }
