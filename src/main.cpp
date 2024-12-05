@@ -7,41 +7,16 @@
 #include "Servers.hpp"
 #include "autoindex.hpp"
 #include "smartLocs.hpp"
-
 #include <csignal>
 
-Servers* globalServer = nullptr;
-
-static void	resetAllConnections() {
-	if (globalServer) {
-		//cout << "Closing all connections" << endl;
-		for (size_t j = 0; j < globalServer->get_connections().size(); j++) {
-			//cout << "closed connection with fd: " << globalServer->get_connections()[j].getFd() << endl;
-			if (globalServer->get_connections()[j].getFd() != -1)
-				close(globalServer->get_connections()[j].getFd());
-			if (globalServer->get_connections()[j].getOtherFD() != -1)
-				close(globalServer->get_connections()[j].getOtherFD());
-			globalServer->get_connections()[j].reset();
-		}
-    }
-}
-
-static void	closeServers() {
-	if (globalServer) {
-		for (size_t j = 0; j < globalServer->get_serverBlocks().size(); j++)
-			if (globalServer->get_serverBlocks()[j].getFd() == globalServer->get_fds()[j].fd)
-				close(globalServer->get_serverBlocks()[j].getFd());
-	}
-}
+volatile sig_atomic_t stop = 0;
 
 static void	signalHandler(int signum) {
-	if (signum == SIGINT) {
-		resetAllConnections();
-		closeServers();
-		exit (0);
-    }
+	(void)signum;
+	stop = 1;
 }
 
+//CHECK add signal(SIGPIPE, SIG_IGN); to make sure we dont exit? 
 int main(int argc, char **argv) {
 	signal(SIGINT, signalHandler);
 	try
@@ -63,11 +38,8 @@ int main(int argc, char **argv) {
 			serverBlocks.push_back(serverBlock);
 		}
 		Servers servers(serverBlocks);
-		globalServer = &servers;
 		servers.start();
 	} catch (exception &e) {
-		resetAllConnections();
-		closeServers();
 		cerr << RED << "Exception: " << e.what() << RESET << endl;
 	}
 	return 0;

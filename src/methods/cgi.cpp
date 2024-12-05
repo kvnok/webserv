@@ -58,7 +58,7 @@ static void	parseHeadersCgi(Connection& connection) {
 	return ;
 }
 
-static bool	reapChild(Connection& connection) {
+static bool	checkChild(Connection& connection) {
 	int status = 0;
 	pid_t result = waitpid(connection.getCgi().getPid(), &status, WNOHANG);
 
@@ -74,12 +74,9 @@ static bool	reapChild(Connection& connection) {
 			connection.getCgi().setPid(-1);
 			return (true);
 		}
-		else if (WEXITSTATUS(status))
-			connection.getRequest().setStatusCode(500);
-		else {
+		else if (!WEXITSTATUS(status))
 			kill(connection.getCgi().getPid(), SIGTERM);
-   	    	connection.getRequest().setStatusCode(500);
-		}
+   	    connection.getRequest().setStatusCode(500);
 		connection.setHandleStatusCode(true);
 		connection.getCgi().setPid(-1);
 		return (false);
@@ -94,7 +91,7 @@ static void readFromCgi(Connection& connection) {
 	int		fd = connection.getOtherFD();
 	ssize_t bytes = read(fd, &buffer[0], BUFFER_SIZE);
 	if (bytes < 0) {
-		if (reapChild(connection)) {
+		if (checkChild(connection)) {
 			connection.getRequest().setStatusCode(500);
 			connection.setHandleStatusCode(true);
 		}
@@ -139,7 +136,7 @@ static void	writeToCgi(Connection& connection) {
 		chunkSize = BUFFER_SIZE;
 	ssize_t bytes = write(fd, cgiData.data() + connection.getBytesWritten(), chunkSize);
 	if (bytes == -1) {
-		if (reapChild(connection)) {
+		if (checkChild(connection)) {
 			connection.getRequest().setStatusCode(500);
 			connection.setHandleStatusCode(true);
 		}
@@ -164,7 +161,7 @@ void	executeCGI(Connection& connection) {
 	else if (connection.getCgi().getCgiStage() == CGI_READ) {
 		readFromCgi(connection);
 		if (connection.getCgi().getCgiStage() == CGI_DONE) {
-			reapChild(connection);
+			checkChild(connection);
 			connection.getCgi().setOutputRead(-1);
 			//connection.getCgi().setCgiStage() = CGI_OFF; //set CGI to OFF? since we are completely done
 			connection.setNextState(DELFD);
@@ -230,6 +227,7 @@ static bool	forkCgi(Connection& connection) {
 
 		vector<char *> args;
     	args.push_back(const_cast<char*>(path.c_str()));
+		args.push_back(nullptr);
     	vector<string> env_strings;
     	env_strings.push_back("PATH_INFO=" + path);
     	env_strings.push_back("FILE_NAME=" + name);
@@ -271,3 +269,5 @@ void	cgiMethod(Connection& connection) {
 		connection.getCgi().setCgiStage(CGI_READ);
 	}
 }
+
+//CHECK if file has execution/reading/writing rights

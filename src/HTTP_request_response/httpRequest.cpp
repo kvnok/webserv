@@ -20,7 +20,7 @@ Request::Request()
 	  _isRedirect(false)
 { }
 
-Request::~Request() { }
+Request::~Request() { this->_header.clear(); }
 
 Request&	Request::operator=(const Request& other) {
 	if (this != &other) {
@@ -99,14 +99,35 @@ void	Request::reset() {
 	this->_isRedirect = false;
 }
 
+static void	drainRequest(Connection& connection) {
+	vector<char> emptyBuf(__INT_MAX__);
+	ssize_t bytes = recv(connection.getFd(), emptyBuf.data(), emptyBuf.size(), MSG_NOSIGNAL);
+	if (bytes < 0) {
+		return ;
+	}
+	else if (bytes == 0) {
+		connection.setNextState(CLOSE);
+		return ;
+	}
+	else {
+		emptyBuf.clear();
+		return ;
+	}
+}
+
 void	readRequest(Connection& connection) {
-    vector<char> buffer(BUFFER_SIZE);
+	if (connection.getHandleStatusCode() == true) {
+		drainRequest(connection);
+		connection.setHandleStatusCode(true);
+		return ;
+	}
+	vector<char> buffer(BUFFER_SIZE);
     ssize_t bytes = recv(connection.getFd(), buffer.data(), buffer.size(), 0);
-    if (bytes < 0) {
-        return ;
+	if (bytes < 0) {
+	    return ;
     }
     else if (bytes == 0) {
-        connection.setNextState(CLOSE);
+		connection.setNextState(CLOSE);
         return ;
     }
     buffer.resize(bytes);
@@ -117,6 +138,14 @@ void	readRequest(Connection& connection) {
     if (connection.getRequest().getReadState() == HEADERS) {
         checkHeaders(connection.getBuffer(), connection.getRequest());
         connection.clearBuffer();
+		if (connection.getRequest().getStatusCode() == 100) {
+			connection.getResponse().setVersion(connection.getRequest().getVersion());
+			connection.getResponse().setClientSocket(connection.getFd());
+			connection.getResponse().setStatusCode(100);
+			connection.getResponse().createFullResponse();
+			connection.setNextState(RESPONSE);
+			return ;
+		}
     }
     if (connection.getRequest().getReadState() == CHUNKED_BODY) {	
 		checkChunkedBody(connection);
@@ -129,18 +158,23 @@ void	readRequest(Connection& connection) {
         connection.getBuffer().resize(0);
         connection.setNextState(PATH);
     }
+	if (connection.getRequest().getStatusCode() >= 400)
+		connection.setHandleStatusCode(true);
 }
 
 void	parsePath(Connection& connection) {
 	if (connection.getRequest().getStatusCode() == 200) 
 		request_path_handler(connection);
+	cout << "after path handler: " << connection.getRequest().getPath() << " and statuscode: " << connection.getRequest().getStatusCode() << endl;
 	if (connection.getRequest().getStatusCode() < 200 || connection.getRequest().getStatusCode() >= 400) {
 		connection.setHandleStatusCode(true);
 		connection.setNextState(PREPEXEC);
 	}
 	else {
-		if (connection.getRequest().getIsCGI())
+		if (connection.getRequest().getIsCGI()) {
 			connection.getCgi().setCgiStage(CGI_ON);
+			connection.updateTimeStamp();
+		}
 		connection.setHandleStatusCode(false);
 		connection.setNextState(PREPEXEC);
 	}

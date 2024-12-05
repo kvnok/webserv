@@ -22,7 +22,6 @@ class Servers
 		void	handleNewConnection(size_t i);
 		void	handleExistingConnection(Connection& connection);
 		void	prepExec(Connection& connection);
-		void	addFdToPoll(Connection& connection);
 		void	executeMethod(Connection& connection);
 		void	closeConnection(Connection& connection, size_t& i);
 		void	deleteOtherFd(Connection& connection, size_t& i);

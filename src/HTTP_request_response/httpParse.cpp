@@ -82,6 +82,7 @@ static bool	parseRequestLine(const string line, Request& request) {
 	}
 	request.setMethod(requestLine[0]);
 	request.setPath(requestLine[1]);
+	cout << "request for: " << request.getPath() << endl;
 	request.setVersion(requestLine[2]);
 	if (!validateMethod(request.getMethod(), request) || !validateVersion(request.getVersion(), request) \
 		|| !validatePath(request.getPath(), request))
@@ -122,7 +123,6 @@ static	void	parsePart(string content, Request& request) {
 			break ;
 		headers[string(start, kvLim)] = string(kvLim + kv.size(), end);
 		start = end + nl.size();
-		cout << "Stuk herer" << endl;
 	}
 	string body(hbPos + hbLim.size(), content.end() - nl.size());
 	if (headers["Content-Disposition"].find("name=\"file\";") != string::npos) {
@@ -160,17 +160,16 @@ void	parseBodyParts(Request& request) {
 		throw runtime_error("400");
 	i += boundary.size();
 	while (true) {
-		cout << "stuk HEHRE" << endl;
 		if (i >= body.end())
-			break ;
+			throw runtime_error("400");
 		string	tmpB(i, body.end());
 		if (tmpB.empty())
-			break ;
-		else if (tmpB == "--")
+			throw runtime_error("400");
+		else if (tmpB == "--\r\n")
 			break ;
 		auto pos = search(tmpB.begin(), tmpB.end(), boundary.begin(), boundary.end());
 		if (pos == tmpB.end())
-			break ;
+			throw runtime_error("400");
 		parsePart(string(tmpB.begin(), pos), request);
 		i = search(i, body.end(), boundary.begin(), boundary.end()) + boundary.size();
 	}
@@ -182,7 +181,6 @@ void	checkChunkedBody(Connection& connection) {
 	const string d = "\r\n";
 	
 	while (true) {
-		cout << "stuk HERREERERE " << endl;
 		if (buf.empty())
 			break ;
 		auto endSize = search(buf.begin(), buf.end(), d.begin(), d.end());
@@ -193,8 +191,7 @@ void	checkChunkedBody(Connection& connection) {
 			chunkSize = stoul(string(buf.begin(), endSize), nullptr, 16);
 		} catch (...) {
 			connection.getRequest().setStatusCode(500);
-			connection.getRequest().setReadState(DONE);
-			break ;
+			return ;
 		}
 		if (chunkSize == 0) {
 			if (connection.getRequest().getMultipartFlag()) {
@@ -202,6 +199,7 @@ void	checkChunkedBody(Connection& connection) {
 					parseBodyParts(connection.getRequest());
 				} catch (...) {
 					connection.getRequest().setStatusCode(400);
+					return ;
 				}
 			}
 			connection.getRequest().setReadState(DONE);
@@ -212,7 +210,6 @@ void	checkChunkedBody(Connection& connection) {
 			break ;
 		if (connection.getServer().getMaxBody() != 0 && fullChunkSize > connection.getServer().getMaxBody()) {
 			connection.getRequest().setStatusCode(413);
-			connection.getRequest().setReadState(DONE);
 			return ;
 		}
 		auto chunkStart = endSize + d.size();
@@ -228,7 +225,6 @@ void	checkContentLengthBody(Connection& connection) {
 
 	if (connection.getServer().getMaxBody() != 0 && readLength > connection.getServer().getMaxBody()) {
 		connection.getRequest().setStatusCode(413);
-		connection.getRequest().setReadState(DONE);
 		return ;
 	}
 	if (connection.getBuffer().size() >= readLength) {
@@ -239,6 +235,7 @@ void	checkContentLengthBody(Connection& connection) {
 				parseBodyParts(connection.getRequest());
 			} catch (...) {
 				connection.getRequest().setStatusCode(400);
+				return ;
 			}
 		}
 		connection.getRequest().setReadState(DONE);
@@ -253,11 +250,9 @@ void	checkHeaders(const vector<char> requestData, Request& request) {
 
 	if (!getline(requestStream, line)) {
 		request.setStatusCode(400);
-		request.setReadState(DONE);
 		return ;
 	}
 	if (!parseRequestLine(line, request) || !parseHeaders(requestStream, line, request)) {
-		request.setReadState(DONE);
 		return ;
 	}
 
@@ -265,18 +260,15 @@ void	checkHeaders(const vector<char> requestData, Request& request) {
 		request.setMultipartFlag(true);
 	else if (suportedCTypes.find(request.getHeaderValue("Content-Type")) == suportedCTypes.end()) {
 		request.setStatusCode(415);
-		request.setReadState(DONE);
 		return ;
 	}
 	if (request.getMethod() == "POST" && !request.getMultipartFlag()) {
 		request.setStatusCode(400);
-		request.setReadState(DONE);
 		return ;
 	}
 	if (request.getHeaderValue("Transfer-Encoding") == "chunked") {
 		if (!request.getHeaderValue("Content-Length").empty()) {
 			request.setStatusCode(400);
-			request.setReadState(DONE);
 			return ;
 		}
 		request.setReadState(CHUNKED_BODY);
@@ -287,13 +279,16 @@ void	checkHeaders(const vector<char> requestData, Request& request) {
 			request.setContentLength(cLength);
 		} catch (...) {
 			request.setStatusCode(500);
-			request.setReadState(DONE);
 			return ;
 		}
 		request.setReadState(CONTENT_LENGTH_BODY);
 	}
 	else
 		request.setReadState(DONE);
+	if (request.getHeaderValue("Expect") == "100-continue") {
+		if (request.getStatusCode() == 200)
+			request.setStatusCode(100);
+	}
 	return ;
 }
 

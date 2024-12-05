@@ -12,16 +12,18 @@ using namespace std;
 #define BUFFER_SIZE 10000
 
 // timeout limits
-#define TIMEOUT 10000 //60 sec
+#define KEEPALIVE_TIMEOUT 60000 //60 sec
+#define REQUEST_TIMEOUT 10000 //10 sec
+#define CGI_TIMEOUT 10000 //10 sec
 
 
-enum cState {READ, PATH, PREPEXEC, EXECFD, DELFD, RESPONSE, CLOSE};
+enum cState {WAIT, READ, PATH, PREPEXEC, EXECFD, DELFD, RESPONSE, CLOSE};
 
 class Connection {
 	private:
 		int				_fd;
 		cState			_nextState;
-		vector<char>	_buffer; //use string instead of vector?
+		vector<char>	_buffer;
 		int				_otherFD;
 		bool			_handleStatusCode;
 		Cgi				_cgi;
@@ -30,7 +32,6 @@ class Connection {
 		Request			_request;
 		ServerBlock		_server;
 		Response		_response;
-		bool			_keepAlive;
 		chrono::steady_clock::time_point	_timeStamp;
 		Connection();
 
@@ -66,12 +67,9 @@ class Connection {
 		size_t			getBytesWritten() const;
 		vector<char>	getBuffer() const;
 
-		void			setKeepAlive(const bool flag);
-		bool			getKeepAlive() const;
-		void			updateAllTimeStamps();
-		bool			timeStampTimeOut(long limit) const;
-		void			checkTimeOuts();
-		void			handleTimeOut(const int statusCode);
+		void			updateTimeStamp();
+		bool			isTimeOut(long limit) const;;
+		void			timeOutCheck();
 		void			reset();
 };
 

@@ -11,7 +11,7 @@ Response::Response() {
     _fullResponse = "";
 }
 
-Response::~Response() { }
+Response::~Response() { this->_header.clear(); }
 
 Response&	Response::operator=(const Response& other) {
 	if (this != &other) {
@@ -87,8 +87,15 @@ static void    sendResponse(Connection& connection) {
     if (response.getBytesSend() >= fullResponse.size()) {
         if (connection.getResponse().getHeaderValue("Connection") == "close")
             connection.setNextState(CLOSE);
-        else
-            connection.reset();
+        else {
+            if (connection.getRequest().getStatusCode() != 100)
+                connection.reset();
+            else {
+                connection.getResponse().reset();
+                connection.getRequest().setStatusCode(200);
+                connection.setNextState(WAIT);
+            }
+        }
     }
     return ;
 }

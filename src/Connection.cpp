@@ -4,19 +4,18 @@
 
 Connection::Connection(const int fd, const ServerBlock serverBlock) {
 	this->_fd = fd;
-	this->_nextState = READ;
+	this->_nextState = WAIT;
 	this->_otherFD = -1;
 	this->_handleStatusCode = false;
 	this->_bRead = 0;
 	this->_bWritten = 0;
 	this->_server = serverBlock;
-	this->updateAllTimeStamps();
-	this->_keepAlive = true;
+	this->updateTimeStamp();
 }
 Connection::Connection(const Connection& other) { *this = other; }
 
 Connection& Connection::operator=(const Connection& other) {
-	if (this != &other) {
+	if (this != &other) { 
 		this->_fd = other._fd;
 		this->_nextState = other._nextState;
 		this->_buffer = other._buffer;
@@ -29,12 +28,26 @@ Connection& Connection::operator=(const Connection& other) {
 		this->_server = other._server;
 		this->_response = other._response;
 		this->_timeStamp = other._timeStamp;
-		this->_keepAlive = other._keepAlive;
 	}
 	return *this;
 }
 
-Connection::~Connection() { this->reset(); }
+Connection::~Connection() { 
+	if (this->_otherFD != -1) {
+		if (this->_otherFD == this->_cgi.getInputWrite())
+			this->_cgi.setInputWrite(-1);
+		else if (this->_otherFD == this->_cgi.getOutputRead())
+			this->_cgi.setOutputRead(-1);
+		close(this->_otherFD);
+	}
+	if (this->_fd != -1) {
+		if (shutdown(this->_fd, SHUT_WR) == -1)
+			cout << YEL << "shutdown fail: " << strerror(errno) << RESET << endl;
+		if (close(this->_fd) == -1)
+			cout << YEL << "terminate fd failed: " << strerror(errno) << RESET << endl;
+	}
+	this->_buffer.clear();
+ }
 
 void	Connection::setNextState(const cState nextState) { this->_nextState = nextState; }
 void	Connection::setBuffer(const vector<char> buffer) { this->_buffer = buffer; }
@@ -78,41 +91,49 @@ void			Connection::clearBuffer() {
 	}
 }
 
-void			Connection::updateAllTimeStamps() {
+void			Connection::updateTimeStamp() {
 	this->_timeStamp = chrono::steady_clock::now();
 	return ;
 }
 
-void			Connection::setKeepAlive(const bool flag) { this->_keepAlive = flag; }
-bool			Connection::getKeepAlive() const { return (this->_keepAlive); }
-
-bool			Connection::timeStampTimeOut(long limit) const {
+bool			Connection::isTimeOut(long limit) const {
+	if (this->_handleStatusCode == true)
+		return (false);
 	auto now = chrono::steady_clock::now();
 	long duration = chrono::duration_cast<chrono::milliseconds>(now - this->_timeStamp).count();
-	cout << "duration: " << duration << endl;
+	// cout << "duration: " << duration << endl;
 	return (duration >= limit);
 }
 
-void			Connection::handleTimeOut(const int statusCode) {
-	if (this->_request.getStatusCode() == 504) {
+void			Connection::timeOutCheck() {
+	if (this->_handleStatusCode == true)
 		return ;
-	}
-	this->_request.setStatusCode(statusCode);
-	if (this->_otherFD != -1) {
-		cout << "the other fd is closed" << this->_otherFD << endl;
-		if (this->_otherFD == this->_cgi.getOutputRead()) {
-			this->_cgi.setOutputRead(-1);
-			this->_cgi.reset();
+	if (this->_nextState == READ) {
+		if (this->isTimeOut(REQUEST_TIMEOUT)) {
+			this->_handleStatusCode = true;
+			this->_request.setStatusCode(408);
 		}
-		else if (this->_otherFD == this->_cgi.getInputWrite()) {
-			this->_cgi.setInputWrite(-1);
-			this->_cgi.reset();
-		}
-		this->_nextState = DELFD;
 	}
-	else
-		this->_nextState = PREPEXEC;
-	this->_handleStatusCode = true;
+	if (this->_request.getIsCGI() == true && this->_cgi.getCgiStage() != CGI_OFF && this->_cgi.getCgiStage() != CGI_DONE) {
+		if (this->isTimeOut(CGI_TIMEOUT)) {
+			this->_request.setStatusCode(504);
+			this->_handleStatusCode = true;
+			if (this->_otherFD != -1) {
+				if (this->_otherFD == this->_cgi.getOutputRead()) {
+					this->_cgi.setOutputRead(-1);
+					this->_cgi.reset();
+				}
+				else if (this->_otherFD == this->_cgi.getInputWrite()) {
+					this->_cgi.setInputWrite(-1);
+					this->_cgi.reset();
+				}
+				this->_nextState = DELFD;
+			}
+			else
+				this->_nextState = PREPEXEC;
+			this->_handleStatusCode = true;
+		}
+	}
 }
 
 void			Connection::reset() {
@@ -121,10 +142,9 @@ void			Connection::reset() {
 	this->_cgi.reset();
 	this->_request.reset();
 	this->_response.reset();
-	this->_nextState = READ;
+	this->_nextState = WAIT;
 	this->_handleStatusCode = false;
 	this->_bRead = 0;
 	this->_bWritten = 0;
-	this->_keepAlive = true;
-	updateAllTimeStamps();
+	updateTimeStamp();
 }

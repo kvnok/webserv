@@ -12,7 +12,7 @@ Cgi::Cgi() {
 	_headersParsed = false;
 }
 
-Cgi::~Cgi() {} //{ this->reset(); }
+Cgi::~Cgi() { this->resetPid(); this->resetFds(); }
 
 Cgi&	Cgi::operator=(const Cgi& other) {
 	if (this != &other) {
