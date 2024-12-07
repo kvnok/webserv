@@ -1,7 +1,6 @@
 # webserv
-(WORK IN PROGRESS) \
 Nginx inspired C++ webserver \
-will handle:
+handles:
 - GET, POST, DELETE requests
 - default error pages
 - serving fully static pages
